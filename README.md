@@ -13,6 +13,7 @@ En mobilvenlig webapp til Henning, som viser 96 timers DK2-elpriser. Offentliggj
 - Alle fire døgn er sammenklappet ved åbning og kan foldes ud time for time.
 - Automatisk opdatering hver time og lokal cache ved midlertidige netfejl.
 - Kan installeres som webapp på PC, Android-telefon og Samsung-tablet.
+- Har særskilt appikon og fuldskærmsvisning på både iPhone og Android.
 
 ## Vigtigt om den samlede pris
 

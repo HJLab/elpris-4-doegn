@@ -40,7 +40,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding: 26px 0 18px;
+  padding: calc(26px + env(safe-area-inset-top)) 0 18px;
 }
 
 .eyebrow, .day-number {
@@ -224,7 +224,7 @@ footer {
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  padding: 8px 0 30px;
+  padding: 8px 0 calc(30px + env(safe-area-inset-bottom));
   color: var(--muted);
   font-size: .75rem;
 }
@@ -240,7 +240,7 @@ footer {
 
 @media (max-width: 520px) {
   .topbar, main, footer { width: min(100% - 18px, 1180px); }
-  .topbar { padding-top: 18px; }
+  .topbar { padding-top: calc(18px + env(safe-area-inset-top)); }
   .refresh { padding: 9px 13px; }
   .price-row { grid-template-columns: 58px minmax(28px, 1fr) 88px 60px; gap: 6px; padding-inline: 9px; }
   .kind-badge { padding-inline: 5px; font-size: .56rem; }
