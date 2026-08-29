@@ -1,4 +1,4 @@
-const CACHE = "elpris-shell-v1";
+const CACHE = "elpris-shell-v2";
 const FILES = ["./", "index.html", "styles.css", "app.js", "manifest.webmanifest", "icon.svg"];
 
 self.addEventListener("install", (event) => {
