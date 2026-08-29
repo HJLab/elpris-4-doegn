@@ -57,6 +57,24 @@
     <p id="daysHelp" class="days-help" hidden>Tryk på en dag for at se eller skjule alle 24 timer</p>
     <section id="days" class="days" aria-label="Priser for de næste fire døgn"></section>
 
+    <section class="accuracy-section">
+      <details id="accuracyDetails" class="accuracy-details">
+        <summary>Prognosens træfsikkerhed</summary>
+        <div class="accuracy-body">
+          <p class="accuracy-explanation">Gennemsnitlig forskel mellem den gemte prognose og den efterfølgende officielle pris.</p>
+          <div class="accuracy-periods" role="group" aria-label="Vælg periode">
+            <button class="accuracy-period active" type="button" data-days="7" aria-pressed="true">7 dage</button>
+            <button class="accuracy-period" type="button" data-days="14" aria-pressed="false">14 dage</button>
+            <button class="accuracy-period" type="button" data-days="30" aria-pressed="false">1 måned</button>
+            <button class="accuracy-period" type="button" data-days="90" aria-pressed="false">3 måneder</button>
+          </div>
+          <span class="accuracy-label">Prognosen ramte i gennemsnit</span>
+          <strong id="accuracyValue" class="accuracy-value">Indsamler data…</strong>
+          <span id="accuracyCoverage" class="accuracy-coverage" aria-live="polite">Målingen begynder, når den første prognose er gemt.</span>
+        </div>
+      </details>
+    </section>
+
     <section class="details">
       <details>
         <summary>Sådan beregnes prisen</summary>

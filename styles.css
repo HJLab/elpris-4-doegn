@@ -214,6 +214,39 @@ h1 { margin: 0; font-size: clamp(1.55rem, 4vw, 2.45rem); line-height: 1.08; }
 }
 .forecast-row .kind-badge { color: var(--muted); background: rgba(157, 178, 197, .1); }
 
+.accuracy-section { margin: 18px 0; }
+.accuracy-details {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.accuracy-details > summary { color: var(--text); }
+.accuracy-body { padding: 0 17px 17px; }
+.accuracy-explanation { margin: 0 0 13px; color: var(--muted); line-height: 1.45; }
+.accuracy-periods { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.accuracy-period {
+  min-height: 40px;
+  padding: 8px 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: .82rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+.accuracy-period.active {
+  border-color: var(--amber);
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+.accuracy-label, .accuracy-coverage { display: block; color: var(--muted); }
+.accuracy-label { font-size: .8rem; }
+.accuracy-value { display: block; margin: 5px 0 3px; color: var(--amber); font-size: clamp(1.45rem, 4vw, 2rem); }
+.accuracy-coverage { font-size: .75rem; }
+
 .details { margin: 18px 0; }
 details { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
 summary { padding: 15px 17px; cursor: pointer; font-weight: 750; }

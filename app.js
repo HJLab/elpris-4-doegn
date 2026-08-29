@@ -26,8 +26,12 @@ const ui = hasDocument ? {
   summary: $("summary"), legend: $("legend"), daysHelp: $("daysHelp"), days: $("days"), updatedAt: $("updatedAt"),
   currentPrice: $("currentPrice"), currentKind: $("currentKind"),
   bestPrice: $("bestPrice"), bestTime: $("bestTime"),
-  expensivePrice: $("expensivePrice"), expensiveTime: $("expensiveTime")
+  expensivePrice: $("expensivePrice"), expensiveTime: $("expensiveTime"),
+  accuracyValue: $("accuracyValue"), accuracyCoverage: $("accuracyCoverage")
 } : {};
+
+let accuracyObservations = [];
+let selectedAccuracyDays = 7;
 
 function localIso(date) {
   const y = date.getFullYear();
@@ -161,6 +165,49 @@ function bestChargeWindow(items, length = 3) {
   return best;
 }
 
+function calculateAccuracy(observations, days, now = new Date()) {
+  const cutoff = new Date(now);
+  cutoff.setHours(0, 0, 0, 0);
+  cutoff.setDate(cutoff.getDate() - days + 1);
+  const usable = observations.filter((item) => {
+    const errorOre = Number(item.errorOre);
+    if (!Number.isFinite(errorOre) || !item.target) return false;
+    return parseDanishTime(item.target) >= cutoff;
+  });
+  const averageOre = usable.length ? mean(usable.map((item) => Number(item.errorOre))) : null;
+  const coveredDays = new Set(usable.map((item) => item.target.slice(0, 10))).size;
+  return { averageOre, coveredDays, observations: usable.length };
+}
+
+function renderAccuracy(days = selectedAccuracyDays) {
+  selectedAccuracyDays = days;
+  const result = calculateAccuracy(accuracyObservations, days);
+  document.querySelectorAll(".accuracy-period").forEach((button) => {
+    const active = Number(button.dataset.days) === days;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+  if (result.averageOre === null) {
+    ui.accuracyValue.textContent = "Indsamler data…";
+    ui.accuracyCoverage.textContent = "Der er endnu ingen afsluttede prognoser i den valgte periode.";
+    return;
+  }
+  ui.accuracyValue.textContent = `${fmtPrice.format(result.averageOre)} øre/kWh forkert`;
+  ui.accuracyCoverage.textContent = `${result.coveredDays} af ${days} dage med data · ${result.observations} sammenlignede timepriser`;
+}
+
+async function loadAccuracy() {
+  try {
+    const response = await fetch("data/accuracy.json", { cache: "no-store" });
+    if (!response.ok) throw new Error("Ingen statistik endnu");
+    const payload = await response.json();
+    accuracyObservations = Array.isArray(payload.observations) ? payload.observations : [];
+  } catch {
+    accuracyObservations = [];
+  }
+  renderAccuracy(selectedAccuracyDays);
+}
+
 function renderSummary(items, now) {
   const current = items[0];
   const future = items.filter((x) => x.date >= floorHour(now));
@@ -252,8 +299,13 @@ async function load() {
 
 if (hasDocument) {
   ui.refresh.addEventListener("click", load);
+  document.querySelectorAll(".accuracy-period").forEach((button) => {
+    button.addEventListener("click", () => renderAccuracy(Number(button.dataset.days)));
+  });
   load();
+  loadAccuracy();
   setInterval(load, 60 * 60 * 1000);
+  setInterval(loadAccuracy, 6 * 60 * 60 * 1000);
 
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
     navigator.serviceWorker.register("sw.js").catch(() => {});
@@ -261,4 +313,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { aggregateToHours, forecastPayloadToHours, forecastSpot, ceriusTariff, totalPrice, buildHorizon, bestChargeWindow, classifyDay };
+if (typeof module !== "undefined") module.exports = { aggregateToHours, forecastPayloadToHours, forecastSpot, ceriusTariff, totalPrice, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy };

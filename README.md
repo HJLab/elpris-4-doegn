@@ -14,6 +14,12 @@ En mobilvenlig webapp til Henning, som viser 96 timers DK2-elpriser. Offentliggj
 - Automatisk opdatering hver time og lokal cache ved midlertidige netfejl.
 - Kan installeres som webapp på PC, Android-telefon og Samsung-tablet.
 - Har særskilt appikon og fuldskærmsvisning på både iPhone og Android.
+- Gemmer automatisk en daglig prognose via GitHub Actions.
+- Viser prognosens gennemsnitlige fejl i øre/kWh for 7 dage, 14 dage, 1 måned eller 3 måneder.
+
+## Prognosens træfsikkerhed
+
+Den automatiske arbejdsgang i `.github/workflows/archive-forecast.yml` gemmer prognosen omkring kl. 15 dansk tid. Når de officielle priser senere er tilgængelige, beregnes den absolutte forskel mellem prognosen og den officielle pris. Resultatet vises kun som gennemsnitlig fejl i øre/kWh; det indeholder ingen beregning af bilens opladning eller forbrug.
 
 ## Vigtigt om den samlede pris
 
