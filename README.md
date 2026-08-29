@@ -6,10 +6,11 @@ En mobilvenlig webapp til Henning, som viser 96 timers DK2-elpriser. Offentliggj
 
 - Præcis 96 timer opdelt i fire blokke á 24 timer.
 - Officielle DK2-priser fra Energi Data Service, aggregeret fra kvarter til timer.
-- Statistisk prognose baseret på de seneste otte ugers DK2-priser.
+- Vejr- og historikbaseret ML-prognose for de resterende timer via elpriser.org.
 - Variabel samlet pris inklusive moms, Modstrøms tillæg, Cerius nettarif, Energinet-tarif og elafgift.
-- Tre billigste og tre dyreste timer i hvert døgn.
-- Bedste sammenhængende 3-timers ladevindue.
+- Bedste sammenhængende 3-timers ladevindue og dyreste time i hvert døgn.
+- Gul, grøn og rød timevisning med de tre dyreste timer tydeligt markeret.
+- Alle fire døgn er sammenklappet ved åbning og kan foldes ud time for time.
 - Automatisk opdatering hver time og lokal cache ved midlertidige netfejl.
 - Kan installeres som webapp på PC, Android-telefon og Samsung-tablet.
 
@@ -33,4 +34,4 @@ Mappen kan offentliggøres gratis med GitHub Pages. Når siden er lagt på nette
 
 ## Datakilde
 
-Energi Data Service: `DayAheadPrices`, prisområde `DK2`.
+Officielle priser stammer fra Energi Data Service. Browservenlige pris- og prognosedata leveres via det åbne, CORS-aktiverede API hos elpriser.org, prisområde `DK2`.

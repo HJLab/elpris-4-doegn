@@ -27,29 +27,29 @@
 
     <section id="summary" class="summary" hidden>
       <article class="summary-card current-card">
-        <span class="summary-label">Pris denne time</span>
+        <span class="summary-label">Pris lige nu</span>
         <strong id="currentPrice">–</strong>
         <span id="currentKind" class="summary-note">–</span>
       </article>
       <article class="summary-card best-card">
-        <span class="summary-label">Billigste kommende time</span>
+        <span class="summary-label">Bedste 3 timers ladetid</span>
         <strong id="bestPrice">–</strong>
         <span id="bestTime" class="summary-note">–</span>
       </article>
-      <article class="summary-card charge-card">
-        <span class="summary-label">Bedste 3 timers ladevindue</span>
-        <strong id="chargePrice">–</strong>
-        <span id="chargeTime" class="summary-note">–</span>
+      <article class="summary-card expensive-card">
+        <span class="summary-label">Dyreste kommende time</span>
+        <strong id="expensivePrice">–</strong>
+        <span id="expensiveTime" class="summary-note">–</span>
       </article>
     </section>
 
     <section id="legend" class="legend" hidden aria-label="Forklaring">
-      <span><i class="dot actual-dot"></i> Officiel pris</span>
-      <span><i class="dot forecast-dot"></i> Prognose</span>
-      <span><i class="swatch cheap-swatch"></i> 3 billigste</span>
-      <span><i class="swatch expensive-swatch"></i> 3 dyreste</span>
+      <span><i class="swatch normal-swatch"></i> Øvrige timer</span>
+      <span><i class="swatch cheap-swatch"></i> Bedste 3 timers ladetid</span>
+      <span><i class="swatch expensive-swatch"></i> 3 dyreste timer</span>
     </section>
 
+    <p id="daysHelp" class="days-help" hidden>Tryk på en dag for at se eller skjule alle 24 timer</p>
     <section id="days" class="days" aria-label="Priser for de næste fire døgn"></section>
 
     <section class="details">
@@ -70,16 +70,27 @@
   </footer>
 
   <template id="dayTemplate">
-    <article class="day-card">
-      <header class="day-header">
-        <div>
+    <details class="day-card">
+      <summary class="day-summary">
+        <div class="day-heading">
           <p class="day-number"></p>
           <h2 class="day-title"></h2>
+          <span class="day-range"></span>
         </div>
-        <div class="day-range"></div>
-      </header>
+        <div class="day-highlight cheap-highlight">
+          <span>Grøn · billigst</span>
+          <strong class="day-best-time">–</strong>
+          <small class="day-best-price">–</small>
+        </div>
+        <div class="day-highlight expensive-highlight">
+          <span>Rød · dyrest</span>
+          <strong class="day-expensive-time">–</strong>
+          <small class="day-expensive-price">–</small>
+        </div>
+        <span class="fold-label"><span class="show-hours">Vis timer ▼</span><span class="hide-hours">Skjul timer ▲</span></span>
+      </summary>
       <div class="price-list"></div>
-    </article>
+    </details>
   </template>
 
   <template id="priceTemplate">

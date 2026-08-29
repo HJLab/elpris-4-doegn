@@ -23,10 +23,10 @@ const hasDocument = typeof document !== "undefined";
 const $ = (id) => hasDocument ? document.getElementById(id) : null;
 const ui = hasDocument ? {
   statusPanel: $("statusPanel"), statusText: $("statusText"), refresh: $("refreshButton"),
-  summary: $("summary"), legend: $("legend"), days: $("days"), updatedAt: $("updatedAt"),
+  summary: $("summary"), legend: $("legend"), daysHelp: $("daysHelp"), days: $("days"), updatedAt: $("updatedAt"),
   currentPrice: $("currentPrice"), currentKind: $("currentKind"),
   bestPrice: $("bestPrice"), bestTime: $("bestTime"),
-  chargePrice: $("chargePrice"), chargeTime: $("chargeTime")
+  expensivePrice: $("expensivePrice"), expensiveTime: $("expensiveTime")
 } : {};
 
 function localIso(date) {
@@ -145,9 +145,10 @@ function buildHorizon(knownHours, now = new Date()) {
 
 function classifyDay(items) {
   const sorted = [...items].sort((a, b) => a.total - b.total);
-  const cheap = new Set(sorted.slice(0, 3).map((x) => hourKey(x.date)));
+  const charge = bestChargeWindow(items);
+  const cheap = new Set(charge.items.map((x) => hourKey(x.date)));
   const expensive = new Set(sorted.slice(-3).map((x) => hourKey(x.date)));
-  return { cheap, expensive };
+  return { cheap, expensive, charge, mostExpensive: sorted.at(-1) };
 }
 
 function bestChargeWindow(items, length = 3) {
@@ -163,17 +164,18 @@ function bestChargeWindow(items, length = 3) {
 function renderSummary(items, now) {
   const current = items[0];
   const future = items.filter((x) => x.date >= floorHour(now));
-  const best = [...future].sort((a, b) => a.total - b.total)[0];
   const charge = bestChargeWindow(future);
+  const mostExpensive = [...future].sort((a, b) => b.total - a.total)[0];
   ui.currentPrice.textContent = `${fmtPrice.format(current.total)} kr./kWh`;
-  ui.currentKind.textContent = current.kind === "actual" ? "Officiel DK2-pris" : "Beregnet prognose";
-  ui.bestPrice.textContent = `${fmtPrice.format(best.total)} kr./kWh`;
-  ui.bestTime.textContent = `${fmtDate.format(best.date)} kl. ${fmtTime.format(best.date)}`;
-  ui.chargePrice.textContent = `${fmtPrice.format(charge.average)} kr./kWh`;
+  ui.currentKind.textContent = `${fmtDate.format(current.date)} kl. ${fmtTime.format(current.date)} · ${current.kind === "actual" ? "officiel" : "prognose"}`;
+  ui.bestPrice.textContent = `${fmtPrice.format(charge.average)} kr./kWh`;
   const last = addHours(charge.items.at(-1).date, 1);
-  ui.chargeTime.textContent = `${fmtDate.format(charge.items[0].date)} kl. ${fmtTime.format(charge.items[0].date)}–${fmtTime.format(last)}`;
+  ui.bestTime.textContent = `${fmtDate.format(charge.items[0].date)} kl. ${fmtTime.format(charge.items[0].date)}–${fmtTime.format(last)}`;
+  ui.expensivePrice.textContent = `${fmtPrice.format(mostExpensive.total)} kr./kWh`;
+  ui.expensiveTime.textContent = `${fmtDate.format(mostExpensive.date)} kl. ${fmtTime.format(mostExpensive.date)}`;
   ui.summary.hidden = false;
   ui.legend.hidden = false;
+  ui.daysHelp.hidden = false;
 }
 
 function renderDays(items, now) {
@@ -187,6 +189,11 @@ function renderDays(items, now) {
     dayNode.querySelector(".day-title").textContent = fmtDateLong.format(block[0].date);
     const end = addHours(block.at(-1).date, 1);
     dayNode.querySelector(".day-range").textContent = `${fmtDate.format(block[0].date)} kl. ${fmtTime.format(block[0].date)} – ${fmtDate.format(end)} kl. ${fmtTime.format(end)}`;
+    const chargeEnd = addHours(marks.charge.items.at(-1).date, 1);
+    dayNode.querySelector(".day-best-time").textContent = `kl. ${fmtTime.format(marks.charge.items[0].date)}–${fmtTime.format(chargeEnd)}`;
+    dayNode.querySelector(".day-best-price").textContent = `${fmtPrice.format(marks.charge.average)} kr./kWh i snit`;
+    dayNode.querySelector(".day-expensive-time").textContent = `kl. ${fmtTime.format(marks.mostExpensive.date)}`;
+    dayNode.querySelector(".day-expensive-price").textContent = `${fmtPrice.format(marks.mostExpensive.total)} kr./kWh`;
     const list = dayNode.querySelector(".price-list");
 
     for (const item of block) {
@@ -254,4 +261,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { aggregateToHours, forecastPayloadToHours, forecastSpot, ceriusTariff, totalPrice, buildHorizon, bestChargeWindow };
+if (typeof module !== "undefined") module.exports = { aggregateToHours, forecastPayloadToHours, forecastSpot, ceriusTariff, totalPrice, buildHorizon, bestChargeWindow, classifyDay };

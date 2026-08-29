@@ -7,12 +7,12 @@
   --text: #f3f7fb;
   --muted: #9db2c5;
   --blue: #58a6ff;
-  --forecast: #d7a6ff;
   --green: #39d98a;
   --green-bg: rgba(57, 217, 138, .16);
   --red: #ff6b7a;
   --red-bg: rgba(255, 107, 122, .16);
   --amber: #ffc857;
+  --amber-bg: rgba(255, 200, 87, .16);
   --shadow: 0 14px 35px rgba(0, 0, 0, .22);
 }
 
@@ -107,7 +107,7 @@ h1 { margin: 0; font-size: clamp(1.55rem, 4vw, 2.45rem); line-height: 1.08; }
   padding: 18px;
   border: 1px solid var(--line);
   border-radius: 16px;
-  background: linear-gradient(145deg, rgba(20, 53, 80, .96), rgba(10, 31, 50, .96));
+  background: var(--surface-2);
   box-shadow: var(--shadow);
 }
 
@@ -115,8 +115,12 @@ h1 { margin: 0; font-size: clamp(1.55rem, 4vw, 2.45rem); line-height: 1.08; }
 .summary-label { font-size: .84rem; font-weight: 700; }
 .summary-card strong { display: block; margin: 8px 0 2px; font-size: clamp(1.45rem, 3.5vw, 2rem); }
 .summary-note { font-size: .85rem; }
+.current-card { background: var(--amber-bg); }
+.current-card strong { color: var(--amber); }
+.best-card { background: var(--green-bg); }
 .best-card strong { color: var(--green); }
-.charge-card strong { color: var(--amber); }
+.expensive-card { background: var(--red-bg); }
+.expensive-card strong { color: var(--red); }
 
 .legend {
   display: flex;
@@ -127,35 +131,52 @@ h1 { margin: 0; font-size: clamp(1.55rem, 4vw, 2.45rem); line-height: 1.08; }
   font-size: .82rem;
 }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
-.dot { width: 9px; height: 9px; border-radius: 50%; }
-.actual-dot { background: var(--blue); }
-.forecast-dot { background: var(--forecast); }
 .swatch { width: 16px; height: 10px; border-radius: 3px; }
+.normal-swatch { background: var(--amber-bg); border: 1px solid var(--amber); }
 .cheap-swatch { background: var(--green-bg); border: 1px solid var(--green); }
 .expensive-swatch { background: var(--red-bg); border: 1px solid var(--red); }
 
-.days { display: grid; gap: 18px; }
+.days-help {
+  margin: 10px 2px 8px;
+  color: var(--text);
+  font-size: .88rem;
+  font-weight: 700;
+}
+
+.days { display: grid; gap: 10px; }
 .day-card {
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 17px;
+  border-radius: 14px;
   background: rgba(12, 31, 49, .92);
   box-shadow: var(--shadow);
 }
 
-.day-header {
-  display: flex;
+.day-summary {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.25fr) minmax(145px, 1fr) minmax(130px, .9fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 16px 18px;
-  border-bottom: 1px solid var(--line);
+  gap: 16px;
+  padding: 14px 16px;
   background: rgba(20, 49, 74, .85);
+  list-style: none;
+  cursor: pointer;
 }
-.day-header h2 { margin: 0; font-size: 1.15rem; }
-.day-range { color: var(--muted); font-size: .8rem; text-align: right; }
+.day-summary::-webkit-details-marker { display: none; }
+.day-summary h2 { margin: 0; font-size: 1.08rem; }
+.day-range { display: block; margin-top: 4px; color: var(--muted); font-size: .72rem; }
+.day-highlight span, .day-highlight strong, .day-highlight small { display: block; }
+.day-highlight span { color: var(--muted); font-size: .7rem; }
+.day-highlight strong { margin-top: 2px; font-size: .92rem; }
+.day-highlight small { margin-top: 2px; color: var(--muted); font-size: .72rem; }
+.cheap-highlight strong { color: var(--green); }
+.expensive-highlight strong { color: var(--red); }
+.fold-label { justify-self: end; color: var(--amber); font-size: .75rem; font-weight: 800; white-space: nowrap; }
+.hide-hours { display: none; }
+.day-card[open] .show-hours { display: none; }
+.day-card[open] .hide-hours { display: inline; }
 
-.price-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.price-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--line); }
 .price-row {
   display: grid;
   grid-template-columns: 66px minmax(40px, 1fr) 100px 70px;
@@ -164,6 +185,7 @@ h1 { margin: 0; font-size: clamp(1.55rem, 4vw, 2.45rem); line-height: 1.08; }
   min-height: 54px;
   padding: 7px 12px;
   border-bottom: 1px solid rgba(39, 67, 93, .62);
+  background: var(--amber-bg);
 }
 .price-row:nth-child(odd) { border-right: 1px solid rgba(39, 67, 93, .62); }
 .price-row.cheap { background: var(--green-bg); }
@@ -174,8 +196,9 @@ h1 { margin: 0; font-size: clamp(1.55rem, 4vw, 2.45rem); line-height: 1.08; }
 .time { font-size: .96rem; }
 .date-short, .spot-price { color: var(--muted); font-size: .67rem; }
 .bar-cell { height: 8px; border-radius: 999px; background: #1c3a54; overflow: hidden; }
-.bar { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--blue); }
-.forecast-row .bar { background: var(--forecast); }
+.bar { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--amber); }
+.price-row.cheap .bar { background: var(--green); }
+.price-row.expensive .bar { background: var(--red); }
 .value-cell { text-align: right; }
 .total-price { font-size: .92rem; }
 .spot-price { margin-top: 2px; }
@@ -183,13 +206,13 @@ h1 { margin: 0; font-size: clamp(1.55rem, 4vw, 2.45rem); line-height: 1.08; }
   justify-self: end;
   padding: 4px 7px;
   border-radius: 999px;
-  color: #b9d9f7;
-  background: rgba(88, 166, 255, .12);
+  color: var(--muted);
+  background: rgba(157, 178, 197, .1);
   font-size: .62rem;
   font-weight: 800;
   text-transform: uppercase;
 }
-.forecast-row .kind-badge { color: #e5c9ff; background: rgba(215, 166, 255, .13); }
+.forecast-row .kind-badge { color: var(--muted); background: rgba(157, 178, 197, .1); }
 
 .details { margin: 18px 0; }
 details { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
@@ -209,6 +232,8 @@ footer {
 @media (max-width: 820px) {
   .summary { grid-template-columns: 1fr; }
   .summary-card { min-height: 102px; }
+  .day-summary { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .fold-label { justify-self: end; }
   .price-list { grid-template-columns: 1fr; }
   .price-row:nth-child(odd) { border-right: 0; }
 }
@@ -220,7 +245,9 @@ footer {
   .price-row { grid-template-columns: 58px minmax(28px, 1fr) 88px 60px; gap: 6px; padding-inline: 9px; }
   .kind-badge { padding-inline: 5px; font-size: .56rem; }
   .total-price { font-size: .84rem; }
-  .day-header { align-items: flex-start; }
+  .day-summary { padding: 13px 12px; }
+  .day-heading { grid-column: 1 / -1; }
+  .fold-label { grid-column: 2; }
   footer { flex-direction: column; }
 }
 
