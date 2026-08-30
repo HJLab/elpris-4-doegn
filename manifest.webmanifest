@@ -1,7 +1,7 @@
 {
   "name": "Elpris – næste 4 døgn",
   "short_name": "Elpris 4 døgn",
-  "description": "DK2 elpriser og prognose for de kommende 96 timer",
+  "description": "Samlet elpris for DK1 eller DK2 og prognose for de kommende 96 timer",
   "id": "./",
   "start_url": "./",
   "scope": "./",

@@ -5,8 +5,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const LOG_PATH = path.join(ROOT, "data", "forecast-log.json");
 const ACCURACY_PATH = path.join(ROOT, "data", "accuracy.json");
-const FORECAST_URL = "https://elpriser.org/api/forecast?area=DK2&mode=spot_ex";
-const PRICE_URL = "https://elpriser.org/api/prices?area=DK2&mode=spot_ex";
+const AREAS = ["DK1", "DK2"];
+const forecastUrl = (area) => `https://elpriser.org/api/forecast?area=${area}&mode=spot_ex`;
+const priceUrl = (area) => `https://elpriser.org/api/prices?area=${area}&mode=spot_ex`;
 const COPENHAGEN = "Europe/Copenhagen";
 
 function copenhagenParts(date = new Date()) {
@@ -82,15 +83,17 @@ function actualPriceMap(payload) {
   return map;
 }
 
-function scoreSnapshots(snapshots, actualPrices, today) {
+function scoreSnapshots(snapshots, actualPrices, today, area = "DK2") {
   const observations = [];
   for (const snapshot of snapshots) {
+    if ((snapshot.area || "DK2") !== area) continue;
     for (const point of snapshot.points || []) {
       if (point.target.slice(0, 10) >= today) continue;
       const actual = actualPrices.get(point.target);
       if (!Number.isFinite(actual)) continue;
       const errorOre = Math.abs(Number(point.forecastSpotExVat) - actual) * 1.25 * 100;
       observations.push({
+        area,
         issuedAt: snapshot.collectedAt,
         target: point.target,
         errorOre: Math.round(errorOre * 100) / 100
@@ -113,23 +116,20 @@ async function main() {
   const cutoff = now.getTime() - 100 * 86400000;
   log.snapshots = log.snapshots.filter((item) => new Date(item.collectedAt).getTime() >= cutoff);
 
-  if (!log.snapshots.some((item) => item.collectedDate === local.date)) {
-    const forecast = await fetchJson(FORECAST_URL);
-    const startKey = `${local.date}T${String(local.hour).padStart(2, "0")}:00`;
-    const points = forecastPoints(forecast, startKey, addNaiveHours(startKey, 96));
-    if (!points.length) throw new Error("Prognosen indeholdt ingen fremtidige prognosetimer inden for 96 timer.");
-    log.snapshots.push({
-      collectedDate: local.date,
-      collectedAt: now.toISOString(),
-      sourceGeneratedAt: forecast.generated || null,
-      points
-    });
-    log.snapshots.sort((a, b) => a.collectedAt.localeCompare(b.collectedAt));
-    await writeJson(LOG_PATH, log);
-    console.log(`Gemte ${points.length} prognosetimer for ${local.date}.`);
-  } else {
-    console.log(`Prognosen for ${local.date} er allerede gemt.`);
+  for (const area of AREAS) {
+    if (!log.snapshots.some((item) => item.collectedDate === local.date && (item.area || "DK2") === area)) {
+      const forecast = await fetchJson(forecastUrl(area));
+      const startKey = `${local.date}T${String(local.hour).padStart(2, "0")}:00`;
+      const points = forecastPoints(forecast, startKey, addNaiveHours(startKey, 96));
+      if (!points.length) throw new Error(`${area}-prognosen indeholdt ingen fremtidige prognosetimer inden for 96 timer.`);
+      log.snapshots.push({ area, collectedDate: local.date, collectedAt: now.toISOString(), sourceGeneratedAt: forecast.generated || null, points });
+      console.log(`Gemte ${points.length} ${area}-prognosetimer for ${local.date}.`);
+    } else {
+      console.log(`${area}-prognosen for ${local.date} er allerede gemt.`);
+    }
   }
+  log.snapshots.sort((a, b) => a.collectedAt.localeCompare(b.collectedAt));
+  await writeJson(LOG_PATH, log);
 
   const completedPoints = log.snapshots.flatMap((item) => item.points || []).filter((item) => item.target.slice(0, 10) < local.date);
   if (!completedPoints.length) {
@@ -139,8 +139,12 @@ async function main() {
 
   const firstDate = completedPoints.map((item) => item.target.slice(0, 10)).sort()[0];
   const lastDate = addDateDays(local.date, -1);
-  const actualPayload = await fetchJson(`${PRICE_URL}&start=${firstDate}&end=${lastDate}`);
-  const observations = scoreSnapshots(log.snapshots, actualPriceMap(actualPayload), local.date);
+  const observations = [];
+  for (const area of AREAS) {
+    const actualPayload = await fetchJson(`${priceUrl(area)}&start=${firstDate}&end=${lastDate}`);
+    observations.push(...scoreSnapshots(log.snapshots, actualPriceMap(actualPayload), local.date, area));
+  }
+  observations.sort((a, b) => a.target.localeCompare(b.target) || a.area.localeCompare(b.area));
   await writeJson(ACCURACY_PATH, { updatedAt: now.toISOString(), observations });
   console.log(`Opdaterede træfsikkerheden med ${observations.length} sammenligninger.`);
 }

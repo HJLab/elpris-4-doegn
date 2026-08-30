@@ -1,9 +1,7 @@
 "use strict";
 
 const CONFIG = Object.freeze({
-  priceArea: "DK2",
   horizonHours: 96,
-  supplierMarkupInclVat: 0.11,
   energinetTariffInclVat: 0.115 * 1.25,
   electricityTaxInclVat: 0.008 * 1.25,
   ceriusInclVat: {
@@ -12,8 +10,13 @@ const CONFIG = Object.freeze({
   }
 });
 
-const API_BASE = "https://elpriser.org/api/forecast?area=DK2&mode=spot_ex";
-const CACHE_KEY = "elpris-dk2-cache-v2";
+const DEFAULT_SETTINGS = Object.freeze({
+  priceArea: "DK2", gridCompany: "cerius", supplier: "Modstrøm", product: "",
+  supplierMarkupOre: 11, supplierSubscriptionMonthly: 0,
+  annualConsumption: 4000, gridSubscriptionMonthly: 0,
+  gridLow: 0.1442, gridHigh: 0.2163, gridPeak: 0.5623
+});
+const SETTINGS_KEY = "elpris-user-settings-v1";
 const fmtPrice = new Intl.NumberFormat("da-DK", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtDate = new Intl.DateTimeFormat("da-DK", { weekday: "short", day: "numeric", month: "short" });
 const fmtDateLong = new Intl.DateTimeFormat("da-DK", { weekday: "long", day: "numeric", month: "long" });
@@ -27,11 +30,52 @@ const ui = hasDocument ? {
   currentPrice: $("currentPrice"), currentKind: $("currentKind"),
   bestPrice: $("bestPrice"), bestTime: $("bestTime"),
   expensivePrice: $("expensivePrice"), expensiveTime: $("expensiveTime"),
-  accuracyValue: $("accuracyValue"), accuracyCoverage: $("accuracyCoverage")
+  accuracyValue: $("accuracyValue"), accuracyCoverage: $("accuracyCoverage"),
+  profileSummary: $("profileSummary"), settingsButton: $("settingsButton"),
+  settingsDialog: $("settingsDialog"), settingsForm: $("settingsForm"),
+  manualTariffs: $("manualTariffs"), calculationExplanation: $("calculationExplanation")
 } : {};
 
 let accuracyObservations = [];
 let selectedAccuracyDays = 7;
+let settings = readSettings();
+
+function finiteNumber(value, fallback, min = 0, max = Number.MAX_SAFE_INTEGER) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.min(max, Math.max(min, parsed)) : fallback;
+}
+
+function normalizeSettings(value = {}) {
+  const area = value.priceArea === "DK1" ? "DK1" : "DK2";
+  const gridCompany = value.gridCompany === "manual" ? "manual" : "cerius";
+  const supplier = String(value.supplier || DEFAULT_SETTINGS.supplier).slice(0, 60);
+  return {
+    priceArea: area, gridCompany, supplier,
+    product: String(value.product || "").slice(0, 60),
+    supplierMarkupOre: finiteNumber(value.supplierMarkupOre, DEFAULT_SETTINGS.supplierMarkupOre, 0, 500),
+    supplierSubscriptionMonthly: finiteNumber(value.supplierSubscriptionMonthly, 0, 0, 2000),
+    annualConsumption: finiteNumber(value.annualConsumption, DEFAULT_SETTINGS.annualConsumption, 100, 100000),
+    gridSubscriptionMonthly: finiteNumber(value.gridSubscriptionMonthly, 0, 0, 2000),
+    gridLow: finiteNumber(value.gridLow, DEFAULT_SETTINGS.gridLow, 0, 10),
+    gridHigh: finiteNumber(value.gridHigh, DEFAULT_SETTINGS.gridHigh, 0, 10),
+    gridPeak: finiteNumber(value.gridPeak, DEFAULT_SETTINGS.gridPeak, 0, 10)
+  };
+}
+
+function readSettings() {
+  if (typeof localStorage === "undefined") return normalizeSettings(DEFAULT_SETTINGS);
+  try { return normalizeSettings(JSON.parse(localStorage.getItem(SETTINGS_KEY)) || DEFAULT_SETTINGS); }
+  catch { return normalizeSettings(DEFAULT_SETTINGS); }
+}
+
+function saveSettings(next) {
+  settings = normalizeSettings(next);
+  if (typeof localStorage !== "undefined") localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  return settings;
+}
+
+function areaName(area) { return area === "DK1" ? "Vestdanmark" : "Østdanmark"; }
+function cacheKey(area = settings.priceArea) { return `elpris-${area.toLowerCase()}-cache-v3`; }
 
 function localIso(date) {
   const y = date.getFullYear();
@@ -60,18 +104,19 @@ function addDays(date, days) { return new Date(date.getTime() + days * 86400000)
 function mean(values) { return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null; }
 
 async function fetchRecords() {
-  const response = await fetch(API_BASE, { headers: { Accept: "application/json" }, cache: "no-store" });
+  const url = `https://elpriser.org/api/forecast?area=${settings.priceArea}&mode=spot_ex`;
+  const response = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-store" });
   if (!response.ok) throw new Error(`Datakilden svarede med fejl ${response.status}`);
   const payload = await response.json();
-  if (!Array.isArray(payload.days) || !payload.days.length) throw new Error("Datakilden returnerede ingen DK2-priser");
+  if (!Array.isArray(payload.days) || !payload.days.length) throw new Error(`Datakilden returnerede ingen ${settings.priceArea}-priser`);
   const saved = { savedAt: new Date().toISOString(), generatedAt: payload.generated, days: payload.days };
-  localStorage.setItem(CACHE_KEY, JSON.stringify(saved));
+  localStorage.setItem(cacheKey(), JSON.stringify(saved));
   return { ...saved, savedAt: new Date(saved.savedAt), fromCache: false };
 }
 
 function readCache() {
   try {
-    const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
+    const cached = JSON.parse(localStorage.getItem(cacheKey()));
     if (!cached?.days?.length) return null;
     return { ...cached, savedAt: new Date(cached.savedAt), fromCache: true };
   } catch { return null; }
@@ -97,10 +142,10 @@ function forecastPayloadToHours(days) {
   return hours;
 }
 
-function aggregateToHours(records) {
+function aggregateToHours(records, priceArea = settings.priceArea) {
   const buckets = new Map();
   for (const record of records) {
-    if (record.PriceArea !== CONFIG.priceArea || !Number.isFinite(record.DayAheadPriceDKK)) continue;
+    if (record.PriceArea !== priceArea || !Number.isFinite(record.DayAheadPriceDKK)) continue;
     const date = floorHour(parseDanishTime(record.TimeDK));
     const key = hourKey(date);
     if (!buckets.has(key)) buckets.set(key, { date, values: [] });
@@ -131,19 +176,32 @@ function ceriusTariff(date) {
   return rates.high;
 }
 
-function totalPrice(spotExVat, date) {
-  const spotInclVat = spotExVat * 1.25;
-  return spotInclVat + CONFIG.supplierMarkupInclVat + CONFIG.energinetTariffInclVat +
-    CONFIG.electricityTaxInclVat + ceriusTariff(date);
+function gridTariff(date, activeSettings = settings) {
+  if (activeSettings.gridCompany === "cerius") return ceriusTariff(date);
+  const hour = date.getHours();
+  if (hour < 6) return activeSettings.gridLow;
+  if (hour >= 17 && hour < 21) return activeSettings.gridPeak;
+  return activeSettings.gridHigh;
 }
 
-function buildHorizon(knownHours, now = new Date()) {
+function fixedCostPerKwh(activeSettings = settings) {
+  return ((activeSettings.supplierSubscriptionMonthly + activeSettings.gridSubscriptionMonthly) * 12) /
+    activeSettings.annualConsumption;
+}
+
+function totalPrice(spotExVat, date, activeSettings = settings) {
+  const spotInclVat = spotExVat * 1.25;
+  return spotInclVat + activeSettings.supplierMarkupOre / 100 + CONFIG.energinetTariffInclVat +
+    CONFIG.electricityTaxInclVat + gridTariff(date, activeSettings) + fixedCostPerKwh(activeSettings);
+}
+
+function buildHorizon(knownHours, now = new Date(), activeSettings = settings) {
   const start = floorHour(now);
   return Array.from({ length: CONFIG.horizonHours }, (_, index) => {
     const date = addHours(start, index);
     const known = knownHours.get(hourKey(date));
     const spotExVat = known ? known.spotExVat : forecastSpot(date, knownHours);
-    return { date, spotExVat, total: totalPrice(spotExVat, date), kind: known?.kind || "forecast" };
+    return { date, spotExVat, total: totalPrice(spotExVat, date, activeSettings), kind: known?.kind || "forecast" };
   });
 }
 
@@ -165,13 +223,14 @@ function bestChargeWindow(items, length = 3) {
   return best;
 }
 
-function calculateAccuracy(observations, days, now = new Date()) {
+function calculateAccuracy(observations, days, now = new Date(), priceArea = settings.priceArea) {
   const cutoff = new Date(now);
   cutoff.setHours(0, 0, 0, 0);
   cutoff.setDate(cutoff.getDate() - days + 1);
   const usable = observations.filter((item) => {
     const errorOre = Number(item.errorOre);
     if (!Number.isFinite(errorOre) || !item.target) return false;
+    if ((item.area || "DK2") !== priceArea) return false;
     return parseDanishTime(item.target) >= cutoff;
   });
   const averageOre = usable.length ? mean(usable.map((item) => Number(item.errorOre))) : null;
@@ -268,9 +327,55 @@ function setStatus(message, kind = "loading") {
   ui.statusPanel.className = `status-panel ${kind === "loading" ? "" : kind}`.trim();
 }
 
+function updateProfileText() {
+  if (!hasDocument) return;
+  const gridName = settings.gridCompany === "cerius" ? "Cerius" : "eget netselskab";
+  ui.profileSummary.textContent = `${settings.priceArea} · ${areaName(settings.priceArea)} · ${gridName} · ${settings.supplier}`;
+  const productText = settings.product ? ` (${settings.product})` : "";
+  const subscription = settings.supplierSubscriptionMonthly + settings.gridSubscriptionMonthly;
+  ui.calculationExplanation.textContent = `Den viste pris indeholder ${settings.priceArea}-spotpris, moms, ${settings.supplier}${productText}, nettarif, Energinets tarif, elafgift og ${fmtPrice.format(subscription)} kr. i samlede månedlige abonnementer fordelt på ${Math.round(settings.annualConsumption).toLocaleString("da-DK")} kWh om året.`;
+}
+
+function fillSettingsForm() {
+  const form = ui.settingsForm.elements;
+  for (const [key, value] of Object.entries(settings)) {
+    if (form.namedItem(key)) form.namedItem(key).value = value;
+  }
+  toggleManualTariffs();
+}
+
+function toggleManualTariffs() {
+  const manual = ui.settingsForm.elements.gridCompany.value === "manual";
+  ui.manualTariffs.hidden = !manual;
+  ["gridLow", "gridHigh", "gridPeak"].forEach((name) => {
+    ui.settingsForm.elements[name].required = manual;
+  });
+}
+
+function handleAreaChange() {
+  if (ui.settingsForm.elements.priceArea.value === "DK1" && ui.settingsForm.elements.gridCompany.value === "cerius") {
+    ui.settingsForm.elements.gridCompany.value = "manual";
+  }
+  toggleManualTariffs();
+}
+
+function openSettings() {
+  fillSettingsForm();
+  if (typeof ui.settingsDialog.showModal === "function") ui.settingsDialog.showModal();
+  else ui.settingsDialog.setAttribute("open", "");
+}
+
+function closeSettings() { ui.settingsDialog.close(); }
+
+function formSettings() {
+  const data = Object.fromEntries(new FormData(ui.settingsForm).entries());
+  return normalizeSettings(data);
+}
+
 async function load() {
   ui.refresh.disabled = true;
-  setStatus("Henter de nyeste DK2-priser…");
+  updateProfileText();
+  setStatus(`Henter de nyeste ${settings.priceArea}-priser…`);
   let data;
   try {
     data = await fetchRecords();
@@ -299,6 +404,22 @@ async function load() {
 
 if (hasDocument) {
   ui.refresh.addEventListener("click", load);
+  ui.settingsButton.addEventListener("click", openSettings);
+  $("closeSettingsButton").addEventListener("click", closeSettings);
+  $("cancelSettingsButton").addEventListener("click", closeSettings);
+  $("gridCompanyInput").addEventListener("change", toggleManualTariffs);
+  $("priceAreaInput").addEventListener("change", handleAreaChange);
+  ui.settingsForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!ui.settingsForm.reportValidity()) return;
+    saveSettings(formSettings());
+    closeSettings();
+    renderAccuracy(selectedAccuracyDays);
+    load();
+  });
+  ui.settingsDialog.addEventListener("click", (event) => {
+    if (event.target === ui.settingsDialog) closeSettings();
+  });
   document.querySelectorAll(".accuracy-period").forEach((button) => {
     button.addEventListener("click", () => renderAccuracy(Number(button.dataset.days)));
   });
@@ -313,4 +434,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { aggregateToHours, forecastPayloadToHours, forecastSpot, ceriusTariff, totalPrice, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy };
+if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, totalPrice, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy };

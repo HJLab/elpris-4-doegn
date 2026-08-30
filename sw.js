@@ -1,4 +1,4 @@
-const CACHE = "elpris-shell-v5";
+const CACHE = "elpris-shell-v6";
 const FILES = ["./", "index.html", "styles.css", "app.js", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 
 self.addEventListener("install", (event) => {

@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Elpris">
-  <meta name="description" content="DK2 elpriser og statistisk prognose for de kommende 96 timer">
+  <meta name="description" content="Samlet elpris og statistisk prognose for de kommende 96 timer">
   <title>Elpris – næste 4 døgn</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -18,16 +18,19 @@
 <body>
   <header class="topbar">
     <div>
-      <p class="eyebrow">Herslev · DK2 · Modstrøm</p>
+      <p id="profileSummary" class="eyebrow">DK2 · Østdanmark · Cerius · Modstrøm</p>
       <h1>Elpris – næste 4 døgn</h1>
     </div>
-    <button id="refreshButton" class="refresh" type="button" aria-label="Opdater priser">Opdater</button>
+    <div class="top-actions">
+      <button id="settingsButton" class="secondary-button" type="button">Indstillinger</button>
+      <button id="refreshButton" class="refresh" type="button" aria-label="Opdater priser">Opdater</button>
+    </div>
   </header>
 
   <main>
     <section id="statusPanel" class="status-panel" aria-live="polite">
       <span class="spinner" aria-hidden="true"></span>
-      <span id="statusText">Henter de nyeste DK2-priser…</span>
+      <span id="statusText">Henter de nyeste priser…</span>
     </section>
 
     <section id="summary" class="summary" hidden>
@@ -79,8 +82,8 @@
       <details>
         <summary>Sådan beregnes prisen</summary>
         <div class="details-body">
-          <p>Den viste pris er den variable pris pr. kWh: DK2-spotpris, moms, Modstrøms tillæg på 11 øre, Cerius nettarif, Energinets 2026-tarif og elafgift.</p>
-          <p>Faste abonnementer er ikke medregnet, fordi de ikke ændrer sig fra time til time. Cerius-tariffen skifter automatisk efter klokkeslæt og sommer/vinter.</p>
+          <p id="calculationExplanation">Den viste pris beregnes ud fra dine valg i Indstillinger.</p>
+          <p>Faste månedlige abonnementer fordeles på dit årsforbrug. Derfor bliver den viste samlede pris pr. kWh mere præcis, når årsforbruget passer til din husstand.</p>
           <p>Officielle priser stammer fra Energi Data Service. Fremtidige timer leveres som en vejr- og historikbaseret ML-prognose via elpriser.org. Prognosen er et skøn og kan ændre sig.</p>
         </div>
       </details>
@@ -91,6 +94,97 @@
     <span id="updatedAt">Ikke opdateret endnu</span>
     <span>96 timer · automatisk opdatering</span>
   </footer>
+
+  <dialog id="settingsDialog" class="settings-dialog" aria-labelledby="settingsTitle">
+    <form id="settingsForm" method="dialog">
+      <div class="settings-heading">
+        <div>
+          <p class="eyebrow">Din samlede elpris</p>
+          <h2 id="settingsTitle">Indstillinger</h2>
+        </div>
+        <button id="closeSettingsButton" class="icon-button" type="button" aria-label="Luk">×</button>
+      </div>
+
+      <p class="settings-intro">Vælg dine egne oplysninger. Så viser appen spotpris, transport, tariffer, afgifter, moms og dine abonnementer samlet.</p>
+
+      <div class="form-grid">
+        <label>
+          <span>Prisområde</span>
+          <select id="priceAreaInput" name="priceArea">
+            <option value="DK1">DK1 – Vestdanmark</option>
+            <option value="DK2">DK2 – Østdanmark</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Netselskab</span>
+          <select id="gridCompanyInput" name="gridCompany">
+            <option value="cerius">Cerius</option>
+            <option value="manual">Andet – indtast tariffer</option>
+          </select>
+          <small>Netselskabet står på din elregning og afhænger af din adresse.</small>
+        </label>
+
+        <label>
+          <span>Elselskab</span>
+          <select id="supplierInput" name="supplier">
+            <option>Modstrøm</option><option>Andel Energi</option><option>Norlys</option><option>OK</option>
+            <option>EWII</option><option>Energi Fyn</option><option>NRGi</option><option>Vindstød</option>
+            <option>Nettopower</option><option>Andet</option>
+          </select>
+          <small>Prisen afhænger af din aftale – ikke kun selskabets navn.</small>
+        </label>
+
+        <label>
+          <span>Navn på elaftale <em>(valgfrit)</em></span>
+          <input id="productInput" name="product" type="text" maxlength="60" placeholder="Fx variabel timepris">
+        </label>
+
+        <label>
+          <span>Elaftalens tillæg i øre/kWh</span>
+          <input id="supplierMarkupInput" name="supplierMarkupOre" type="number" min="0" max="500" step="0.01" inputmode="decimal" required>
+          <small>Indtast beløbet inklusive moms fra din aftale eller regning.</small>
+        </label>
+
+        <label>
+          <span>Elselskabets abonnement i kr./måned</span>
+          <input id="supplierSubscriptionInput" name="supplierSubscriptionMonthly" type="number" min="0" max="2000" step="0.01" inputmode="decimal" required>
+        </label>
+
+        <label class="annual-use-field">
+          <span>Årsforbrug i kWh</span>
+          <input id="annualConsumptionInput" name="annualConsumption" type="number" min="100" max="100000" step="100" inputmode="numeric" required>
+          <small>Bruges til at fordele abonnementer, så din samlede pris pr. kWh bliver mere præcis. Kender du ikke dit forbrug? Brug 4.000 kWh.</small>
+        </label>
+
+        <label>
+          <span>Netselskabets abonnement i kr./måned</span>
+          <input id="gridSubscriptionInput" name="gridSubscriptionMonthly" type="number" min="0" max="2000" step="0.01" inputmode="decimal" required>
+        </label>
+      </div>
+
+      <details class="why-consumption">
+        <summary>Hvorfor skal jeg skrive mit årsforbrug?</summary>
+        <p>Et fast abonnement fylder mere pr. kWh ved et lavt forbrug og mindre ved et højt forbrug. Årsforbruget bruges kun til denne fordeling og gemmes kun på din egen enhed.</p>
+      </details>
+
+      <fieldset id="manualTariffs" class="manual-tariffs" hidden>
+        <legend>Netselskabets tariffer inkl. moms</legend>
+        <p>Find lav-, høj- og spidslasttariffen på din elregning eller dit netselskabs hjemmeside.</p>
+        <div class="form-grid three-columns">
+          <label><span>Lavlast, kr./kWh</span><input id="gridLowInput" name="gridLow" type="number" min="0" max="10" step="0.0001" inputmode="decimal"></label>
+          <label><span>Højlast, kr./kWh</span><input id="gridHighInput" name="gridHigh" type="number" min="0" max="10" step="0.0001" inputmode="decimal"></label>
+          <label><span>Spidslast, kr./kWh</span><input id="gridPeakInput" name="gridPeak" type="number" min="0" max="10" step="0.0001" inputmode="decimal"></label>
+        </div>
+      </fieldset>
+
+      <p class="settings-note">Kontrollér tallene på din seneste regning. Selskaber kan have flere forskellige aftaler.</p>
+      <div class="dialog-actions">
+        <button id="cancelSettingsButton" class="secondary-button" type="button">Annuller</button>
+        <button class="save-button" type="submit">Gem og opdater</button>
+      </div>
+    </form>
+  </dialog>
 
   <template id="dayTemplate">
     <details class="day-card">
