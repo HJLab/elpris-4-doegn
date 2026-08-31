@@ -55,6 +55,7 @@ body {
 }
 
 h1 { margin: 0; font-size: clamp(1.55rem, 4vw, 2.45rem); line-height: 1.08; }
+.app-version { display: block; margin-top: 5px; color: var(--muted); font-size: .7rem; font-weight: 650; letter-spacing: .04em; }
 
 .refresh, .secondary-button, .save-button, .icon-button {
   border: 1px solid #3a5d7c;
