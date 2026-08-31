@@ -31,13 +31,17 @@ const ui = hasDocument ? {
   bestPrice: $("bestPrice"), bestTime: $("bestTime"),
   expensivePrice: $("expensivePrice"), expensiveTime: $("expensiveTime"),
   accuracyValue: $("accuracyValue"), accuracyCoverage: $("accuracyCoverage"),
+  monthlyAccuracyDetails: $("monthlyAccuracyDetails"), monthlyAccuracyMonth: $("accuracyMonth"),
+  monthlyAccuracyIntro: $("monthlyAccuracyIntro"), monthlyAccuracyRows: $("monthlyAccuracyRows"), monthlyAccuracyCoverage: $("monthlyAccuracyCoverage"),
   profileSummary: $("profileSummary"), settingsButton: $("settingsButton"),
   settingsDialog: $("settingsDialog"), settingsForm: $("settingsForm"),
-  manualTariffs: $("manualTariffs"), calculationExplanation: $("calculationExplanation")
+  manualTariffs: $("manualTariffs"), calculationExplanation: $("calculationExplanation"),
+  calculationButton: $("calculationButton"), calculationDialog: $("calculationDialog"), closeCalculationButton: $("closeCalculationButton")
 } : {};
 
 let accuracyObservations = [];
 let selectedAccuracyDays = 7;
+let selectedAccuracyMonth = "";
 let settings = readSettings();
 
 function finiteNumber(value, fallback, min = 0, max = Number.MAX_SAFE_INTEGER) {
@@ -238,6 +242,50 @@ function calculateAccuracy(observations, days, now = new Date(), priceArea = set
   return { averageOre, coveredDays, observations: usable.length };
 }
 
+function monthKey(value) { return String(value || "").slice(0, 7); }
+
+function monthLabel(value) {
+  const [year, month] = value.split("-").map(Number);
+  return new Intl.DateTimeFormat("da-DK", { month: "long", year: "numeric" }).format(new Date(year, month - 1, 1));
+}
+
+function timeBand(target) {
+  const hour = Number(String(target).slice(11, 13));
+  if (hour < 6) return "00:00–06:00";
+  if (hour < 12) return "06:00–12:00";
+  if (hour < 18) return "12:00–18:00";
+  return "18:00–24:00";
+}
+
+function monthlyAccuracyReport(observations, month, priceArea = settings.priceArea) {
+  const bands = ["00:00–06:00", "06:00–12:00", "12:00–18:00", "18:00–24:00"];
+  const groups = new Map(bands.map((band) => [band, []]));
+  const usable = observations.filter((item) => {
+    if ((item.area || "DK2") !== priceArea || monthKey(item.target) !== month) return false;
+    return Number.isFinite(Number(item.errorOre)) && Number.isFinite(Number(item.forecastSpotExVat)) && Number.isFinite(Number(item.actualSpotExVat));
+  });
+  for (const item of usable) groups.get(timeBand(item.target)).push(item);
+  const rows = bands.map((band) => {
+    const items = groups.get(band);
+    const averageOre = items.length ? mean(items.map((item) => Number(item.errorOre))) : null;
+    const percentageValues = items
+      .filter((item) => Math.abs(Number(item.actualSpotExVat)) >= 0.01)
+      .map((item) => Math.abs(Number(item.forecastSpotExVat) - Number(item.actualSpotExVat)) / Math.abs(Number(item.actualSpotExVat)) * 100);
+    return { band, averageOre, averagePercent: percentageValues.length ? mean(percentageValues) : null, observations: items.length };
+  });
+  return { rows, observations: usable.length, coveredDays: new Set(usable.map((item) => item.target.slice(0, 10))).size };
+}
+
+function availableAccuracyMonths(observations, now = new Date(), priceArea = settings.priceArea) {
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  return [...new Set(observations
+    .filter((item) => (item.area || "DK2") === priceArea && monthKey(item.target) < currentMonth && Number.isFinite(Number(item.forecastSpotExVat)) && Number.isFinite(Number(item.actualSpotExVat)))
+    .map((item) => monthKey(item.target)))]
+    .filter(Boolean)
+    .sort()
+    .reverse();
+}
+
 function renderAccuracy(days = selectedAccuracyDays) {
   selectedAccuracyDays = days;
   const result = calculateAccuracy(accuracyObservations, days);
@@ -255,6 +303,36 @@ function renderAccuracy(days = selectedAccuracyDays) {
   ui.accuracyCoverage.textContent = `${result.coveredDays} af ${days} dage med data · ${result.observations} sammenlignede timepriser`;
 }
 
+function renderMonthlyAccuracy() {
+  const months = availableAccuracyMonths(accuracyObservations);
+  if (!months.length) {
+    ui.monthlyAccuracyDetails.hidden = true;
+    return;
+  }
+  ui.monthlyAccuracyDetails.hidden = false;
+  if (!months.includes(selectedAccuracyMonth)) selectedAccuracyMonth = months[0];
+  ui.monthlyAccuracyMonth.replaceChildren(...months.map((month) => {
+    const option = document.createElement("option");
+    option.value = month;
+    option.textContent = monthLabel(month);
+    return option;
+  }));
+  ui.monthlyAccuracyMonth.value = selectedAccuracyMonth;
+  const result = monthlyAccuracyReport(accuracyObservations, selectedAccuracyMonth);
+  ui.monthlyAccuracyIntro.textContent = `DK${settings.priceArea === "DK1" ? "1" : "2"} · ${monthLabel(selectedAccuracyMonth)} · gennemsnitlig absolut forskel mellem prognose og officiel spotpris.`;
+  ui.monthlyAccuracyRows.replaceChildren(...result.rows.map((row) => {
+    const tr = document.createElement("tr");
+    const values = [row.band, row.averageOre === null ? "–" : `${fmtPrice.format(row.averageOre)} øre/kWh`, row.averagePercent === null ? "–" : `${fmtPrice.format(row.averagePercent)} %`];
+    for (const value of values) {
+      const td = document.createElement("td");
+      td.textContent = value;
+      tr.append(td);
+    }
+    return tr;
+  }));
+  ui.monthlyAccuracyCoverage.textContent = `${result.coveredDays} dage og ${result.observations} sammenlignede prognoser. Procenten beregnes i forhold til den officielle spotpris; timer med spotpris tæt på 0 kr./kWh tæller kun med i øre-målingen.`;
+}
+
 async function loadAccuracy() {
   try {
     const response = await fetch("data/accuracy.json", { cache: "no-store" });
@@ -265,6 +343,7 @@ async function loadAccuracy() {
     accuracyObservations = [];
   }
   renderAccuracy(selectedAccuracyDays);
+  renderMonthlyAccuracy();
 }
 
 function renderSummary(items, now) {
@@ -366,6 +445,11 @@ function openSettings() {
 }
 
 function closeSettings() { ui.settingsDialog.close(); }
+function openCalculation() {
+  if (typeof ui.calculationDialog.showModal === "function") ui.calculationDialog.showModal();
+  else ui.calculationDialog.setAttribute("open", "");
+}
+function closeCalculation() { ui.calculationDialog.close(); }
 
 function formSettings() {
   const data = Object.fromEntries(new FormData(ui.settingsForm).entries());
@@ -407,6 +491,8 @@ if (hasDocument) {
   ui.settingsButton.addEventListener("click", openSettings);
   $("closeSettingsButton").addEventListener("click", closeSettings);
   $("cancelSettingsButton").addEventListener("click", closeSettings);
+  ui.calculationButton.addEventListener("click", openCalculation);
+  ui.closeCalculationButton.addEventListener("click", closeCalculation);
   $("gridCompanyInput").addEventListener("change", toggleManualTariffs);
   $("priceAreaInput").addEventListener("change", handleAreaChange);
   ui.settingsForm.addEventListener("submit", (event) => {
@@ -415,13 +501,21 @@ if (hasDocument) {
     saveSettings(formSettings());
     closeSettings();
     renderAccuracy(selectedAccuracyDays);
+    renderMonthlyAccuracy();
     load();
   });
   ui.settingsDialog.addEventListener("click", (event) => {
     if (event.target === ui.settingsDialog) closeSettings();
   });
+  ui.calculationDialog.addEventListener("click", (event) => {
+    if (event.target === ui.calculationDialog) closeCalculation();
+  });
   document.querySelectorAll(".accuracy-period").forEach((button) => {
     button.addEventListener("click", () => renderAccuracy(Number(button.dataset.days)));
+  });
+  ui.monthlyAccuracyMonth.addEventListener("change", () => {
+    selectedAccuracyMonth = ui.monthlyAccuracyMonth.value;
+    renderMonthlyAccuracy();
   });
   load();
   loadAccuracy();
@@ -434,4 +528,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, totalPrice, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy };
+if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, totalPrice, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, monthlyAccuracyReport, availableAccuracyMonths, timeBand };

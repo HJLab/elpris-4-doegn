@@ -17,5 +17,7 @@ assert.equal(scored.length, 2);
 assert.equal(scored[0].area, "DK1");
 assert.equal(scored[0].errorOre, 25);
 assert.equal(scored[1].errorOre, 12.5);
+assert.equal(scored[0].forecastSpotExVat, 1);
+assert.equal(scored[0].actualSpotExVat, 0.8);
 
 console.log("Arkiveringskontroller bestået.");

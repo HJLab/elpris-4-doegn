@@ -76,17 +76,33 @@
           <span id="accuracyCoverage" class="accuracy-coverage" aria-live="polite">Målingen begynder, når den første prognose er gemt.</span>
         </div>
       </details>
+
+      <details id="monthlyAccuracyDetails" class="monthly-accuracy-details" hidden>
+        <summary>Månedlig prognoserapport</summary>
+        <div class="monthly-accuracy-body">
+          <p>Her sammenlignes de gemte spotprisprognoser med de efterfølgende officielle spotpriser. Afgifter, tariffer og abonnementer er ikke med i målingen, fordi de ikke er en del af selve prognosen.</p>
+          <label class="month-picker" for="accuracyMonth">
+            <span>Vælg afsluttet måned</span>
+            <select id="accuracyMonth"></select>
+          </label>
+          <p id="monthlyAccuracyIntro" class="monthly-accuracy-intro" aria-live="polite"></p>
+          <div class="monthly-accuracy-table-wrap">
+            <table class="monthly-accuracy-table">
+              <thead><tr><th>Tidsrum</th><th>Fejl i øre/kWh</th><th>Fejl i procent</th></tr></thead>
+              <tbody id="monthlyAccuracyRows"></tbody>
+            </table>
+          </div>
+          <p id="monthlyAccuracyCoverage" class="accuracy-coverage"></p>
+        </div>
+      </details>
     </section>
 
     <section class="details">
-      <details>
-        <summary>Sådan beregnes prisen</summary>
-        <div class="details-body">
-          <p id="calculationExplanation">Den viste pris beregnes ud fra dine valg i Indstillinger.</p>
-          <p>Faste månedlige abonnementer fordeles på dit årsforbrug. Derfor bliver den viste samlede pris pr. kWh mere præcis, når årsforbruget passer til din husstand.</p>
-          <p>Officielle priser stammer fra Energi Data Service. Fremtidige timer leveres som en vejr- og historikbaseret ML-prognose via elpriser.org. Prognosen er et skøn og kan ændre sig.</p>
-        </div>
-      </details>
+      <button id="calculationButton" class="calculation-button" type="button">
+        <span aria-hidden="true">ⓘ</span>
+        <span><strong>Sådan beregnes din pris og prognose</strong><small>Se, hvad den viste pris består af – og hvad prognosen bygger på.</small></span>
+        <span class="calculation-arrow" aria-hidden="true">›</span>
+      </button>
     </section>
   </main>
 
@@ -184,6 +200,26 @@
         <button class="save-button" type="submit">Gem og opdater</button>
       </div>
     </form>
+  </dialog>
+
+  <dialog id="calculationDialog" class="calculation-dialog" aria-labelledby="calculationTitle">
+    <div class="calculation-dialog-body">
+      <div class="settings-heading">
+        <div><p class="eyebrow">Din elpris – forklaret</p><h2 id="calculationTitle">Sådan hænger det sammen</h2></div>
+        <button id="closeCalculationButton" class="icon-button" type="button" aria-label="Luk">×</button>
+      </div>
+      <p class="calculation-lead">Appen viser den forventede samlede pris for hver enkelt time. Den starter med spotprisen og lægger derefter de prisdele oveni, som passer til dine indstillinger.</p>
+
+      <section class="calculation-card"><h3>1. Den samlede pris</h3><p id="calculationExplanation">Den viste pris beregnes ud fra dine valg i Indstillinger.</p><ul><li><strong>Spotpris:</strong> prisen på elmarkedet for den valgte time og elzone.</li><li><strong>Moms, elselskab, Energinet og elafgift:</strong> lægges oveni spotprisen.</li><li><strong>Nettarif:</strong> afhænger af dit netselskab, årstid og klokkeslæt.</li><li><strong>Abonnementer:</strong> fordeles på dit indtastede årsforbrug, så de kan vises som en pris pr. kWh.</li></ul></section>
+
+      <section class="calculation-card"><h3>2. Officiel pris eller prognose?</h3><p><strong>Officiel</strong> betyder, at timeprisen er offentliggjort på day-ahead-markedet. <strong>Prognose</strong> betyder, at den officielle pris endnu ikke er kendt. Så snart den offentliggøres, erstatter den automatisk prognosen.</p></section>
+
+      <section class="calculation-card"><h3>3. Sådan udregnes prognosen</h3><p>Prognosen kommer fra en maskinlæringsmodel hos elpriser.org. Den vurderer hver time ud fra de seneste prisforløb, tidspunkt, ugedag og årstid samt forventede markedsforhold.</p><p>Modellen bruger blandt andet vind, solindstråling og temperatur i Danmark, Nordtyskland og udvalgte nabolande. Det siger noget om forventet vind- og solproduktion, elforbrug og strømhandel over forbindelserne til Danmark.</p><p>Derfor findes der ikke en fast regel om, at strøm er billigst om natten. Om sommeren kan lave priser eksempelvis ligge midt på dagen ved høj solproduktion, mens vind og forbrug kan flytte dem til helt andre tidspunkter.</p></section>
+
+      <section class="calculation-card"><h3>4. Farverne i oversigten</h3><p><strong class="green-text">Grøn</strong> er den billigste sammenhængende periode på tre timer. <strong class="red-text">Rød</strong> er døgnets tre dyreste enkelttimer. <strong class="amber-text">Gul</strong> er de øvrige timer.</p></section>
+
+      <p class="calculation-note">Prognosen er vejledende. Den månedlige prognoserapport viser løbende, hvor tæt de gemte prognoser har ligget på de efterfølgende officielle spotpriser.</p>
+    </div>
   </dialog>
 
   <template id="dayTemplate">

@@ -96,6 +96,8 @@ function scoreSnapshots(snapshots, actualPrices, today, area = "DK2") {
         area,
         issuedAt: snapshot.collectedAt,
         target: point.target,
+        forecastSpotExVat: Number(point.forecastSpotExVat),
+        actualSpotExVat: actual,
         errorOre: Math.round(errorOre * 100) / 100
       });
     }

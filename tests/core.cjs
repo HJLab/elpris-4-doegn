@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, ceriusTariff, fixedCostPerKwh, totalPrice, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy } = require("../app.js");
+const { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, ceriusTariff, fixedCostPerKwh, totalPrice, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, monthlyAccuracyReport, availableAccuracyMonths } = require("../app.js");
 
 const records = [
   { TimeDK: "2026-08-29T10:00:00", PriceArea: "DK2", DayAheadPriceDKK: 400 },
@@ -61,4 +61,15 @@ const accuracy = calculateAccuracy([
 assert.equal(accuracy.averageOre, 15);
 assert.equal(accuracy.coveredDays, 2);
 assert.equal(accuracy.observations, 2);
+
+const monthly = monthlyAccuracyReport([
+  { area: "DK2", target: "2026-07-01T01:00", forecastSpotExVat: 1.1, actualSpotExVat: 1, errorOre: 12.5 },
+  { area: "DK2", target: "2026-07-01T07:00", forecastSpotExVat: 0.9, actualSpotExVat: 1, errorOre: 12.5 },
+  { area: "DK2", target: "2026-07-01T13:00", forecastSpotExVat: 1.2, actualSpotExVat: 1, errorOre: 25 },
+  { area: "DK2", target: "2026-07-01T19:00", forecastSpotExVat: 0.8, actualSpotExVat: 1, errorOre: 25 }
+], "2026-07", "DK2");
+assert.equal(monthly.rows[0].averageOre, 12.5);
+assert.ok(Math.abs(monthly.rows[0].averagePercent - 10) < 0.000001);
+assert.ok(Math.abs(monthly.rows[3].averagePercent - 20) < 0.000001);
+assert.deepEqual(availableAccuracyMonths([{ area: "DK2", target: "2026-07-01T01:00", forecastSpotExVat: 1, actualSpotExVat: 1 }], new Date(2026, 7, 1), "DK2"), ["2026-07"]);
 console.log("Alle kernekontroller bestået.");

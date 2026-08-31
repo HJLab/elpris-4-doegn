@@ -18,10 +18,14 @@ En mobilvenlig webapp, som viser 96 timers elpriser for valgfrit DK1 eller DK2. 
 - Har særskilt appikon og fuldskærmsvisning på både iPhone og Android.
 - Gemmer automatisk en daglig prognose via GitHub Actions.
 - Viser prognosens gennemsnitlige fejl i øre/kWh for 7 dage, 14 dage, 1 måned eller 3 måneder.
+- Har en brugervenlig popup, der forklarer samlet pris, officielle priser, prognosen og farvemarkeringerne.
+- Viser efter den første afsluttede måned en månedlig prognoserapport i fire tidsrum: 00–06, 06–12, 12–18 og 18–24.
 
 ## Prognosens træfsikkerhed
 
-Den automatiske arbejdsgang i `.github/workflows/archive-forecast.yml` gemmer prognosen for både DK1 og DK2 omkring kl. 15 dansk tid. Når de officielle priser senere er tilgængelige, beregnes den absolutte forskel mellem prognosen og den officielle pris. Resultatet vises kun som gennemsnitlig fejl i øre/kWh; det indeholder ingen beregning af bilens opladning eller forbrug.
+Den automatiske arbejdsgang i `.github/workflows/archive-forecast.yml` gemmer prognosen for både DK1 og DK2 omkring kl. 15 dansk tid. Når de officielle priser senere er tilgængelige, beregnes den absolutte forskel mellem prognosen og den officielle pris.
+
+Efter en afsluttet måned vises der også en rapport, opdelt i perioderne 00–06, 06–12, 12–18 og 18–24. Den viser både gennemsnitlig absolut fejl i øre/kWh og gennemsnitlig procentfejl i forhold til den officielle spotpris. Rapporten måler kun spotprisen, fordi tariffer, afgifter og abonnementer ikke er en del af selve prognosen.
 
 ## Vigtigt om den samlede pris
 
