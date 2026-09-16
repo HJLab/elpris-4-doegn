@@ -1,0 +1,45 @@
+name: Gem elprisprognose
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/archive-forecast.yml"
+  schedule:
+    # Kl. 15 dansk tid: 13 UTC om sommeren og 14 UTC om vinteren.
+    # Scriptet kontrollerer selv dansk klokkeslaet og gemmer kun én gang pr. dag.
+    - cron: "17 13 * * *"
+    - cron: "17 14 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: archive-elpris-forecast
+  cancel-in-progress: false
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hent projektet
+        uses: actions/checkout@v4
+
+      - name: Gem prognose og beregn traefsikkerhed
+        run: node scripts/archive-forecast.mjs
+        env:
+          FORCE_RUN: ${{ github.event_name != 'schedule' }}
+
+      - name: Gem opdaterede historikdata
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/forecast-log.json data/accuracy.json
+          if git diff --cached --quiet; then
+            echo "Ingen nye data at gemme."
+          else
+            git commit -m "Opdater prognosehistorik"
+            git push
+          fi
