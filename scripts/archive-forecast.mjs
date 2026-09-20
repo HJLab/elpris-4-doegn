@@ -32,6 +32,10 @@ function addDateDays(dateText, days) {
   return `${result.getUTCFullYear()}-${String(result.getUTCMonth() + 1).padStart(2, "0")}-${String(result.getUTCDate()).padStart(2, "0")}`;
 }
 
+function shouldRun(localHour, forceRun = false) {
+  return forceRun || localHour >= 15;
+}
+
 async function fetchJson(url) {
   const response = await fetch(url, { headers: { Accept: "application/json" } });
   if (!response.ok) throw new Error(`${url} svarede med fejl ${response.status}`);
@@ -109,7 +113,7 @@ async function main() {
   const now = new Date();
   const local = copenhagenParts(now);
   const forceRun = process.env.FORCE_RUN === "true";
-  if (!forceRun && local.hour !== 15) {
+  if (!shouldRun(local.hour, forceRun)) {
     console.log(`Springer over: klokken er ${local.hour} i København.`);
     return;
   }
@@ -158,4 +162,4 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   });
 }
 
-export { addNaiveHours, forecastPoints, actualPriceMap, scoreSnapshots };
+export { addNaiveHours, forecastPoints, actualPriceMap, scoreSnapshots, shouldRun };

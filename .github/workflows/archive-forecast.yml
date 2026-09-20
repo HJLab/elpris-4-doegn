@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - ".github/workflows/archive-forecast.yml"
+      - "scripts/archive-forecast.mjs"
   schedule:
     # Kl. 15 dansk tid: 13 UTC om sommeren og 14 UTC om vinteren.
     # Scriptet kontrollerer selv dansk klokkeslaet og gemmer kun én gang pr. dag.
@@ -25,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Hent projektet
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Gem prognose og beregn traefsikkerhed
         run: node scripts/archive-forecast.mjs

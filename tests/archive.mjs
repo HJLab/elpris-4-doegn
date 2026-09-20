@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
-import { addNaiveHours, forecastPoints, actualPriceMap, scoreSnapshots } from "../scripts/archive-forecast.mjs";
+import { addNaiveHours, forecastPoints, actualPriceMap, scoreSnapshots, shouldRun } from "../scripts/archive-forecast.mjs";
 
 assert.equal(addNaiveHours("2026-08-29T23:00", 2), "2026-08-30T01:00");
+assert.equal(shouldRun(14, false), false);
+assert.equal(shouldRun(15, false), true);
+assert.equal(shouldRun(19, false), true);
+assert.equal(shouldRun(8, true), true);
 
 const points = forecastPoints({ days: [
   { date: "2026-08-29", type: "actual", prices: [{ hour: 23, price: 9 }] },
