@@ -102,6 +102,19 @@ function floorHour(date) {
   return copy;
 }
 
+function startOfDay(date) {
+  const copy = new Date(date);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+}
+
+function calendarHour(dayStart, index) {
+  const date = new Date(dayStart);
+  date.setDate(dayStart.getDate() + Math.floor(index / 24));
+  date.setHours(index % 24, 0, 0, 0);
+  return date;
+}
+
 function hourKey(date) { return localIso(floorHour(date)); }
 function addHours(date, hours) { return new Date(date.getTime() + hours * 3600000); }
 function addDays(date, days) { return new Date(date.getTime() + days * 86400000); }
@@ -200,9 +213,9 @@ function totalPrice(spotExVat, date, activeSettings = settings) {
 }
 
 function buildHorizon(knownHours, now = new Date(), activeSettings = settings) {
-  const start = floorHour(now);
+  const start = startOfDay(now);
   return Array.from({ length: CONFIG.horizonHours }, (_, index) => {
-    const date = addHours(start, index);
+    const date = calendarHour(start, index);
     const known = knownHours.get(hourKey(date));
     const spotExVat = known ? known.spotExVat : forecastSpot(date, knownHours);
     return { date, spotExVat, total: totalPrice(spotExVat, date, activeSettings), kind: known?.kind || "forecast" };
@@ -347,7 +360,7 @@ async function loadAccuracy() {
 }
 
 function renderSummary(items, now) {
-  const current = items[0];
+  const current = items.find((item) => hourKey(item.date) === hourKey(now)) || items[0];
   const future = items.filter((x) => x.date >= floorHour(now));
   const charge = bestChargeWindow(future);
   const mostExpensive = [...future].sort((a, b) => b.total - a.total)[0];
@@ -370,10 +383,9 @@ function renderDays(items, now) {
     const block = items.slice(dayIndex * 24, (dayIndex + 1) * 24);
     const marks = classifyDay(block);
     const dayNode = $("dayTemplate").content.cloneNode(true);
-    dayNode.querySelector(".day-number").textContent = `Døgn ${dayIndex + 1}`;
+    dayNode.querySelector(".day-number").textContent = `Dag ${dayIndex + 1}`;
     dayNode.querySelector(".day-title").textContent = fmtDateLong.format(block[0].date);
-    const end = addHours(block.at(-1).date, 1);
-    dayNode.querySelector(".day-range").textContent = `${fmtDate.format(block[0].date)} kl. ${fmtTime.format(block[0].date)} – ${fmtDate.format(end)} kl. ${fmtTime.format(end)}`;
+    dayNode.querySelector(".day-range").textContent = `${fmtDate.format(block[0].date)} · kl. 00:00–23:59`;
     const chargeEnd = addHours(marks.charge.items.at(-1).date, 1);
     dayNode.querySelector(".day-best-time").textContent = `kl. ${fmtTime.format(marks.charge.items[0].date)}–${fmtTime.format(chargeEnd)}`;
     dayNode.querySelector(".day-best-price").textContent = `${fmtPrice.format(marks.charge.average)} kr./kWh i snit`;
@@ -528,4 +540,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, totalPrice, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, monthlyAccuracyReport, availableAccuracyMonths, timeBand };
+if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, monthlyAccuracyReport, availableAccuracyMonths, timeBand };

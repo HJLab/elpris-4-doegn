@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, ceriusTariff, fixedCostPerKwh, totalPrice, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, monthlyAccuracyReport, availableAccuracyMonths } = require("../app.js");
+const { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, ceriusTariff, fixedCostPerKwh, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, monthlyAccuracyReport, availableAccuracyMonths } = require("../app.js");
 
 const records = [
   { TimeDK: "2026-08-29T10:00:00", PriceArea: "DK2", DayAheadPriceDKK: 400 },
@@ -32,10 +32,20 @@ assert.equal(custom.priceArea, "DK1");
 assert.equal(fixedCostPerKwh(custom), 0.6);
 assert.equal(normalizeSettings({ annualConsumption: 0 }).annualConsumption, 100);
 
-const horizon = buildHorizon(forecastHours, new Date(2026, 7, 29, 10));
+const exampleNow = new Date(2026, 7, 29, 16, 37);
+assert.equal(startOfDay(exampleNow).getHours(), 0);
+assert.equal(calendarHour(startOfDay(exampleNow), 24).getDate(), 30);
+assert.equal(calendarHour(startOfDay(exampleNow), 24).getHours(), 0);
+const horizon = buildHorizon(forecastHours, exampleNow);
 assert.equal(horizon.length, 96);
-assert.equal(horizon[0].kind, "actual");
-assert.equal(horizon[1].kind, "forecast");
+assert.equal(horizon[0].date.getHours(), 0);
+assert.equal(horizon[0].date.getDate(), 29);
+assert.equal(horizon[23].date.getHours(), 23);
+assert.equal(horizon[23].date.getDate(), 29);
+assert.equal(horizon[24].date.getHours(), 0);
+assert.equal(horizon[24].date.getDate(), 30);
+assert.equal(horizon[10].kind, "actual");
+assert.equal(horizon[34].kind, "forecast");
 
 const charge = bestChargeWindow([
   { total: 3 }, { total: 2 }, { total: 1 }, { total: 1 }, { total: 1 }, { total: 4 }

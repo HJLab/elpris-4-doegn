@@ -8,8 +8,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Elpris">
-  <meta name="description" content="Samlet elpris og statistisk prognose for de kommende 96 timer">
-  <title>Elpris – næste 4 døgn</title>
+  <meta name="description" content="Samlet elpris og statistisk prognose for fire hele kalenderdage">
+  <title>Elpris – næste 4 dage</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -19,8 +19,8 @@
   <header class="topbar">
     <div>
       <p id="profileSummary" class="eyebrow">DK2 · Østdanmark · Cerius · Modstrøm</p>
-      <h1>Elpris – næste 4 døgn</h1>
-      <span class="app-version">Version v1</span>
+      <h1>Elpris – næste 4 dage</h1>
+      <span class="app-version">Version v2</span>
     </div>
     <div class="top-actions">
       <button id="settingsButton" class="secondary-button" type="button">Indstillinger</button>
@@ -59,7 +59,7 @@
     </section>
 
     <p id="daysHelp" class="days-help" hidden>Tryk på en dag for at se eller skjule alle 24 timer</p>
-    <section id="days" class="days" aria-label="Priser for de næste fire døgn"></section>
+    <section id="days" class="days" aria-label="Priser for de næste fire kalenderdage"></section>
 
     <section class="accuracy-section">
       <details id="accuracyDetails" class="accuracy-details">
@@ -109,7 +109,7 @@
 
   <footer>
     <span id="updatedAt">Ikke opdateret endnu</span>
-    <span>96 timer · automatisk opdatering</span>
+    <span>4 hele dage · automatisk opdatering</span>
   </footer>
 
   <dialog id="settingsDialog" class="settings-dialog" aria-labelledby="settingsTitle">
@@ -217,7 +217,7 @@
 
       <section class="calculation-card"><h3>3. Sådan udregnes prognosen</h3><p>Prognosen kommer fra en maskinlæringsmodel hos elpriser.org. Den vurderer hver time ud fra de seneste prisforløb, tidspunkt, ugedag og årstid samt forventede markedsforhold.</p><p>Modellen bruger blandt andet vind, solindstråling og temperatur i Danmark, Nordtyskland og udvalgte nabolande. Det siger noget om forventet vind- og solproduktion, elforbrug og strømhandel over forbindelserne til Danmark.</p><p>Derfor findes der ikke en fast regel om, at strøm er billigst om natten. Om sommeren kan lave priser eksempelvis ligge midt på dagen ved høj solproduktion, mens vind og forbrug kan flytte dem til helt andre tidspunkter.</p></section>
 
-      <section class="calculation-card"><h3>4. Farverne i oversigten</h3><p><strong class="green-text">Grøn</strong> er den billigste sammenhængende periode på tre timer. <strong class="red-text">Rød</strong> er døgnets tre dyreste enkelttimer. <strong class="amber-text">Gul</strong> er de øvrige timer.</p></section>
+      <section class="calculation-card"><h3>4. Farverne i oversigten</h3><p><strong class="green-text">Grøn</strong> er den billigste sammenhængende periode på tre timer. <strong class="red-text">Rød</strong> er dagens tre dyreste enkelttimer. <strong class="amber-text">Gul</strong> er de øvrige timer.</p></section>
 
       <p class="calculation-note">Prognosen er vejledende. Den månedlige prognoserapport viser løbende, hvor tæt de gemte prognoser har ligget på de efterfølgende officielle spotpriser.</p>
     </div>

@@ -1,18 +1,18 @@
-# Elpris – næste 4 døgn
+# Elpris – næste 4 dage
 
-En mobilvenlig webapp, som viser 96 timers elpriser for valgfrit DK1 eller DK2. Offentliggjorte day-ahead-priser suppleres med en tydeligt mærket statistisk prognose for resten af perioden.
+En mobilvenlig webapp, som viser fire hele kalenderdage med elpriser for valgfrit DK1 eller DK2. Hver dag går fra kl. 00:00 til 23:59. Offentliggjorte day-ahead-priser suppleres med en tydeligt mærket statistisk prognose for resten af perioden.
 
 ## Det viser siden
 
-- Præcis 96 timer opdelt i fire blokke á 24 timer.
+- Fire kalenderdage opdelt i hele dage fra midnat til midnat.
 - Valg mellem DK1 (Vestdanmark) og DK2 (Østdanmark).
 - Officielle områdepriser fra Energi Data Service, aggregeret fra kvarter til timer.
 - Vejr- og historikbaseret ML-prognose for de resterende timer via elpriser.org.
 - Personlige indstillinger for netselskab, elselskab, elaftale, tillæg, abonnementer og årsforbrug.
 - Samlet pris inklusive spotpris, transport, moms, afgifter, tillæg og faste abonnementer.
-- Bedste sammenhængende 3-timers ladevindue og dyreste time i hvert døgn.
+- Bedste sammenhængende 3-timers ladevindue og dyreste time i hver dag.
 - Gul, grøn og rød timevisning med de tre dyreste timer tydeligt markeret.
-- Alle fire døgn er sammenklappet ved åbning og kan foldes ud time for time.
+- Alle fire dage er sammenklappet ved åbning og kan foldes ud time for time.
 - Automatisk opdatering hver time og lokal cache ved midlertidige netfejl.
 - Kan installeres som webapp på PC, Android-telefon og Samsung-tablet.
 - Har særskilt appikon og fuldskærmsvisning på både iPhone og Android.
