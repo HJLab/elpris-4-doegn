@@ -20,7 +20,7 @@
     <div>
       <p id="profileSummary" class="eyebrow">DK2 · Østdanmark · Cerius · Modstrøm</p>
       <h1>Elpris – næste 4 dage</h1>
-      <span class="app-version">Version v3</span>
+      <span class="app-version">Version v4</span>
     </div>
     <div class="top-actions">
       <button id="settingsButton" class="secondary-button" type="button">Indstillinger</button>
@@ -220,6 +220,22 @@
       <section class="calculation-card"><h3>4. Farverne i oversigten</h3><p><strong class="green-text">Grøn</strong> er den billigste sammenhængende periode på tre timer. <strong class="red-text">Rød</strong> er dagens tre dyreste enkelttimer. <strong class="amber-text">Gul</strong> er de øvrige timer.</p></section>
 
       <p class="calculation-note">Prognosen er vejledende. Den månedlige prognoserapport viser løbende, hvor tæt de gemte prognoser har ligget på de efterfølgende officielle spotpriser.</p>
+    </div>
+  </dialog>
+
+  <dialog id="reviewReminderDialog" class="calculation-dialog" aria-labelledby="reviewReminderTitle">
+    <div class="calculation-dialog-body">
+      <div class="settings-heading">
+        <div>
+          <p class="eyebrow">Tid til et eftersyn</p>
+          <h2 id="reviewReminderTitle">Gennemgå prognosens træfsikkerhed</h2>
+        </div>
+      </div>
+      <p class="calculation-lead">Der er nu gået cirka 30 dage med indsamling af historik. Det er tid til at kontrollere prognosens fejl, se efter faste mønstre og vurdere mulige forbedringer.</p>
+      <p class="calculation-note">Åbn “Prognosens træfsikkerhed”, og gennemgå resultaterne sammen med ChatGPT.</p>
+      <div class="dialog-actions">
+        <button id="reviewReminderButton" class="save-button" type="button">Jeg har set beskeden</button>
+      </div>
     </div>
   </dialog>
 

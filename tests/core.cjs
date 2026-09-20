@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, ceriusTariff, fixedCostPerKwh, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, monthlyAccuracyReport, availableAccuracyMonths } = require("../app.js");
+const { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, ceriusTariff, fixedCostPerKwh, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, monthlyAccuracyReport, availableAccuracyMonths, shouldShowReviewReminder } = require("../app.js");
 
 const records = [
   { TimeDK: "2026-08-29T10:00:00", PriceArea: "DK2", DayAheadPriceDKK: 400 },
@@ -46,6 +46,10 @@ assert.equal(horizon[24].date.getHours(), 0);
 assert.equal(horizon[24].date.getDate(), 30);
 assert.equal(horizon[10].kind, "actual");
 assert.equal(horizon[34].kind, "forecast");
+
+assert.equal(shouldShowReviewReminder(new Date(2026, 9, 21, 23, 59), null), false);
+assert.equal(shouldShowReviewReminder(new Date(2026, 9, 22, 0, 0), null), true);
+assert.equal(shouldShowReviewReminder(new Date(2026, 9, 22, 12, 0), "dismissed"), false);
 
 const charge = bestChargeWindow([
   { total: 3 }, { total: 2 }, { total: 1 }, { total: 1 }, { total: 1 }, { total: 4 }

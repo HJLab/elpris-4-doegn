@@ -17,6 +17,8 @@ const DEFAULT_SETTINGS = Object.freeze({
   gridLow: 0.1442, gridHigh: 0.2163, gridPeak: 0.5623
 });
 const SETTINGS_KEY = "elpris-user-settings-v1";
+const REVIEW_REMINDER_DATE = "2026-10-22";
+const REVIEW_REMINDER_KEY = "elpris-review-reminder-2026-10-22";
 const fmtPrice = new Intl.NumberFormat("da-DK", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtDate = new Intl.DateTimeFormat("da-DK", { weekday: "short", day: "numeric", month: "short" });
 const fmtDateLong = new Intl.DateTimeFormat("da-DK", { weekday: "long", day: "numeric", month: "long" });
@@ -36,7 +38,8 @@ const ui = hasDocument ? {
   profileSummary: $("profileSummary"), settingsButton: $("settingsButton"),
   settingsDialog: $("settingsDialog"), settingsForm: $("settingsForm"),
   manualTariffs: $("manualTariffs"), calculationExplanation: $("calculationExplanation"),
-  calculationButton: $("calculationButton"), calculationDialog: $("calculationDialog"), closeCalculationButton: $("closeCalculationButton")
+  calculationButton: $("calculationButton"), calculationDialog: $("calculationDialog"), closeCalculationButton: $("closeCalculationButton"),
+  reviewReminderDialog: $("reviewReminderDialog"), reviewReminderButton: $("reviewReminderButton")
 } : {};
 
 let accuracyObservations = [];
@@ -463,6 +466,22 @@ function openCalculation() {
 }
 function closeCalculation() { ui.calculationDialog.close(); }
 
+function shouldShowReviewReminder(now = new Date(), storedValue = null) {
+  return localIso(now).slice(0, 10) >= REVIEW_REMINDER_DATE && storedValue !== "dismissed";
+}
+
+function showReviewReminderIfDue() {
+  const storedValue = localStorage.getItem(REVIEW_REMINDER_KEY);
+  if (!shouldShowReviewReminder(new Date(), storedValue)) return;
+  if (typeof ui.reviewReminderDialog.showModal === "function") ui.reviewReminderDialog.showModal();
+  else ui.reviewReminderDialog.setAttribute("open", "");
+}
+
+function dismissReviewReminder() {
+  localStorage.setItem(REVIEW_REMINDER_KEY, "dismissed");
+  ui.reviewReminderDialog.close();
+}
+
 function formSettings() {
   const data = Object.fromEntries(new FormData(ui.settingsForm).entries());
   return normalizeSettings(data);
@@ -505,6 +524,7 @@ if (hasDocument) {
   $("cancelSettingsButton").addEventListener("click", closeSettings);
   ui.calculationButton.addEventListener("click", openCalculation);
   ui.closeCalculationButton.addEventListener("click", closeCalculation);
+  ui.reviewReminderButton.addEventListener("click", dismissReviewReminder);
   $("gridCompanyInput").addEventListener("change", toggleManualTariffs);
   $("priceAreaInput").addEventListener("change", handleAreaChange);
   ui.settingsForm.addEventListener("submit", (event) => {
@@ -531,6 +551,7 @@ if (hasDocument) {
   });
   load();
   loadAccuracy();
+  showReviewReminderIfDue();
   setInterval(load, 60 * 60 * 1000);
   setInterval(loadAccuracy, 6 * 60 * 60 * 1000);
 
@@ -540,4 +561,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, monthlyAccuracyReport, availableAccuracyMonths, timeBand };
+if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, monthlyAccuracyReport, availableAccuracyMonths, timeBand, shouldShowReviewReminder };
