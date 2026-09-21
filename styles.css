@@ -295,6 +295,7 @@ input:focus, select:focus { outline: 2px solid var(--amber); outline-offset: 1px
 .accuracy-label { font-size: .8rem; }
 .accuracy-value { display: block; margin: 5px 0 3px; color: var(--amber); font-size: clamp(1.45rem, 4vw, 2rem); }
 .accuracy-coverage { font-size: .75rem; }
+.accuracy-updated { display: block; margin-top: 8px; color: var(--blue); font-size: .75rem; font-weight: 700; }
 
 .monthly-accuracy-details { margin-top: 12px; border-color: rgba(88, 166, 255, .45); }
 .monthly-accuracy-details > summary { color: var(--blue); }

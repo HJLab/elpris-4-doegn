@@ -1,11 +1,25 @@
 import assert from "node:assert/strict";
-import { addNaiveHours, forecastPoints, actualPriceMap, scoreSnapshots, shouldRun } from "../scripts/archive-forecast.mjs";
+import { addNaiveHours, forecastPoints, actualPriceMap, scoreSnapshots, shouldRun, hasOfficialDay, hasSnapshotsForDate } from "../scripts/archive-forecast.mjs";
 
 assert.equal(addNaiveHours("2026-08-29T23:00", 2), "2026-08-30T01:00");
 assert.equal(shouldRun(14, false), false);
 assert.equal(shouldRun(15, false), true);
 assert.equal(shouldRun(19, false), true);
 assert.equal(shouldRun(8, true), true);
+
+const officialPayload = { days: [
+  { date: "2026-10-25", type: "actual", prices: [{ hour: 0, price: 1 }] },
+  { date: "2026-10-26", type: "forecast", prices: [{ hour: 0, price: 1.2 }] }
+] };
+assert.equal(hasOfficialDay(officialPayload, "2026-10-25"), true);
+assert.equal(hasOfficialDay(officialPayload, "2026-10-26"), false);
+assert.equal(hasSnapshotsForDate([
+  { area: "DK1", collectedDate: "2026-10-25" },
+  { area: "DK2", collectedDate: "2026-10-25" }
+], "2026-10-25"), true);
+assert.equal(hasSnapshotsForDate([
+  { area: "DK1", collectedDate: "2026-10-25" }
+], "2026-10-25"), false);
 
 const points = forecastPoints({ days: [
   { date: "2026-08-29", type: "actual", prices: [{ hour: 23, price: 9 }] },

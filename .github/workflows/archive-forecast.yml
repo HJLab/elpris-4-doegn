@@ -9,10 +9,11 @@ on:
       - ".github/workflows/archive-forecast.yml"
       - "scripts/archive-forecast.mjs"
   schedule:
-    # Kl. 15 dansk tid: 13 UTC om sommeren og 14 UTC om vinteren.
-    # Scriptet kontrollerer selv dansk klokkeslaet og gemmer kun én gang pr. dag.
-    - cron: "17 13 * * *"
-    - cron: "17 14 * * *"
+    # GitHub planlaegger i UTC. Forsøg hvert kvarter fra 13-18 UTC.
+    # Scriptet bruger Europe/Copenhagen som facit, starter først efter dansk kl. 15
+    # og stopper efter dagens første vellykkede opdatering. Det virker i både
+    # sommer- og vintertid og giver nye forsøg, hvis GitHub er forsinket.
+    - cron: "7,22,37,52 13-18 * * *"
 
 permissions:
   contents: write

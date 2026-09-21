@@ -36,6 +36,15 @@ function shouldRun(localHour, forceRun = false) {
   return forceRun || localHour >= 15;
 }
 
+function hasOfficialDay(payload, date) {
+  const day = (payload.days || []).find((item) => item.date === date && item.type === "actual");
+  return Array.isArray(day?.prices) && day.prices.length > 0;
+}
+
+function hasSnapshotsForDate(snapshots, date, areas = AREAS) {
+  return areas.every((area) => snapshots.some((item) => item.collectedDate === date && (item.area || "DK2") === area));
+}
+
 async function fetchJson(url) {
   const response = await fetch(url, { headers: { Accept: "application/json" } });
   if (!response.ok) throw new Error(`${url} svarede med fejl ${response.status}`);
@@ -122,9 +131,24 @@ async function main() {
   const cutoff = now.getTime() - 100 * 86400000;
   log.snapshots = log.snapshots.filter((item) => new Date(item.collectedAt).getTime() >= cutoff);
 
+  if (!forceRun && hasSnapshotsForDate(log.snapshots, local.date)) {
+    console.log(`Dagens prognose for ${local.date} er allerede gemt for DK1 og DK2.`);
+    return;
+  }
+
+  const forecasts = new Map();
+  for (const area of AREAS) forecasts.set(area, await fetchJson(forecastUrl(area)));
+
+  const tomorrow = addDateDays(local.date, 1);
+  const areasWaitingForOfficialPrices = AREAS.filter((area) => !hasOfficialDay(forecasts.get(area), tomorrow));
+  if (areasWaitingForOfficialPrices.length) {
+    console.log(`Venter: de officielle priser for ${tomorrow} er endnu ikke klar for ${areasWaitingForOfficialPrices.join(", ")}.`);
+    return;
+  }
+
   for (const area of AREAS) {
     if (!log.snapshots.some((item) => item.collectedDate === local.date && (item.area || "DK2") === area)) {
-      const forecast = await fetchJson(forecastUrl(area));
+      const forecast = forecasts.get(area);
       const startKey = `${local.date}T${String(local.hour).padStart(2, "0")}:00`;
       const points = forecastPoints(forecast, startKey, addNaiveHours(startKey, 96));
       if (!points.length) throw new Error(`${area}-prognosen indeholdt ingen fremtidige prognosetimer inden for 96 timer.`);
@@ -162,4 +186,4 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   });
 }
 
-export { addNaiveHours, forecastPoints, actualPriceMap, scoreSnapshots, shouldRun };
+export { addNaiveHours, forecastPoints, actualPriceMap, scoreSnapshots, shouldRun, hasOfficialDay, hasSnapshotsForDate };

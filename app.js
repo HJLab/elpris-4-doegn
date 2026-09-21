@@ -23,6 +23,10 @@ const fmtPrice = new Intl.NumberFormat("da-DK", { minimumFractionDigits: 2, maxi
 const fmtDate = new Intl.DateTimeFormat("da-DK", { weekday: "short", day: "numeric", month: "short" });
 const fmtDateLong = new Intl.DateTimeFormat("da-DK", { weekday: "long", day: "numeric", month: "long" });
 const fmtTime = new Intl.DateTimeFormat("da-DK", { hour: "2-digit", minute: "2-digit", hour12: false });
+const fmtHistoryUpdated = new Intl.DateTimeFormat("da-DK", {
+  timeZone: "Europe/Copenhagen", weekday: "long", day: "numeric", month: "long", year: "numeric",
+  hour: "2-digit", minute: "2-digit", hour12: false
+});
 
 const hasDocument = typeof document !== "undefined";
 const $ = (id) => hasDocument ? document.getElementById(id) : null;
@@ -32,7 +36,7 @@ const ui = hasDocument ? {
   currentPrice: $("currentPrice"), currentKind: $("currentKind"),
   bestPrice: $("bestPrice"), bestTime: $("bestTime"),
   expensivePrice: $("expensivePrice"), expensiveTime: $("expensiveTime"),
-  accuracyValue: $("accuracyValue"), accuracyCoverage: $("accuracyCoverage"),
+  accuracyValue: $("accuracyValue"), accuracyCoverage: $("accuracyCoverage"), accuracyUpdatedAt: $("accuracyUpdatedAt"),
   monthlyAccuracyDetails: $("monthlyAccuracyDetails"), monthlyAccuracyMonth: $("accuracyMonth"),
   monthlyAccuracyIntro: $("monthlyAccuracyIntro"), monthlyAccuracyRows: $("monthlyAccuracyRows"), monthlyAccuracyCoverage: $("monthlyAccuracyCoverage"),
   profileSummary: $("profileSummary"), settingsButton: $("settingsButton"),
@@ -351,12 +355,17 @@ function renderMonthlyAccuracy() {
 
 async function loadAccuracy() {
   try {
-    const response = await fetch("data/accuracy.json", { cache: "no-store" });
+    const response = await fetch(`data/accuracy.json?t=${Date.now()}`, { cache: "no-store" });
     if (!response.ok) throw new Error("Ingen statistik endnu");
     const payload = await response.json();
     accuracyObservations = Array.isArray(payload.observations) ? payload.observations : [];
+    const updated = payload.updatedAt ? new Date(payload.updatedAt) : null;
+    ui.accuracyUpdatedAt.textContent = updated && Number.isFinite(updated.getTime())
+      ? `Historik senest opdateret: ${fmtHistoryUpdated.format(updated)}`
+      : "Historikkens opdateringstidspunkt mangler.";
   } catch {
     accuracyObservations = [];
+    ui.accuracyUpdatedAt.textContent = "Historikken kunne ikke hentes.";
   }
   renderAccuracy(selectedAccuracyDays);
   renderMonthlyAccuracy();
