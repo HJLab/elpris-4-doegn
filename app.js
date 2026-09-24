@@ -37,6 +37,7 @@ const ui = hasDocument ? {
   bestPrice: $("bestPrice"), bestTime: $("bestTime"),
   expensivePrice: $("expensivePrice"), expensiveTime: $("expensiveTime"),
   accuracyValue: $("accuracyValue"), accuracyCoverage: $("accuracyCoverage"), accuracyUpdatedAt: $("accuracyUpdatedAt"),
+  dailyAccuracyList: $("dailyAccuracyList"),
   monthlyAccuracyDetails: $("monthlyAccuracyDetails"), monthlyAccuracyMonth: $("accuracyMonth"),
   monthlyAccuracyIntro: $("monthlyAccuracyIntro"), monthlyAccuracyRows: $("monthlyAccuracyRows"), monthlyAccuracyCoverage: $("monthlyAccuracyCoverage"),
   profileSummary: $("profileSummary"), settingsButton: $("settingsButton"),
@@ -251,15 +252,44 @@ function calculateAccuracy(observations, days, now = new Date(), priceArea = set
   const cutoff = new Date(now);
   cutoff.setHours(0, 0, 0, 0);
   cutoff.setDate(cutoff.getDate() - days + 1);
-  const usable = observations.filter((item) => {
+  const latestByTarget = new Map();
+  for (const item of observations) {
     const errorOre = Number(item.errorOre);
-    if (!Number.isFinite(errorOre) || !item.target) return false;
-    if ((item.area || "DK2") !== priceArea) return false;
-    return parseDanishTime(item.target) >= cutoff;
-  });
+    if (!Number.isFinite(errorOre) || !item.target) continue;
+    if ((item.area || "DK2") !== priceArea || parseDanishTime(item.target) < cutoff) continue;
+    const previous = latestByTarget.get(item.target);
+    if (!previous || String(item.issuedAt || "") > String(previous.issuedAt || "")) latestByTarget.set(item.target, item);
+  }
+  const usable = [...latestByTarget.values()].sort((a, b) => a.target.localeCompare(b.target));
   const averageOre = usable.length ? mean(usable.map((item) => Number(item.errorOre))) : null;
   const coveredDays = new Set(usable.map((item) => item.target.slice(0, 10))).size;
-  return { averageOre, coveredDays, observations: usable.length };
+  return { averageOre, coveredDays, observations: usable.length, items: usable };
+}
+
+function dailyAccuracyReport(observations, days, now = new Date(), priceArea = settings.priceArea) {
+  const result = calculateAccuracy(observations, days, now, priceArea);
+  const groups = new Map();
+  for (const item of result.items) {
+    const date = item.target.slice(0, 10);
+    if (!groups.has(date)) groups.set(date, []);
+    groups.get(date).push(item);
+  }
+  const rows = [...groups.entries()].map(([date, items]) => {
+    const sorted = [...items].sort((a, b) => a.target.localeCompare(b.target));
+    const best = [...sorted].sort((a, b) => Number(a.errorOre) - Number(b.errorOre))[0];
+    const worst = [...sorted].sort((a, b) => Number(b.errorOre) - Number(a.errorOre))[0];
+    return {
+      date,
+      averageOre: mean(sorted.map((item) => Number(item.errorOre))),
+      forecastAverageOre: mean(sorted.map((item) => Number(item.forecastSpotExVat) * 125)),
+      actualAverageOre: mean(sorted.map((item) => Number(item.actualSpotExVat) * 125)),
+      observations: sorted.length,
+      complete: sorted.length === 24,
+      best,
+      worst
+    };
+  }).sort((a, b) => b.date.localeCompare(a.date));
+  return { ...result, rows };
 }
 
 function monthKey(value) { return String(value || "").slice(0, 7); }
@@ -308,7 +338,7 @@ function availableAccuracyMonths(observations, now = new Date(), priceArea = set
 
 function renderAccuracy(days = selectedAccuracyDays) {
   selectedAccuracyDays = days;
-  const result = calculateAccuracy(accuracyObservations, days);
+  const result = dailyAccuracyReport(accuracyObservations, days);
   document.querySelectorAll(".accuracy-period").forEach((button) => {
     const active = Number(button.dataset.days) === days;
     button.classList.toggle("active", active);
@@ -317,10 +347,89 @@ function renderAccuracy(days = selectedAccuracyDays) {
   if (result.averageOre === null) {
     ui.accuracyValue.textContent = "Indsamler data…";
     ui.accuracyCoverage.textContent = "Der er endnu ingen afsluttede prognoser i den valgte periode.";
+    ui.dailyAccuracyList.replaceChildren();
     return;
   }
   ui.accuracyValue.textContent = `${fmtPrice.format(result.averageOre)} øre/kWh forkert`;
-  ui.accuracyCoverage.textContent = `${result.coveredDays} af ${days} dage med data · ${result.observations} sammenlignede timepriser`;
+  ui.accuracyCoverage.textContent = `Baseret på ${result.observations} timepriser fordelt over ${result.coveredDays} døgn · ${result.coveredDays} af ${days} dage med data`;
+  renderDailyAccuracy(result.rows);
+}
+
+function renderDailyAccuracy(rows) {
+  if (!rows.length) {
+    ui.dailyAccuracyList.replaceChildren();
+    return;
+  }
+  const completeRows = rows.filter((row) => row.complete);
+  const rankedRows = completeRows.length ? completeRows : rows;
+  const bestValue = Math.min(...rankedRows.map((row) => row.averageOre));
+  const worstValue = Math.max(...rankedRows.map((row) => row.averageOre));
+  const maxValue = Math.max(...rows.map((row) => row.averageOre), 1);
+  const fragment = document.createDocumentFragment();
+
+  for (const row of rows) {
+    const details = document.createElement("details");
+    details.className = "daily-accuracy-card";
+    const isBest = row.complete && row.averageOre === bestValue;
+    const isWorst = row.complete && row.averageOre === worstValue && worstValue !== bestValue;
+    if (isBest) details.classList.add("best-day");
+    if (isWorst) details.classList.add("worst-day");
+
+    const date = parseDanishTime(`${row.date}T12:00`);
+    const summary = document.createElement("summary");
+    const header = document.createElement("span");
+    header.className = "daily-accuracy-header";
+    const title = document.createElement("strong");
+    title.textContent = fmtDate.format(date);
+    const badges = document.createElement("span");
+    badges.className = "daily-accuracy-badges";
+    if (isBest) badges.append(makeAccuracyBadge("Tættest", "best"));
+    if (isWorst) badges.append(makeAccuracyBadge("Længst fra", "worst"));
+    if (!row.complete) badges.append(makeAccuracyBadge("Delvist døgn", "partial"));
+    header.append(title, badges);
+
+    const value = document.createElement("strong");
+    value.className = "daily-accuracy-value";
+    value.textContent = `${fmtPrice.format(row.averageOre)} øre/kWh`;
+    const meta = document.createElement("span");
+    meta.className = "daily-accuracy-meta";
+    meta.textContent = `${row.observations} af 24 timer`;
+    const bar = document.createElement("span");
+    bar.className = "daily-accuracy-bar";
+    const fill = document.createElement("i");
+    fill.style.width = `${Math.max(4, row.averageOre / maxValue * 100)}%`;
+    bar.append(fill);
+    summary.append(header, value, meta, bar);
+
+    const body = document.createElement("div");
+    body.className = "daily-accuracy-detail-grid";
+    body.append(
+      makeAccuracyDetail("Prognosens gennemsnitspris", `${fmtPrice.format(row.forecastAverageOre)} øre/kWh`),
+      makeAccuracyDetail("Officiel gennemsnitspris", `${fmtPrice.format(row.actualAverageOre)} øre/kWh`),
+      makeAccuracyDetail("Tætteste time", `${row.best.target.slice(11, 16)} · ${fmtPrice.format(row.best.errorOre)} øre/kWh forkert`),
+      makeAccuracyDetail("Største fejl", `${row.worst.target.slice(11, 16)} · ${fmtPrice.format(row.worst.errorOre)} øre/kWh forkert`)
+    );
+    details.append(summary, body);
+    fragment.append(details);
+  }
+  ui.dailyAccuracyList.replaceChildren(fragment);
+}
+
+function makeAccuracyBadge(text, kind) {
+  const badge = document.createElement("span");
+  badge.className = `daily-accuracy-badge ${kind}`;
+  badge.textContent = text;
+  return badge;
+}
+
+function makeAccuracyDetail(label, value) {
+  const item = document.createElement("span");
+  const title = document.createElement("small");
+  title.textContent = label;
+  const content = document.createElement("strong");
+  content.textContent = value;
+  item.append(title, content);
+  return item;
 }
 
 function renderMonthlyAccuracy() {
@@ -570,4 +679,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, monthlyAccuracyReport, availableAccuracyMonths, timeBand, shouldShowReviewReminder };
+if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, shouldShowReviewReminder };

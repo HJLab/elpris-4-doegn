@@ -20,7 +20,7 @@
     <div>
       <p id="profileSummary" class="eyebrow">DK2 · Østdanmark · Cerius · Modstrøm</p>
       <h1>Elpris – næste 4 dage</h1>
-      <span class="app-version">Version v5</span>
+      <span class="app-version">Version v6</span>
     </div>
     <div class="top-actions">
       <button id="settingsButton" class="secondary-button" type="button">Indstillinger</button>
@@ -65,17 +65,22 @@
       <details id="accuracyDetails" class="accuracy-details">
         <summary>Prognosens træfsikkerhed</summary>
         <div class="accuracy-body">
-          <p class="accuracy-explanation">Gennemsnitlig forskel mellem den gemte prognose og den efterfølgende officielle pris.</p>
+          <p class="accuracy-explanation">Gennemsnitlig fejl pr. kWh mellem den senest gemte prognose for hver time og den efterfølgende officielle spotpris.</p>
           <div class="accuracy-periods" role="group" aria-label="Vælg periode">
             <button class="accuracy-period active" type="button" data-days="7" aria-pressed="true">7 dage</button>
             <button class="accuracy-period" type="button" data-days="14" aria-pressed="false">14 dage</button>
             <button class="accuracy-period" type="button" data-days="30" aria-pressed="false">1 måned</button>
             <button class="accuracy-period" type="button" data-days="90" aria-pressed="false">3 måneder</button>
           </div>
-          <span class="accuracy-label">Prognosen ramte i gennemsnit</span>
+          <span class="accuracy-label">Gennemsnitlig prognosefejl</span>
           <strong id="accuracyValue" class="accuracy-value">Indsamler data…</strong>
           <span id="accuracyCoverage" class="accuracy-coverage" aria-live="polite">Målingen begynder, når den første prognose er gemt.</span>
           <span id="accuracyUpdatedAt" class="accuracy-updated" aria-live="polite">Historikken er ikke opdateret endnu.</span>
+          <div class="daily-accuracy-heading">
+            <strong>Fejl pr. døgn</strong>
+            <span>Tryk på et døgn for at se detaljerne</span>
+          </div>
+          <div id="dailyAccuracyList" class="daily-accuracy-list" aria-live="polite"></div>
         </div>
       </details>
 

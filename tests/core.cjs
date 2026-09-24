@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, ceriusTariff, fixedCostPerKwh, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, monthlyAccuracyReport, availableAccuracyMonths, shouldShowReviewReminder } = require("../app.js");
+const { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, ceriusTariff, fixedCostPerKwh, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, shouldShowReviewReminder } = require("../app.js");
 
 const records = [
   { TimeDK: "2026-08-29T10:00:00", PriceArea: "DK2", DayAheadPriceDKK: 400 },
@@ -75,6 +75,17 @@ const accuracy = calculateAccuracy([
 assert.equal(accuracy.averageOre, 15);
 assert.equal(accuracy.coveredDays, 2);
 assert.equal(accuracy.observations, 2);
+
+const daily = dailyAccuracyReport([
+  { area: "DK2", issuedAt: "2026-08-27T13:00:00Z", target: "2026-08-29T01:00", forecastSpotExVat: 1.2, actualSpotExVat: 1, errorOre: 25 },
+  { area: "DK2", issuedAt: "2026-08-28T13:00:00Z", target: "2026-08-29T01:00", forecastSpotExVat: 1.1, actualSpotExVat: 1, errorOre: 12.5 },
+  { area: "DK2", issuedAt: "2026-08-28T13:00:00Z", target: "2026-08-29T02:00", forecastSpotExVat: 0.8, actualSpotExVat: 1, errorOre: 25 }
+], 7, new Date(2026, 7, 29, 12), "DK2");
+assert.equal(daily.observations, 2);
+assert.equal(daily.rows.length, 1);
+assert.equal(daily.rows[0].averageOre, 18.75);
+assert.equal(daily.rows[0].best.issuedAt, "2026-08-28T13:00:00Z");
+assert.equal(daily.rows[0].complete, false);
 
 const monthly = monthlyAccuracyReport([
   { area: "DK2", target: "2026-07-01T01:00", forecastSpotExVat: 1.1, actualSpotExVat: 1, errorOre: 12.5 },
