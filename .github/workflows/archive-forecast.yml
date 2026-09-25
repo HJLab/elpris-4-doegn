@@ -13,7 +13,12 @@ on:
     # Scriptet bruger Europe/Copenhagen som facit, starter først efter dansk kl. 15
     # og stopper efter dagens første vellykkede opdatering. Det virker i både
     # sommer- og vintertid og giver nye forsøg, hvis GitHub er forsinket.
-    - cron: "7,22,37,52 13-18 * * *"
+    # Flere separate cron-linjer giver GitHub flere uafhaengige planlagte haendelser.
+    # Scriptet er idempotent og gemmer kun dagens foerste vellykkede snapshot.
+    - cron: "7,37 13-18 * * *"
+    - cron: "22,52 13-18 * * *"
+    # Sen sikkerhedskoersel hvis GitHub har sprunget hele eftermiddagen over.
+    - cron: "17 19-21 * * *"
 
 permissions:
   contents: write
