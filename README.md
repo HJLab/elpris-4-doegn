@@ -48,3 +48,11 @@ Mappen kan offentliggøres gratis med GitHub Pages. Når siden er lagt på nette
 ## Datakilde
 
 Officielle priser stammer fra Energi Data Service. Browservenlige pris- og prognosedata leveres via det åbne, CORS-aktiverede API hos elpriser.org for prisområderne `DK1` og `DK2`.
+
+
+## Version 7
+
+- Gør det tydeligt, at mærket **Spot officiel** kun gælder spotprisen – ikke hele den beregnede totalpris.
+- Viser **uden faste** under hver time: spotpris med moms, elselskabets kWh-tillæg, Energinet, elafgift og nettarif, men uden fordelte månedsabonnementer.
+- Den store pris er fortsat den samlede beregnede kWh-pris inklusive de faste månedsbeløb fordelt på det valgte årsforbrug.
+- Service-worker-cachen er opdateret, så v7 bliver hentet på installerede enheder.

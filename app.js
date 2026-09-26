@@ -214,10 +214,14 @@ function fixedCostPerKwh(activeSettings = settings) {
     activeSettings.annualConsumption;
 }
 
-function totalPrice(spotExVat, date, activeSettings = settings) {
+function variablePrice(spotExVat, date, activeSettings = settings) {
   const spotInclVat = spotExVat * 1.25;
   return spotInclVat + activeSettings.supplierMarkupOre / 100 + CONFIG.energinetTariffInclVat +
-    CONFIG.electricityTaxInclVat + gridTariff(date, activeSettings) + fixedCostPerKwh(activeSettings);
+    CONFIG.electricityTaxInclVat + gridTariff(date, activeSettings);
+}
+
+function totalPrice(spotExVat, date, activeSettings = settings) {
+  return variablePrice(spotExVat, date, activeSettings) + fixedCostPerKwh(activeSettings);
 }
 
 function buildHorizon(knownHours, now = new Date(), activeSettings = settings) {
@@ -226,7 +230,14 @@ function buildHorizon(knownHours, now = new Date(), activeSettings = settings) {
     const date = calendarHour(start, index);
     const known = knownHours.get(hourKey(date));
     const spotExVat = known ? known.spotExVat : forecastSpot(date, knownHours);
-    return { date, spotExVat, total: totalPrice(spotExVat, date, activeSettings), kind: known?.kind || "forecast" };
+    return {
+      date,
+      spotExVat,
+      variable: variablePrice(spotExVat, date, activeSettings),
+      fixed: fixedCostPerKwh(activeSettings),
+      total: totalPrice(spotExVat, date, activeSettings),
+      kind: known?.kind || "forecast"
+    };
   });
 }
 
@@ -486,7 +497,7 @@ function renderSummary(items, now) {
   const charge = bestChargeWindow(future);
   const mostExpensive = [...future].sort((a, b) => b.total - a.total)[0];
   ui.currentPrice.textContent = `${fmtPrice.format(current.total)} kr./kWh`;
-  ui.currentKind.textContent = `${fmtDate.format(current.date)} kl. ${fmtTime.format(current.date)} · ${current.kind === "actual" ? "officiel" : "prognose"}`;
+  ui.currentKind.textContent = `${fmtDate.format(current.date)} kl. ${fmtTime.format(current.date)} · ${current.kind === "actual" ? "officiel spotpris" : "spotprognose"} · inkl. faste`;
   ui.bestPrice.textContent = `${fmtPrice.format(charge.average)} kr./kWh`;
   const last = addHours(charge.items.at(-1).date, 1);
   ui.bestTime.textContent = `${fmtDate.format(charge.items[0].date)} kl. ${fmtTime.format(charge.items[0].date)}–${fmtTime.format(last)}`;
@@ -526,8 +537,8 @@ function renderDays(items, now) {
       row.querySelector(".date-short").textContent = fmtDate.format(item.date);
       row.querySelector(".bar").style.width = `${Math.max(2, item.total / maxTotal * 100)}%`;
       row.querySelector(".total-price").textContent = `${fmtPrice.format(item.total)} kr.`;
-      row.querySelector(".spot-price").textContent = `spot ${fmtPrice.format(item.spotExVat)} kr.`;
-      row.querySelector(".kind-badge").textContent = item.kind === "actual" ? "Officiel" : "Prognose";
+      row.querySelector(".spot-price").textContent = `uden faste ${fmtPrice.format(item.variable)} kr. · spot ${fmtPrice.format(item.spotExVat)} kr.`;
+      row.querySelector(".kind-badge").textContent = item.kind === "actual" ? "Spot officiel" : "Spot prognose";
       list.append(rowNode);
     }
     ui.days.append(dayNode);
@@ -545,7 +556,7 @@ function updateProfileText() {
   ui.profileSummary.textContent = `${settings.priceArea} · ${areaName(settings.priceArea)} · ${gridName} · ${settings.supplier}`;
   const productText = settings.product ? ` (${settings.product})` : "";
   const subscription = settings.supplierSubscriptionMonthly + settings.gridSubscriptionMonthly;
-  ui.calculationExplanation.textContent = `Den viste pris indeholder ${settings.priceArea}-spotpris, moms, ${settings.supplier}${productText}, nettarif, Energinets tarif, elafgift og ${fmtPrice.format(subscription)} kr. i samlede månedlige abonnementer fordelt på ${Math.round(settings.annualConsumption).toLocaleString("da-DK")} kWh om året.`;
+  ui.calculationExplanation.textContent = `Den store pris er din beregnede samlede kWh-pris: ${settings.priceArea}-spotpris, moms, ${settings.supplier}${productText}, nettarif, Energinets tarif, elafgift samt ${fmtPrice.format(subscription)} kr. i månedlige abonnementer fordelt på ${Math.round(settings.annualConsumption).toLocaleString("da-DK")} kWh om året. Linjen “uden faste” viser samme pris uden de fordelte månedsabonnementer og er derfor bedre til sammenligning med apps, der ikke medregner faste beløb.`;
 }
 
 function fillSettingsForm() {
@@ -679,4 +690,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, shouldShowReviewReminder };
+if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, variablePrice, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, shouldShowReviewReminder };
