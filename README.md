@@ -72,3 +72,9 @@ Officielle priser stammer fra Energi Data Service. Browservenlige pris- og progn
 - Timeoversigten viser nu kun ét pristal pr. time: den beregnede **alt inklusive-pris pr. kWh**.
 - Spot, basis og “uden faste” er fjernet fra selve timeoversigten for at gøre appen enkel at aflæse.
 - Beregningen bagved er uændret og medregner fortsat spotpris, moms, nettarif, Energinet, elafgift, elselskabets kWh-tillæg samt faste månedlige beløb fordelt på det valgte årsforbrug.
+
+
+## Version 10
+
+- Retter en situation hvor appen kunne blive stående på “Henter de nyeste priser…” uden at komme videre, hvis pris-API'et ikke afsluttede forbindelsen.
+- En prisforespørgsel afbrydes nu efter 10 sekunder. Hvis der findes gemte priser på telefonen, vises de straks som reserve i stedet for en uendelig indlæsning.

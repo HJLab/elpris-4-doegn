@@ -130,7 +130,14 @@ function mean(values) { return values.length ? values.reduce((a, b) => a + b, 0)
 
 async function fetchRecords() {
   const url = `https://elpriser.org/api/forecast?area=${settings.priceArea}&mode=spot_ex`;
-  const response = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-store" });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  let response;
+  try {
+    response = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-store", signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
   if (!response.ok) throw new Error(`Datakilden svarede med fejl ${response.status}`);
   const payload = await response.json();
   if (!Array.isArray(payload.days) || !payload.days.length) throw new Error(`Datakilden returnerede ingen ${settings.priceArea}-priser`);
