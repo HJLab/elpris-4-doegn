@@ -15,14 +15,29 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="auth-pending">
+  <section id="authGate" class="auth-gate" aria-live="polite">
+    <div class="auth-card">
+      <p class="eyebrow">Elpris</p>
+      <h1>Log ind</h1>
+      <p>Brug den e-mailadresse, som administratoren har godkendt. Første gang vælger du selv dit password.</p>
+      <form id="loginForm" class="auth-form">
+        <label><span>E-mail</span><input id="loginEmail" type="email" autocomplete="username" required></label>
+        <label><span>Password</span><input id="loginPassword" type="password" minlength="6" autocomplete="current-password" required></label>
+        <button class="save-button" type="submit">Log ind / første login</button>
+      </form>
+      <p id="authMessage" class="auth-message">Kontrollerer login…</p>
+    </div>
+  </section>
   <header class="topbar">
     <div>
       <p id="profileSummary" class="eyebrow">DK2 · Østdanmark · Cerius · Modstrøm</p>
       <h1>Elpris – næste 4 dage</h1>
-      <span class="app-version">Version v10</span>
+      <span class="app-version">Version v11</span>
     </div>
     <div class="top-actions">
+      <button id="accountButton" class="secondary-button" type="button" hidden>Konto</button>
+      <button id="usersButton" class="secondary-button" type="button" hidden>Brugere</button>
       <button id="settingsButton" class="secondary-button" type="button">Indstillinger</button>
       <button id="refreshButton" class="refresh" type="button" aria-label="Opdater priser">Opdater</button>
     </div>
@@ -245,6 +260,36 @@
     </div>
   </dialog>
 
+  <dialog id="accountDialog" class="settings-dialog" aria-labelledby="accountTitle">
+    <div class="calculation-dialog-body">
+      <div class="settings-heading">
+        <div><p class="eyebrow">Din konto</p><h2 id="accountTitle">Konto</h2></div>
+        <button id="closeAccountButton" class="icon-button" type="button" aria-label="Luk">×</button>
+      </div>
+      <p>Logget ind som <strong id="accountEmail">–</strong></p>
+      <div class="dialog-actions"><button id="logoutButton" class="secondary-button" type="button">Log ud</button></div>
+    </div>
+  </dialog>
+
+  <dialog id="usersDialog" class="settings-dialog" aria-labelledby="usersTitle">
+    <div class="calculation-dialog-body">
+      <div class="settings-heading">
+        <div><p class="eyebrow">Administrator</p><h2 id="usersTitle">Brugere</h2></div>
+        <button id="closeUsersButton" class="icon-button" type="button" aria-label="Luk">×</button>
+      </div>
+      <p class="settings-intro">Tilføj den e-mailadresse, som må bruge appen. Du sender selv app-linket til personen.</p>
+      <form id="addUserForm" class="admin-user-form">
+        <label><span>Ny brugers e-mail</span><input id="newUserEmail" type="email" required></label>
+        <button class="save-button" type="submit">Tilføj bruger</button>
+      </form>
+      <div class="admin-link-row">
+        <button id="copyAppLinkButton" class="secondary-button" type="button">Kopiér app-link</button>
+        <span id="copyLinkStatus" class="auth-message"></span>
+      </div>
+      <div id="usersList" class="admin-users-list" aria-live="polite"></div>
+    </div>
+  </dialog>
+
   <template id="dayTemplate">
     <details class="day-card">
       <summary class="day-summary">
@@ -283,6 +328,8 @@
     </div>
   </template>
 
+  <script src="firebase-config.js"></script>
+  <script type="module" src="auth.js"></script>
   <script src="app.js" defer></script>
 </body>
 </html>

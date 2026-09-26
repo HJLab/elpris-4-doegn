@@ -83,6 +83,9 @@ function readSettings() {
 function saveSettings(next) {
   settings = normalizeSettings(next);
   if (typeof localStorage !== "undefined") localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  if (typeof window !== "undefined" && window.elprisAuth?.saveSettings) {
+    window.elprisAuth.saveSettings(settings).catch((error) => console.error("Kunne ikke gemme brugerindstillinger online", error));
+  }
   return settings;
 }
 
@@ -657,7 +660,9 @@ async function load() {
   ui.refresh.disabled = false;
 }
 
-if (hasDocument) {
+function startApp() {
+  if (!hasDocument || window.__elprisAppStarted) return;
+  window.__elprisAppStarted = true;
   ui.refresh.addEventListener("click", load);
   ui.settingsButton.addEventListener("click", openSettings);
   $("closeSettingsButton").addEventListener("click", closeSettings);
@@ -697,6 +702,14 @@ if (hasDocument) {
 
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
     navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
+}
+
+if (hasDocument) {
+  if (window.elprisAuth?.ready) {
+    window.elprisAuth.ready.then(startApp).catch((error) => console.error("Login kunne ikke startes", error));
+  } else {
+    window.addEventListener("elpris-auth-ready", startApp, { once: true });
   }
 }
 

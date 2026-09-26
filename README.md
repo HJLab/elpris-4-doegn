@@ -78,3 +78,15 @@ Officielle priser stammer fra Energi Data Service. Browservenlige pris- og progn
 
 - Retter en situation hvor appen kunne blive stående på “Henter de nyeste priser…” uden at komme videre, hvis pris-API'et ikke afsluttede forbindelsen.
 - En prisforespørgsel afbrydes nu efter 10 sekunder. Hvis der findes gemte priser på telefonen, vises de straks som reserve i stedet for en uendelig indlæsning.
+
+
+## Version 11 – login og flere brugere
+
+Denne version udvikles på den separate branch `v11-login-admin`, så den stabile v10 på `main` ikke påvirkes under opsætningen.
+
+- E-mail + password med automatisk husket login.
+- Kun administrator-godkendte e-mailadresser får adgang til appens data.
+- Hver bruger får egne elindstillinger i Firestore.
+- Administrator kan tilføje/deaktivere brugere og kopiere app-linket med én knap.
+- Appen sender ingen invitationer eller e-mails.
+- Før aktivering skal et Firebase-projekt konfigureres i `firebase-config.js`, og `firestore.rules` skal udgives.

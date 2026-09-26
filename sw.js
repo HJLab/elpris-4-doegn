@@ -1,5 +1,5 @@
-const CACHE = "elpris-shell-v17";
-const FILES = ["./", "index.html", "styles.css", "app.js", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
+const CACHE = "elpris-shell-v18";
+const FILES = ["./", "index.html", "styles.css", "app.js", "auth.js", "firebase-config.js", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FILES)));
