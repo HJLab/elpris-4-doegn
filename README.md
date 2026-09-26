@@ -65,3 +65,10 @@ Officielle priser stammer fra Energi Data Service. Browservenlige pris- og progn
 - Hver time viser nu også **basis**: spot inkl. moms + nettarif + Energinet + elafgift, men uden elselskabets kWh-tillæg og uden abonnementer. Det er den mest retvisende værdi at sammenligne med en rå prisvisning i fx Watts.
 - “Uden faste” er basis plus elselskabets kWh-tillæg. Den store pris lægger derefter abonnementerne oveni.
 - Automatisk test-workflow kontrollerer fremover kerneberegninger og prognosehistorik ved kodeændringer.
+
+
+## Version 9
+
+- Timeoversigten viser nu kun ét pristal pr. time: den beregnede **alt inklusive-pris pr. kWh**.
+- Spot, basis og “uden faste” er fjernet fra selve timeoversigten for at gøre appen enkel at aflæse.
+- Beregningen bagved er uændret og medregner fortsat spotpris, moms, nettarif, Energinet, elafgift, elselskabets kWh-tillæg samt faste månedlige beløb fordelt på det valgte årsforbrug.

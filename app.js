@@ -502,7 +502,7 @@ function renderSummary(items, now) {
   const charge = bestChargeWindow(future);
   const mostExpensive = [...future].sort((a, b) => b.total - a.total)[0];
   ui.currentPrice.textContent = `${fmtPrice.format(current.total)} kr./kWh`;
-  ui.currentKind.textContent = `${fmtDate.format(current.date)} kl. ${fmtTime.format(current.date)} · ${current.kind === "actual" ? "officiel spotpris" : "spotprognose"} · inkl. faste`;
+  ui.currentKind.textContent = `${fmtDate.format(current.date)} kl. ${fmtTime.format(current.date)} · alt inklusive · ${current.kind === "actual" ? "officiel spotpris" : "spotprognose"}`;
   ui.bestPrice.textContent = `${fmtPrice.format(charge.average)} kr./kWh`;
   const last = addHours(charge.items.at(-1).date, 1);
   ui.bestTime.textContent = `${fmtDate.format(charge.items[0].date)} kl. ${fmtTime.format(charge.items[0].date)}–${fmtTime.format(last)}`;
@@ -542,8 +542,7 @@ function renderDays(items, now) {
       row.querySelector(".date-short").textContent = fmtDate.format(item.date);
       row.querySelector(".bar").style.width = `${Math.max(2, item.total / maxTotal * 100)}%`;
       row.querySelector(".total-price").textContent = `${fmtPrice.format(item.total)} kr.`;
-      row.querySelector(".spot-price").textContent = `basis ${fmtPrice.format(item.officialBase)} · uden faste ${fmtPrice.format(item.variable)} · spot ${fmtPrice.format(item.spotExVat)} kr.`;
-      row.querySelector(".kind-badge").textContent = item.kind === "actual" ? "Spot officiel" : "Spot prognose";
+      row.querySelector(".kind-badge").textContent = item.kind === "actual" ? "Officiel" : "Prognose";
       list.append(rowNode);
     }
     ui.days.append(dayNode);
