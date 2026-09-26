@@ -214,10 +214,14 @@ function fixedCostPerKwh(activeSettings = settings) {
     activeSettings.annualConsumption;
 }
 
-function variablePrice(spotExVat, date, activeSettings = settings) {
+function officialBasePrice(spotExVat, date, activeSettings = settings) {
   const spotInclVat = spotExVat * 1.25;
-  return spotInclVat + activeSettings.supplierMarkupOre / 100 + CONFIG.energinetTariffInclVat +
-    CONFIG.electricityTaxInclVat + gridTariff(date, activeSettings);
+  return spotInclVat + CONFIG.energinetTariffInclVat + CONFIG.electricityTaxInclVat +
+    gridTariff(date, activeSettings);
+}
+
+function variablePrice(spotExVat, date, activeSettings = settings) {
+  return officialBasePrice(spotExVat, date, activeSettings) + activeSettings.supplierMarkupOre / 100;
 }
 
 function totalPrice(spotExVat, date, activeSettings = settings) {
@@ -233,6 +237,7 @@ function buildHorizon(knownHours, now = new Date(), activeSettings = settings) {
     return {
       date,
       spotExVat,
+      officialBase: officialBasePrice(spotExVat, date, activeSettings),
       variable: variablePrice(spotExVat, date, activeSettings),
       fixed: fixedCostPerKwh(activeSettings),
       total: totalPrice(spotExVat, date, activeSettings),
@@ -292,8 +297,8 @@ function dailyAccuracyReport(observations, days, now = new Date(), priceArea = s
     return {
       date,
       averageOre: mean(sorted.map((item) => Number(item.errorOre))),
-      forecastAverageOre: mean(sorted.map((item) => Number(item.forecastSpotExVat) * 125)),
-      actualAverageOre: mean(sorted.map((item) => Number(item.actualSpotExVat) * 125)),
+      forecastAverageOre: mean(sorted.map((item) => Number(item.forecastSpotExVat) * 100)),
+      actualAverageOre: mean(sorted.map((item) => Number(item.actualSpotExVat) * 100)),
       observations: sorted.length,
       complete: sorted.length === 24,
       best,
@@ -537,7 +542,7 @@ function renderDays(items, now) {
       row.querySelector(".date-short").textContent = fmtDate.format(item.date);
       row.querySelector(".bar").style.width = `${Math.max(2, item.total / maxTotal * 100)}%`;
       row.querySelector(".total-price").textContent = `${fmtPrice.format(item.total)} kr.`;
-      row.querySelector(".spot-price").textContent = `uden faste ${fmtPrice.format(item.variable)} kr. · spot ${fmtPrice.format(item.spotExVat)} kr.`;
+      row.querySelector(".spot-price").textContent = `basis ${fmtPrice.format(item.officialBase)} · uden faste ${fmtPrice.format(item.variable)} · spot ${fmtPrice.format(item.spotExVat)} kr.`;
       row.querySelector(".kind-badge").textContent = item.kind === "actual" ? "Spot officiel" : "Spot prognose";
       list.append(rowNode);
     }
@@ -556,7 +561,7 @@ function updateProfileText() {
   ui.profileSummary.textContent = `${settings.priceArea} · ${areaName(settings.priceArea)} · ${gridName} · ${settings.supplier}`;
   const productText = settings.product ? ` (${settings.product})` : "";
   const subscription = settings.supplierSubscriptionMonthly + settings.gridSubscriptionMonthly;
-  ui.calculationExplanation.textContent = `Den store pris er din beregnede samlede kWh-pris: ${settings.priceArea}-spotpris, moms, ${settings.supplier}${productText}, nettarif, Energinets tarif, elafgift samt ${fmtPrice.format(subscription)} kr. i månedlige abonnementer fordelt på ${Math.round(settings.annualConsumption).toLocaleString("da-DK")} kWh om året. Linjen “uden faste” viser samme pris uden de fordelte månedsabonnementer og er derfor bedre til sammenligning med apps, der ikke medregner faste beløb.`;
+  ui.calculationExplanation.textContent = `Den store pris er din beregnede samlede kWh-pris: ${settings.priceArea}-spotpris, moms, ${settings.supplier}${productText}, nettarif, Energinets tarif, elafgift samt ${fmtPrice.format(subscription)} kr. i månedlige abonnementer fordelt på ${Math.round(settings.annualConsumption).toLocaleString("da-DK")} kWh om året. “Basis” er spot med moms, nettarif, Energinet og elafgift, men uden elselskabets kWh-tillæg og uden abonnementer. “Uden faste” er basis plus elselskabets kWh-tillæg.`;
 }
 
 function fillSettingsForm() {
@@ -690,4 +695,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, variablePrice, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, shouldShowReviewReminder };
+if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, shouldShowReviewReminder };

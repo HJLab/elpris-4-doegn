@@ -96,15 +96,14 @@ function actualPriceMap(payload) {
   return map;
 }
 
-function scoreSnapshots(snapshots, actualPrices, today, area = "DK2") {
+function scoreSnapshots(snapshots, actualPrices, area = "DK2") {
   const observations = [];
   for (const snapshot of snapshots) {
     if ((snapshot.area || "DK2") !== area) continue;
     for (const point of snapshot.points || []) {
-      if (point.target.slice(0, 10) >= today) continue;
       const actual = actualPrices.get(point.target);
       if (!Number.isFinite(actual)) continue;
-      const errorOre = Math.abs(Number(point.forecastSpotExVat) - actual) * 1.25 * 100;
+      const errorOre = Math.abs(Number(point.forecastSpotExVat) - actual) * 100;
       observations.push({
         area,
         issuedAt: snapshot.collectedAt,
@@ -122,27 +121,44 @@ async function main() {
   const now = new Date();
   const local = copenhagenParts(now);
   const forceRun = process.env.FORCE_RUN === "true";
-  if (!shouldRun(local.hour, forceRun)) {
-    console.log(`Springer over: klokken er ${local.hour} i København.`);
-    return;
-  }
 
   const log = await readLog();
   const cutoff = now.getTime() - 100 * 86400000;
   log.snapshots = log.snapshots.filter((item) => new Date(item.collectedAt).getTime() >= cutoff);
+
+  const forecasts = new Map();
+  for (const area of AREAS) forecasts.set(area, await fetchJson(forecastUrl(area)));
+
+  const allPoints = log.snapshots.flatMap((item) => item.points || []);
+  if (allPoints.length) {
+    const firstDate = allPoints.map((item) => item.target.slice(0, 10)).sort()[0];
+    const tomorrow = addDateDays(local.date, 1);
+    const observations = [];
+    for (const area of AREAS) {
+      const actualPayload = await fetchJson(`${priceUrl(area)}&start=${firstDate}&end=${tomorrow}`);
+      observations.push(...scoreSnapshots(log.snapshots, actualPriceMap(actualPayload), area));
+    }
+    observations.sort((a, b) => a.target.localeCompare(b.target) || a.area.localeCompare(b.area) || a.issuedAt.localeCompare(b.issuedAt));
+    await writeJson(ACCURACY_PATH, { updatedAt: now.toISOString(), metric: "spot_ex_vat_mae", observations });
+    console.log(`Opdaterede træfsikkerheden med ${observations.length} sammenligninger.`);
+  } else {
+    await writeJson(ACCURACY_PATH, { updatedAt: now.toISOString(), metric: "spot_ex_vat_mae", observations: [] });
+  }
+
+  if (!shouldRun(local.hour, forceRun)) {
+    console.log(`Ingen ny prognosesnapshot endnu: klokken er ${local.hour} i København.`);
+    return;
+  }
 
   if (!forceRun && hasSnapshotsForDate(log.snapshots, local.date)) {
     console.log(`Dagens prognose for ${local.date} er allerede gemt for DK1 og DK2.`);
     return;
   }
 
-  const forecasts = new Map();
-  for (const area of AREAS) forecasts.set(area, await fetchJson(forecastUrl(area)));
-
   const tomorrow = addDateDays(local.date, 1);
   const areasWaitingForOfficialPrices = AREAS.filter((area) => !hasOfficialDay(forecasts.get(area), tomorrow));
   if (areasWaitingForOfficialPrices.length) {
-    console.log(`Venter: de officielle priser for ${tomorrow} er endnu ikke klar for ${areasWaitingForOfficialPrices.join(", ")}.`);
+    console.log(`Venter med nyt snapshot: de officielle priser for ${tomorrow} er endnu ikke klar for ${areasWaitingForOfficialPrices.join(", ")}.`);
     return;
   }
 
@@ -154,29 +170,10 @@ async function main() {
       if (!points.length) throw new Error(`${area}-prognosen indeholdt ingen fremtidige prognosetimer inden for 96 timer.`);
       log.snapshots.push({ area, collectedDate: local.date, collectedAt: now.toISOString(), sourceGeneratedAt: forecast.generated || null, points });
       console.log(`Gemte ${points.length} ${area}-prognosetimer for ${local.date}.`);
-    } else {
-      console.log(`${area}-prognosen for ${local.date} er allerede gemt.`);
     }
   }
   log.snapshots.sort((a, b) => a.collectedAt.localeCompare(b.collectedAt));
   await writeJson(LOG_PATH, log);
-
-  const completedPoints = log.snapshots.flatMap((item) => item.points || []).filter((item) => item.target.slice(0, 10) < local.date);
-  if (!completedPoints.length) {
-    await writeJson(ACCURACY_PATH, { updatedAt: now.toISOString(), observations: [] });
-    return;
-  }
-
-  const firstDate = completedPoints.map((item) => item.target.slice(0, 10)).sort()[0];
-  const lastDate = addDateDays(local.date, -1);
-  const observations = [];
-  for (const area of AREAS) {
-    const actualPayload = await fetchJson(`${priceUrl(area)}&start=${firstDate}&end=${lastDate}`);
-    observations.push(...scoreSnapshots(log.snapshots, actualPriceMap(actualPayload), local.date, area));
-  }
-  observations.sort((a, b) => a.target.localeCompare(b.target) || a.area.localeCompare(b.area));
-  await writeJson(ACCURACY_PATH, { updatedAt: now.toISOString(), observations });
-  console.log(`Opdaterede træfsikkerheden med ${observations.length} sammenligninger.`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

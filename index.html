@@ -20,7 +20,7 @@
     <div>
       <p id="profileSummary" class="eyebrow">DK2 · Østdanmark · Cerius · Modstrøm</p>
       <h1>Elpris – næste 4 dage</h1>
-      <span class="app-version">Version v7</span>
+      <span class="app-version">Version v8</span>
     </div>
     <div class="top-actions">
       <button id="settingsButton" class="secondary-button" type="button">Indstillinger</button>
@@ -65,14 +65,14 @@
       <details id="accuracyDetails" class="accuracy-details">
         <summary>Prognosens træfsikkerhed</summary>
         <div class="accuracy-body">
-          <p class="accuracy-explanation">Gennemsnitlig fejl pr. kWh mellem den senest gemte prognose for hver time og den efterfølgende officielle spotpris.</p>
+          <p class="accuracy-explanation">Gennemsnitlig fejl mellem den senest gemte spotprognose og den efterfølgende officielle spotpris. Målingen bruger ren spotpris ekskl. moms, tariffer, afgifter, tillæg og abonnementer.</p>
           <div class="accuracy-periods" role="group" aria-label="Vælg periode">
             <button class="accuracy-period active" type="button" data-days="7" aria-pressed="true">7 dage</button>
             <button class="accuracy-period" type="button" data-days="14" aria-pressed="false">14 dage</button>
             <button class="accuracy-period" type="button" data-days="30" aria-pressed="false">1 måned</button>
             <button class="accuracy-period" type="button" data-days="90" aria-pressed="false">3 måneder</button>
           </div>
-          <span class="accuracy-label">Gennemsnitlig prognosefejl</span>
+          <span class="accuracy-label">Gennemsnitlig spotprognosefejl · ekskl. moms</span>
           <strong id="accuracyValue" class="accuracy-value">Indsamler data…</strong>
           <span id="accuracyCoverage" class="accuracy-coverage" aria-live="polite">Målingen begynder, når den første prognose er gemt.</span>
           <span id="accuracyUpdatedAt" class="accuracy-updated" aria-live="polite">Historikken er ikke opdateret endnu.</span>
@@ -87,7 +87,7 @@
       <details id="monthlyAccuracyDetails" class="monthly-accuracy-details" hidden>
         <summary>Månedlig prognoserapport</summary>
         <div class="monthly-accuracy-body">
-          <p>Her sammenlignes de gemte spotprisprognoser med de efterfølgende officielle spotpriser. Afgifter, tariffer og abonnementer er ikke med i målingen, fordi de ikke er en del af selve prognosen.</p>
+          <p>Her sammenlignes de gemte spotprisprognoser med de efterfølgende officielle spotpriser. Begge er ekskl. moms. Afgifter, tariffer, elselskabstillæg og abonnementer er ikke med i målingen.</p>
           <label class="month-picker" for="accuracyMonth">
             <span>Vælg afsluttet måned</span>
             <select id="accuracyMonth"></select>
@@ -215,9 +215,9 @@
         <div><p class="eyebrow">Din elpris – forklaret</p><h2 id="calculationTitle">Sådan hænger det sammen</h2></div>
         <button id="closeCalculationButton" class="icon-button" type="button" aria-label="Luk">×</button>
       </div>
-      <p class="calculation-lead">Appen viser din beregnede samlede pris for hver enkelt time. Den store pris inkluderer også faste månedsbeløb fordelt på dit årsforbrug. Under hver time vises desuden “uden faste”, så prisen kan sammenlignes direkte med apps, der ikke fordeler abonnementer ud på kWh.</p>
+      <p class="calculation-lead">Appen viser din beregnede samlede pris for hver enkelt time. Den store pris inkluderer også faste månedsbeløb fordelt på dit årsforbrug. Under hver time vises basis, uden faste og spot, så du kan se præcis hvor forskellen til andre elpris-apps opstår.</p>
 
-      <section class="calculation-card"><h3>1. Den samlede pris</h3><p id="calculationExplanation">Den viste pris beregnes ud fra dine valg i Indstillinger.</p><ul><li><strong>Spotpris:</strong> prisen på elmarkedet for den valgte time og elzone.</li><li><strong>Moms, elselskab, Energinet og elafgift:</strong> lægges oveni spotprisen.</li><li><strong>Nettarif:</strong> afhænger af dit netselskab, årstid og klokkeslæt.</li><li><strong>Uden faste:</strong> den timeafhængige pris før månedsabonnementer fordeles ud.</li><li><strong>Abonnementer:</strong> fordeles på dit indtastede årsforbrug og lægges kun til den store samlede pris.</li></ul></section>
+      <section class="calculation-card"><h3>1. Den samlede pris</h3><p id="calculationExplanation">Den viste pris beregnes ud fra dine valg i Indstillinger.</p><ul><li><strong>Spot:</strong> den rene markedspris ekskl. moms.</li><li><strong>Basis:</strong> spot med moms + nettarif + Energinets tariffer + elafgift. Ingen elselskabstillæg eller abonnementer.</li><li><strong>Uden faste:</strong> basis + dit elselskabs kWh-tillæg.</li><li><strong>Samlet pris:</strong> uden faste + dine månedlige abonnementer fordelt på årsforbruget.</li></ul></section>
 
       <section class="calculation-card"><h3>2. Officiel spotpris eller prognose?</h3><p>Mærket <strong>Spot officiel</strong> gælder kun spotprisen fra day-ahead-markedet – ikke hele den samlede pris. <strong>Spot prognose</strong> betyder, at spotprisen endnu ikke er offentliggjort. Så snart den officielle spotpris findes, erstatter den automatisk prognosen.</p></section>
 

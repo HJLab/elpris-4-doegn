@@ -1,0 +1,30 @@
+name: Kontroller elpris-app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app.js"
+      - "scripts/**/*.mjs"
+      - "tests/**"
+      - ".github/workflows/check-app.yml"
+  pull_request:
+    paths:
+      - "app.js"
+      - "scripts/**/*.mjs"
+      - "tests/**"
+      - ".github/workflows/check-app.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - run: node tests/core.cjs
+      - run: node tests/archive.mjs

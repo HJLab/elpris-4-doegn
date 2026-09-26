@@ -30,12 +30,17 @@ assert.equal(points.length, 2);
 const actual = actualPriceMap({ days: [
   { date: "2026-08-30", prices: [{ hour: 0, price: 0.8 }, { hour: 1, price: 1.1 }] }
 ] });
-const scored = scoreSnapshots([{ area: "DK1", collectedAt: "2026-08-29T13:00:00Z", points }], actual, "2026-08-31", "DK1");
+const scored = scoreSnapshots([{ area: "DK1", collectedAt: "2026-08-29T13:00:00Z", points }], actual, "DK1");
 assert.equal(scored.length, 2);
 assert.equal(scored[0].area, "DK1");
-assert.equal(scored[0].errorOre, 25);
-assert.equal(scored[1].errorOre, 12.5);
+assert.equal(scored[0].errorOre, 20);
+assert.equal(scored[1].errorOre, 10);
 assert.equal(scored[0].forecastSpotExVat, 1);
 assert.equal(scored[0].actualSpotExVat, 0.8);
+
+const futureActual = actualPriceMap({ days: [{ date: "2026-08-31", prices: [{ hour: 0, price: 0.5 }] }] });
+const futureScored = scoreSnapshots([{ area: "DK1", collectedAt: "2026-08-29T13:00:00Z", points: [{ target: "2026-08-31T00:00", forecastSpotExVat: 0.7 }] }], futureActual, "DK1");
+assert.equal(futureScored.length, 1);
+assert.equal(futureScored[0].errorOre, 20);
 
 console.log("Arkiveringskontroller bestået.");

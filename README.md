@@ -56,3 +56,12 @@ Officielle priser stammer fra Energi Data Service. Browservenlige pris- og progn
 - Viser **uden faste** under hver time: spotpris med moms, elselskabets kWh-tillæg, Energinet, elafgift og nettarif, men uden fordelte månedsabonnementer.
 - Den store pris er fortsat den samlede beregnede kWh-pris inklusive de faste månedsbeløb fordelt på det valgte årsforbrug.
 - Service-worker-cachen er opdateret, så v7 bliver hentet på installerede enheder.
+
+
+## Version 8
+
+- Prognosefejl måles nu som forskellen mellem prognose og officiel **spotpris ekskl. moms**. Den tidligere fejlmåling lagde 25 % moms oven i forskellen og viste derfor et tal, der var 25 % højere end den rå spotprisforskel.
+- Træfsikkerheden opdateres nu så snart den officielle day-ahead-pris findes; den venter ikke længere unødigt til leveringsdøgnet er afsluttet.
+- Hver time viser nu også **basis**: spot inkl. moms + nettarif + Energinet + elafgift, men uden elselskabets kWh-tillæg og uden abonnementer. Det er den mest retvisende værdi at sammenligne med en rå prisvisning i fx Watts.
+- “Uden faste” er basis plus elselskabets kWh-tillæg. Den store pris lægger derefter abonnementerne oveni.
+- Automatisk test-workflow kontrollerer fremover kerneberegninger og prognosehistorik ved kodeændringer.
