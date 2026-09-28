@@ -20,7 +20,7 @@
     <div>
       <p id="profileSummary" class="eyebrow">DK2 · Østdanmark · Cerius · Modstrøm</p>
       <h1>Elpris – næste 4 dage</h1>
-      <span class="app-version">Version v10</span>
+      <span class="app-version">Version v11</span>
     </div>
     <div class="top-actions">
       <button id="settingsButton" class="secondary-button" type="button">Indstillinger</button>
@@ -219,7 +219,7 @@
 
       <section class="calculation-card"><h3>1. Den samlede pris</h3><p id="calculationExplanation">Den viste pris beregnes ud fra dine valg i Indstillinger.</p><ul><li><strong>Spot:</strong> den rene markedspris ekskl. moms.</li><li><strong>Basis:</strong> spot med moms + nettarif + Energinets tariffer + elafgift. Ingen elselskabstillæg eller abonnementer.</li><li><strong>Uden faste:</strong> basis + dit elselskabs kWh-tillæg.</li><li><strong>Samlet pris:</strong> uden faste + dine månedlige abonnementer fordelt på årsforbruget.</li></ul></section>
 
-      <section class="calculation-card"><h3>2. Officiel spotpris eller prognose?</h3><p>Mærket <strong>Spot officiel</strong> gælder kun spotprisen fra day-ahead-markedet – ikke hele den samlede pris. <strong>Spot prognose</strong> betyder, at spotprisen endnu ikke er offentliggjort. Så snart den officielle spotpris findes, erstatter den automatisk prognosen.</p></section>
+      <section class="calculation-card"><h3>2. Officiel spotpris eller prognose?</h3><p>Mærket <strong>Spot officiel</strong> gælder kun spotprisen fra day-ahead-markedet – ikke hele den samlede pris. <strong>Spot prognose</strong> betyder, at spotprisen endnu ikke er offentliggjort. Officielle priser hentes direkte fra Energinets DayAheadPrices-data og erstatter automatisk prognosen, så snart de findes.</p></section>
 
       <section class="calculation-card"><h3>3. Sådan udregnes prognosen</h3><p>Prognosen kommer fra en maskinlæringsmodel hos elpriser.org. Den vurderer hver time ud fra de seneste prisforløb, tidspunkt, ugedag og årstid samt forventede markedsforhold.</p><p>Modellen bruger blandt andet vind, solindstråling og temperatur i Danmark, Nordtyskland og udvalgte nabolande. Det siger noget om forventet vind- og solproduktion, elforbrug og strømhandel over forbindelserne til Danmark.</p><p>Derfor findes der ikke en fast regel om, at strøm er billigst om natten. Om sommeren kan lave priser eksempelvis ligge midt på dagen ved høj solproduktion, mens vind og forbrug kan flytte dem til helt andre tidspunkter.</p></section>
 

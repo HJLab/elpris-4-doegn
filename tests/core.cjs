@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, ceriusTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, shouldShowReviewReminder } = require("../app.js");
+const { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, mergeKnownHours, forecastPayloadToHours, ceriusTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, shouldShowReviewReminder } = require("../app.js");
 
 const records = [
   { TimeDK: "2026-08-29T10:00:00", PriceArea: "DK2", DayAheadPriceDKK: 400 },
@@ -10,6 +10,7 @@ const records = [
 const hourly = aggregateToHours(records);
 assert.equal(hourly.size, 1);
 assert.equal([...hourly.values()][0].spotExVat, 0.7);
+assert.equal([...hourly.values()][0].kind, "actual");
 
 const forecastHours = forecastPayloadToHours([
   { date: "2026-08-29", type: "actual", prices: [{ hour: 10, price: 0.7 }] },
@@ -18,6 +19,15 @@ const forecastHours = forecastPayloadToHours([
 assert.equal(forecastHours.size, 2);
 assert.equal([...forecastHours.values()][0].kind, "actual");
 assert.equal([...forecastHours.values()][1].kind, "forecast");
+
+const mergedHours = mergeKnownHours(forecastHours, aggregateToHours([
+  { TimeDK: "2026-08-30T10:00:00", PriceArea: "DK2", DayAheadPriceDKK: "900" },
+  { TimeDK: "2026-08-30T10:15:00", PriceArea: "DK2", DayAheadPriceDKK: 1100 },
+  { TimeDK: "2026-08-30T10:30:00", PriceArea: "DK2", DayAheadPriceDKK: 1000 },
+  { TimeDK: "2026-08-30T10:45:00", PriceArea: "DK2", DayAheadPriceDKK: 1000 }
+]));
+assert.equal(mergedHours.get("2026-08-30T10:00").kind, "actual");
+assert.equal(mergedHours.get("2026-08-30T10:00").spotExVat, 1);
 
 assert.equal(ceriusTariff(new Date(2026, 7, 29, 3)), 0.1442);
 assert.equal(ceriusTariff(new Date(2026, 7, 29, 12)), 0.2163);

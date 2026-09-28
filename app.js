@@ -87,7 +87,7 @@ function saveSettings(next) {
 }
 
 function areaName(area) { return area === "DK1" ? "Vestdanmark" : "Østdanmark"; }
-function cacheKey(area = settings.priceArea) { return `elpris-${area.toLowerCase()}-cache-v3`; }
+function cacheKey(area = settings.priceArea) { return `elpris-${area.toLowerCase()}-cache-v4`; }
 
 function localIso(date) {
   const y = date.getFullYear();
@@ -128,20 +128,54 @@ function addHours(date, hours) { return new Date(date.getTime() + hours * 360000
 function addDays(date, days) { return new Date(date.getTime() + days * 86400000); }
 function mean(values) { return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null; }
 
-async function fetchRecords() {
-  const url = `https://elpriser.org/api/forecast?area=${settings.priceArea}&mode=spot_ex`;
+async function fetchJsonWithTimeout(url, timeoutMs = 10000) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000);
-  let response;
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    response = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-store", signal: controller.signal });
+    const response = await fetch(url, { headers: { Accept: "application/json" }, cache: "no-store", signal: controller.signal });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
   } finally {
     clearTimeout(timeout);
   }
-  if (!response.ok) throw new Error(`Datakilden svarede med fejl ${response.status}`);
-  const payload = await response.json();
-  if (!Array.isArray(payload.days) || !payload.days.length) throw new Error(`Datakilden returnerede ingen ${settings.priceArea}-priser`);
-  const saved = { savedAt: new Date().toISOString(), generatedAt: payload.generated, days: payload.days };
+}
+
+function dateKey(date) { return localIso(date).slice(0, 10); }
+
+function dayAheadUrl(area = settings.priceArea, now = new Date()) {
+  const start = startOfDay(now);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 4);
+  const filter = encodeURIComponent(JSON.stringify({ PriceArea: [area] }));
+  return `https://api.energidataservice.dk/dataset/DayAheadPrices?start=${dateKey(start)}&end=${dateKey(end)}&columns=TimeDK,PriceArea,DayAheadPriceDKK&filter=${filter}&sort=TimeDK&limit=0`;
+}
+
+async function fetchForecastSource() {
+  const payload = await fetchJsonWithTimeout(`https://elpriser.org/api/forecast?area=${settings.priceArea}&mode=spot_ex`);
+  if (!Array.isArray(payload.days) || !payload.days.length) throw new Error("Prognosekilden returnerede ingen priser");
+  return payload;
+}
+
+async function fetchOfficialSource() {
+  const payload = await fetchJsonWithTimeout(dayAheadUrl());
+  if (!Array.isArray(payload.records)) throw new Error("Energinet returnerede ikke DayAheadPrices-data");
+  return payload.records;
+}
+
+async function fetchRecords() {
+  const [forecastResult, officialResult] = await Promise.allSettled([fetchForecastSource(), fetchOfficialSource()]);
+  if (forecastResult.status === "rejected" && officialResult.status === "rejected") {
+    throw new Error("Både prognosekilden og Energinet fejlede");
+  }
+  const forecastPayload = forecastResult.status === "fulfilled" ? forecastResult.value : null;
+  const saved = {
+    savedAt: new Date().toISOString(),
+    generatedAt: forecastPayload?.generated || null,
+    days: forecastPayload?.days || [],
+    officialRecords: officialResult.status === "fulfilled" ? officialResult.value : [],
+    officialSourceOk: officialResult.status === "fulfilled",
+    forecastSourceOk: forecastResult.status === "fulfilled"
+  };
   localStorage.setItem(cacheKey(), JSON.stringify(saved));
   return { ...saved, savedAt: new Date(saved.savedAt), fromCache: false };
 }
@@ -149,8 +183,8 @@ async function fetchRecords() {
 function readCache() {
   try {
     const cached = JSON.parse(localStorage.getItem(cacheKey()));
-    if (!cached?.days?.length) return null;
-    return { ...cached, savedAt: new Date(cached.savedAt), fromCache: true };
+    if (!cached || (!cached.days?.length && !cached.officialRecords?.length)) return null;
+    return { ...cached, officialRecords: cached.officialRecords || [], savedAt: new Date(cached.savedAt), fromCache: true };
   } catch { return null; }
 }
 
@@ -177,15 +211,22 @@ function forecastPayloadToHours(days) {
 function aggregateToHours(records, priceArea = settings.priceArea) {
   const buckets = new Map();
   for (const record of records) {
-    if (record.PriceArea !== priceArea || !Number.isFinite(record.DayAheadPriceDKK)) continue;
+    const price = Number(record.DayAheadPriceDKK);
+    if (record.PriceArea !== priceArea || !record.TimeDK || !Number.isFinite(price)) continue;
     const date = floorHour(parseDanishTime(record.TimeDK));
     const key = hourKey(date);
     if (!buckets.has(key)) buckets.set(key, { date, values: [] });
-    buckets.get(key).values.push(record.DayAheadPriceDKK / 1000);
+    buckets.get(key).values.push(price / 1000);
   }
   const hours = new Map();
-  for (const [key, bucket] of buckets) hours.set(key, { date: bucket.date, spotExVat: mean(bucket.values) });
+  for (const [key, bucket] of buckets) hours.set(key, { date: bucket.date, spotExVat: mean(bucket.values), kind: "actual" });
   return hours;
+}
+
+function mergeKnownHours(forecastHours, officialHours) {
+  const merged = new Map(forecastHours);
+  for (const [key, item] of officialHours) merged.set(key, { ...item, kind: "actual" });
+  return merged;
 }
 
 function forecastSpot(target, knownHours) {
@@ -644,16 +685,23 @@ async function load() {
   }
 
   const now = new Date();
-  const known = forecastPayloadToHours(data.days);
+  const forecastHours = forecastPayloadToHours(data.days || []);
+  const officialHours = aggregateToHours(data.officialRecords || []);
+  const known = mergeKnownHours(forecastHours, officialHours);
+  if (!known.size) {
+    setStatus("Der blev ikke fundet brugbare prisdata. Prøv igen om lidt.", "error");
+    ui.refresh.disabled = false;
+    return;
+  }
   const items = buildHorizon(known, now);
   renderSummary(items, now);
   renderDays(items, now);
   const officialCount = items.filter((x) => x.kind === "actual").length;
   const forecastCount = items.length - officialCount;
   const cacheText = data.fromCache ? " Viser senest gemte data, fordi en ny hentning mislykkedes." : "";
-  setStatus(`${officialCount} officielle timer og ${forecastCount} prognosetimer.${cacheText}`, data.fromCache ? "error" : "ok");
-  const sourceTime = data.generatedAt ? new Date(data.generatedAt) : data.savedAt;
-  ui.updatedAt.textContent = `Prognose opdateret ${fmtDate.format(sourceTime)} kl. ${fmtTime.format(sourceTime)}`;
+  const sourceText = data.officialSourceOk === false ? " Direkte Energinet-data kunne ikke hentes, så reservekilden bruges." : "";
+  setStatus(`${officialCount} officielle timer og ${forecastCount} prognosetimer.${sourceText}${cacheText}`, data.fromCache || data.officialSourceOk === false ? "error" : "ok");
+  ui.updatedAt.textContent = `Priser hentet ${fmtDate.format(data.savedAt)} kl. ${fmtTime.format(data.savedAt)}`;
   ui.refresh.disabled = false;
 }
 
@@ -689,11 +737,27 @@ if (hasDocument) {
     selectedAccuracyMonth = ui.monthlyAccuracyMonth.value;
     renderMonthlyAccuracy();
   });
-  load();
+  let lastPriceRefresh = 0;
+  const runPriceLoad = async () => {
+    await load();
+    lastPriceRefresh = Date.now();
+  };
+  runPriceLoad();
   loadAccuracy();
   showReviewReminderIfDue();
-  setInterval(load, 60 * 60 * 1000);
-  setInterval(loadAccuracy, 6 * 60 * 60 * 1000);
+  const schedulePriceRefresh = () => {
+    const hour = new Date().getHours();
+    const minutes = hour >= 12 && hour < 16 ? 15 : 60;
+    setTimeout(async () => {
+      await runPriceLoad();
+      schedulePriceRefresh();
+    }, minutes * 60 * 1000);
+  };
+  schedulePriceRefresh();
+  setInterval(loadAccuracy, 60 * 60 * 1000);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && Date.now() - lastPriceRefresh > 5 * 60 * 1000) runPriceLoad();
+  });
 
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
     navigator.serviceWorker.register("sw.js").catch(() => {});
@@ -701,4 +765,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, shouldShowReviewReminder };
+if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, shouldShowReviewReminder };

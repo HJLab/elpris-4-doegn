@@ -9,16 +9,12 @@ on:
       - ".github/workflows/archive-forecast.yml"
       - "scripts/archive-forecast.mjs"
   schedule:
-    # GitHub planlaegger i UTC. Forsøg hvert kvarter fra 13-18 UTC.
-    # Scriptet bruger Europe/Copenhagen som facit, starter først efter dansk kl. 15
-    # og stopper efter dagens første vellykkede opdatering. Det virker i både
-    # sommer- og vintertid og giver nye forsøg, hvis GitHub er forsinket.
-    # Flere separate cron-linjer giver GitHub flere uafhaengige planlagte haendelser.
-    # Scriptet er idempotent og gemmer kun dagens foerste vellykkede snapshot.
-    - cron: "7,37 13-18 * * *"
-    - cron: "22,52 13-18 * * *"
-    # Sen sikkerhedskoersel hvis GitHub har sprunget hele eftermiddagen over.
-    - cron: "17 19-21 * * *"
+    # GitHub kører cron i UTC. Vi prøver to gange i timen gennem en bred del af dagen.
+    # Scriptet bruger Europe/Copenhagen som facit og gemmer kun ét snapshot pr. døgn.
+    # Første snapshot må gemmes fra kl. 11 dansk tid, altså før day-ahead-priserne
+    # normalt offentliggøres. Senere kørsler kan derfor sammenligne prognosen med
+    # de officielle DayAheadPrices samme eftermiddag.
+    - cron: "13,43 9-21 * * *"
 
 permissions:
   contents: write
@@ -48,5 +44,6 @@ jobs:
             echo "Ingen nye data at gemme."
           else
             git commit -m "Opdater prognosehistorik"
+            git pull --rebase
             git push
           fi

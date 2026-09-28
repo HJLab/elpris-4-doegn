@@ -7,7 +7,10 @@ const LOG_PATH = path.join(ROOT, "data", "forecast-log.json");
 const ACCURACY_PATH = path.join(ROOT, "data", "accuracy.json");
 const AREAS = ["DK1", "DK2"];
 const forecastUrl = (area) => `https://elpriser.org/api/forecast?area=${area}&mode=spot_ex`;
-const priceUrl = (area) => `https://elpriser.org/api/prices?area=${area}&mode=spot_ex`;
+const dayAheadUrl = (area, start, end) => {
+  const filter = encodeURIComponent(JSON.stringify({ PriceArea: [area] }));
+  return `https://api.energidataservice.dk/dataset/DayAheadPrices?start=${start}&end=${end}&columns=TimeDK,PriceArea,DayAheadPriceDKK&filter=${filter}&sort=TimeDK&limit=0`;
+};
 const COPENHAGEN = "Europe/Copenhagen";
 
 function copenhagenParts(date = new Date()) {
@@ -33,22 +36,30 @@ function addDateDays(dateText, days) {
 }
 
 function shouldRun(localHour, forceRun = false) {
-  return forceRun || localHour >= 15;
-}
-
-function hasOfficialDay(payload, date) {
-  const day = (payload.days || []).find((item) => item.date === date && item.type === "actual");
-  return Array.isArray(day?.prices) && day.prices.length > 0;
+  return forceRun || localHour >= 11;
 }
 
 function hasSnapshotsForDate(snapshots, date, areas = AREAS) {
   return areas.every((area) => snapshots.some((item) => item.collectedDate === date && (item.area || "DK2") === area));
 }
 
-async function fetchJson(url) {
-  const response = await fetch(url, { headers: { Accept: "application/json" } });
-  if (!response.ok) throw new Error(`${url} svarede med fejl ${response.status}`);
-  return response.json();
+async function fetchJson(url, attempts = 3) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    try {
+      const response = await fetch(url, { headers: { Accept: "application/json" }, signal: controller.signal });
+      if (!response.ok) throw new Error(`${url} svarede med fejl ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts) await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+  throw lastError;
 }
 
 async function readLog() {
@@ -81,18 +92,32 @@ function forecastPoints(payload, startKey, endKey) {
 }
 
 function actualPriceMap(payload) {
-  const map = new Map();
-  const days = Array.isArray(payload.days) ? payload.days : [payload];
-  for (const day of days) {
-    if (!day?.date || !Array.isArray(day.prices)) continue;
-    for (const item of day.prices) {
-      const hour = Number(item.hour);
-      const price = Number(item.price);
-      if (Number.isInteger(hour) && Number.isFinite(price)) {
-        map.set(`${day.date}T${String(hour).padStart(2, "0")}:00`, price);
+  const buckets = new Map();
+  if (Array.isArray(payload.records)) {
+    for (const record of payload.records) {
+      const price = Number(record.DayAheadPriceDKK);
+      if (!record.TimeDK || !Number.isFinite(price)) continue;
+      const target = `${record.TimeDK.slice(0, 13)}:00`;
+      if (!buckets.has(target)) buckets.set(target, []);
+      buckets.get(target).push(price / 1000);
+    }
+  } else {
+    const days = Array.isArray(payload.days) ? payload.days : [payload];
+    for (const day of days) {
+      if (!day?.date || !Array.isArray(day.prices)) continue;
+      for (const item of day.prices) {
+        const hour = Number(item.hour);
+        const price = Number(item.price);
+        if (Number.isInteger(hour) && Number.isFinite(price)) {
+          const target = `${day.date}T${String(hour).padStart(2, "0")}:00`;
+          if (!buckets.has(target)) buckets.set(target, []);
+          buckets.get(target).push(price);
+        }
       }
     }
   }
+  const map = new Map();
+  for (const [target, values] of buckets) map.set(target, values.reduce((sum, value) => sum + value, 0) / values.length);
   return map;
 }
 
@@ -132,10 +157,10 @@ async function main() {
   const allPoints = log.snapshots.flatMap((item) => item.points || []);
   if (allPoints.length) {
     const firstDate = allPoints.map((item) => item.target.slice(0, 10)).sort()[0];
-    const tomorrow = addDateDays(local.date, 1);
+    const endDate = addDateDays(local.date, 2);
     const observations = [];
     for (const area of AREAS) {
-      const actualPayload = await fetchJson(`${priceUrl(area)}&start=${firstDate}&end=${tomorrow}`);
+      const actualPayload = await fetchJson(dayAheadUrl(area, firstDate, endDate));
       observations.push(...scoreSnapshots(log.snapshots, actualPriceMap(actualPayload), area));
     }
     observations.sort((a, b) => a.target.localeCompare(b.target) || a.area.localeCompare(b.area) || a.issuedAt.localeCompare(b.issuedAt));
@@ -152,13 +177,6 @@ async function main() {
 
   if (!forceRun && hasSnapshotsForDate(log.snapshots, local.date)) {
     console.log(`Dagens prognose for ${local.date} er allerede gemt for DK1 og DK2.`);
-    return;
-  }
-
-  const tomorrow = addDateDays(local.date, 1);
-  const areasWaitingForOfficialPrices = AREAS.filter((area) => !hasOfficialDay(forecasts.get(area), tomorrow));
-  if (areasWaitingForOfficialPrices.length) {
-    console.log(`Venter med nyt snapshot: de officielle priser for ${tomorrow} er endnu ikke klar for ${areasWaitingForOfficialPrices.join(", ")}.`);
     return;
   }
 
@@ -183,4 +201,4 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   });
 }
 
-export { addNaiveHours, forecastPoints, actualPriceMap, scoreSnapshots, shouldRun, hasOfficialDay, hasSnapshotsForDate };
+export { addNaiveHours, forecastPoints, actualPriceMap, scoreSnapshots, shouldRun, hasSnapshotsForDate };

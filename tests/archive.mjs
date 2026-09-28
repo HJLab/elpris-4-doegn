@@ -1,18 +1,11 @@
 import assert from "node:assert/strict";
-import { addNaiveHours, forecastPoints, actualPriceMap, scoreSnapshots, shouldRun, hasOfficialDay, hasSnapshotsForDate } from "../scripts/archive-forecast.mjs";
+import { addNaiveHours, forecastPoints, actualPriceMap, scoreSnapshots, shouldRun, hasSnapshotsForDate } from "../scripts/archive-forecast.mjs";
 
 assert.equal(addNaiveHours("2026-08-29T23:00", 2), "2026-08-30T01:00");
-assert.equal(shouldRun(14, false), false);
-assert.equal(shouldRun(15, false), true);
+assert.equal(shouldRun(10, false), false);
+assert.equal(shouldRun(11, false), true);
 assert.equal(shouldRun(19, false), true);
 assert.equal(shouldRun(8, true), true);
-
-const officialPayload = { days: [
-  { date: "2026-10-25", type: "actual", prices: [{ hour: 0, price: 1 }] },
-  { date: "2026-10-26", type: "forecast", prices: [{ hour: 0, price: 1.2 }] }
-] };
-assert.equal(hasOfficialDay(officialPayload, "2026-10-25"), true);
-assert.equal(hasOfficialDay(officialPayload, "2026-10-26"), false);
 assert.equal(hasSnapshotsForDate([
   { area: "DK1", collectedDate: "2026-10-25" },
   { area: "DK2", collectedDate: "2026-10-25" }
@@ -27,8 +20,15 @@ const points = forecastPoints({ days: [
 ] }, "2026-08-29T23:00", "2026-08-30T02:00");
 assert.equal(points.length, 2);
 
-const actual = actualPriceMap({ days: [
-  { date: "2026-08-30", prices: [{ hour: 0, price: 0.8 }, { hour: 1, price: 1.1 }] }
+const actual = actualPriceMap({ records: [
+  { TimeDK: "2026-08-30T00:00:00", DayAheadPriceDKK: 700 },
+  { TimeDK: "2026-08-30T00:15:00", DayAheadPriceDKK: 800 },
+  { TimeDK: "2026-08-30T00:30:00", DayAheadPriceDKK: 900 },
+  { TimeDK: "2026-08-30T00:45:00", DayAheadPriceDKK: 800 },
+  { TimeDK: "2026-08-30T01:00:00", DayAheadPriceDKK: 1000 },
+  { TimeDK: "2026-08-30T01:15:00", DayAheadPriceDKK: 1100 },
+  { TimeDK: "2026-08-30T01:30:00", DayAheadPriceDKK: 1200 },
+  { TimeDK: "2026-08-30T01:45:00", DayAheadPriceDKK: 1100 }
 ] });
 const scored = scoreSnapshots([{ area: "DK1", collectedAt: "2026-08-29T13:00:00Z", points }], actual, "DK1");
 assert.equal(scored.length, 2);
