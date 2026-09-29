@@ -78,3 +78,11 @@ Officielle priser stammer fra Energi Data Service. Browservenlige pris- og progn
 
 - Retter en situation hvor appen kunne blive stående på “Henter de nyeste priser…” uden at komme videre, hvis pris-API'et ikke afsluttede forbindelsen.
 - En prisforespørgsel afbrydes nu efter 10 sekunder. Hvis der findes gemte priser på telefonen, vises de straks som reserve i stedet for en uendelig indlæsning.
+
+
+## Version 12
+
+- Tilføjer en uafhængig backup-kørsel til prognosehistorikken.
+- Backup-jobbet kører på andre klokkeslæt end hovedjobbet og bruger samme idempotente arkiveringsscript.
+- Hvis GitHubs primære planlagte kørsel bliver forsinket eller springes over, får historikken flere uafhængige chancer for både at gemme en prognose før offentliggørelsen og opdatere træfsikkerheden bagefter.
+- Hovedjob og backup-job deler samme concurrency-gruppe, så de ikke skriver til historikfilerne samtidig.
