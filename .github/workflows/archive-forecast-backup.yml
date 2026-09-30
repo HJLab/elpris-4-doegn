@@ -7,11 +7,12 @@ on:
       - main
     paths:
       - ".github/workflows/archive-forecast-backup.yml"
-      - "scripts/archive-forecast.mjs"
   schedule:
-    # Uafhængig sikkerhed for hovedjobbet. UTC-tiderne giver flere forsøg
-    # både før og efter offentliggørelsen i dansk sommer- og vintertid.
-    - cron: "31 9-16 * * *"
+    # Reserve hvis GitHub forsinker eller dropper hovedkørslen.
+    - cron: "20 12 * * *"
+      timezone: "Europe/Copenhagen"
+    - cron: "20 16 * * *"
+      timezone: "Europe/Copenhagen"
 
 permissions:
   contents: write
@@ -23,14 +24,13 @@ concurrency:
 jobs:
   archive-backup:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Hent projektet
         uses: actions/checkout@v5
 
       - name: Gem prognose og beregn traefsikkerhed
         run: node scripts/archive-forecast.mjs
-        env:
-          FORCE_RUN: ${{ github.event_name != 'schedule' }}
 
       - name: Gem opdaterede historikdata
         run: |

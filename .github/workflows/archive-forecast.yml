@@ -9,12 +9,13 @@ on:
       - ".github/workflows/archive-forecast.yml"
       - "scripts/archive-forecast.mjs"
   schedule:
-    # GitHub kører cron i UTC. Vi prøver to gange i timen gennem en bred del af dagen.
-    # Scriptet bruger Europe/Copenhagen som facit og gemmer kun ét snapshot pr. døgn.
-    # Første snapshot må gemmes fra kl. 11 dansk tid, altså før day-ahead-priserne
-    # normalt offentliggøres. Senere kørsler kan derfor sammenligne prognosen med
-    # de officielle DayAheadPrices samme eftermiddag.
-    - cron: "13,43 9-21 * * *"
+    # Fast dansk tid. GitHub håndterer selv sommer-/vintertid.
+    # 11:20 gemmer dagens prognose før de officielle priser.
+    # 15:20 opdaterer historikken efter day-ahead-priserne normalt er ude.
+    - cron: "20 11 * * *"
+      timezone: "Europe/Copenhagen"
+    - cron: "20 15 * * *"
+      timezone: "Europe/Copenhagen"
 
 permissions:
   contents: write
@@ -26,14 +27,13 @@ concurrency:
 jobs:
   archive:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Hent projektet
         uses: actions/checkout@v5
 
       - name: Gem prognose og beregn traefsikkerhed
         run: node scripts/archive-forecast.mjs
-        env:
-          FORCE_RUN: ${{ github.event_name != 'schedule' }}
 
       - name: Gem opdaterede historikdata
         run: |
