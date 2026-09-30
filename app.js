@@ -6,7 +6,7 @@ const CONFIG = Object.freeze({
   electricityTaxInclVat: 0.008 * 1.25,
   ceriusInclVat: {
     summer: { low: 0.1442, high: 0.2163, peak: 0.5623 },
-    winter: { low: 0.13825, high: 0.414875, peak: 1.2445 }
+    winter: { low: 0.1442, high: 0.4325, peak: 1.2975 }
   }
 });
 
