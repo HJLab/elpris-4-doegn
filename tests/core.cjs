@@ -32,7 +32,9 @@ assert.equal(mergedHours.get("2026-08-30T10:00").spotExVat, 1);
 assert.equal(ceriusTariff(new Date(2026, 7, 29, 3)), 0.1442);
 assert.equal(ceriusTariff(new Date(2026, 7, 29, 12)), 0.2163);
 assert.equal(ceriusTariff(new Date(2026, 7, 29, 18)), 0.5623);
-assert.equal(ceriusTariff(new Date(2026, 9, 1, 3)), 0.1442);\nassert.equal(ceriusTariff(new Date(2026, 9, 1, 12)), 0.4325);\nassert.equal(ceriusTariff(new Date(2026, 9, 1, 18)), 1.2975);
+assert.equal(ceriusTariff(new Date(2026, 9, 1, 3)), 0.1442);
+assert.equal(ceriusTariff(new Date(2026, 9, 1, 12)), 0.4325);
+assert.equal(ceriusTariff(new Date(2026, 9, 1, 18)), 1.2975);
 
 const priceDate = new Date(2026, 7, 29, 12);
 const baseCalculated = officialBasePrice(0.7, priceDate, DEFAULT_SETTINGS);
