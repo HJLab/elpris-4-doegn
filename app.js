@@ -150,6 +150,58 @@ function dayAheadUrl(area = settings.priceArea, now = new Date()) {
   return `https://api.energidataservice.dk/dataset/DayAheadPrices?start=${dateKey(start)}&end=${dateKey(end)}&columns=TimeDK,PriceArea,DayAheadPriceDKK&filter=${filter}&sort=TimeDK&limit=0`;
 }
 
+function daysBetweenDateKeys(earlier, later) {
+  const [ey, em, ed] = earlier.split("-").map(Number);
+  const [ly, lm, ld] = later.split("-").map(Number);
+  return Math.round((Date.UTC(ly, lm - 1, ld) - Date.UTC(ey, em - 1, ed)) / 86400000);
+}
+
+function copenhagenDateKey(date) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Copenhagen", year: "numeric", month: "2-digit", day: "2-digit"
+  }).format(date);
+}
+
+function cleanForecastObservations(observations) {
+  return observations.filter((item) => {
+    if (!item?.issuedAt || !item?.target) return false;
+    const issued = new Date(item.issuedAt);
+    if (!Number.isFinite(issued.getTime())) return false;
+    return daysBetweenDateKeys(copenhagenDateKey(issued), item.target.slice(0, 10)) >= 2;
+  });
+}
+
+function historicalDayAheadUrl(area, startDate, endDate) {
+  const filter = encodeURIComponent(JSON.stringify({ PriceArea: [area] }));
+  return `https://api.energidataservice.dk/dataset/DayAheadPrices?start=${startDate}&end=${endDate}&columns=TimeDK,PriceArea,DayAheadPriceDKK&filter=${filter}&sort=TimeDK&limit=0`;
+}
+
+function scoreSavedForecasts(snapshots, officialRecords, priceArea = settings.priceArea) {
+  const actualHours = aggregateToHours(officialRecords, priceArea);
+  const observations = [];
+  for (const snapshot of snapshots) {
+    if ((snapshot.area || "DK2") !== priceArea || !snapshot.collectedAt) continue;
+    const issued = new Date(snapshot.collectedAt);
+    if (!Number.isFinite(issued.getTime())) continue;
+    const issuedDate = copenhagenDateKey(issued);
+    for (const point of snapshot.points || []) {
+      if (!point?.target || daysBetweenDateKeys(issuedDate, point.target.slice(0, 10)) < 2) continue;
+      const forecast = Number(point.forecastSpotExVat);
+      const actual = actualHours.get(point.target)?.spotExVat;
+      if (!Number.isFinite(forecast) || !Number.isFinite(actual)) continue;
+      observations.push({
+        area: priceArea,
+        issuedAt: snapshot.collectedAt,
+        target: point.target,
+        forecastSpotExVat: forecast,
+        actualSpotExVat: actual,
+        errorOre: Math.round(Math.abs(forecast - actual) * 10000) / 100
+      });
+    }
+  }
+  return observations.sort((a, b) => a.target.localeCompare(b.target) || a.issuedAt.localeCompare(b.issuedAt));
+}
+
 async function fetchForecastSource() {
   const payload = await fetchJsonWithTimeout(`https://elpriser.org/api/forecast?area=${settings.priceArea}&mode=spot_ex`);
   if (!Array.isArray(payload.days) || !payload.days.length) throw new Error("Prognosekilden returnerede ingen priser");
@@ -528,17 +580,36 @@ function renderMonthlyAccuracy() {
 
 async function loadAccuracy() {
   try {
-    const response = await fetch(`data/accuracy.json?t=${Date.now()}`, { cache: "no-store" });
-    if (!response.ok) throw new Error("Ingen statistik endnu");
-    const payload = await response.json();
-    accuracyObservations = Array.isArray(payload.observations) ? payload.observations : [];
-    const updated = payload.updatedAt ? new Date(payload.updatedAt) : null;
-    ui.accuracyUpdatedAt.textContent = updated && Number.isFinite(updated.getTime())
-      ? `Historik senest opdateret: ${fmtHistoryUpdated.format(updated)}`
-      : "Historikkens opdateringstidspunkt mangler.";
+    const logResponse = await fetch(`data/forecast-log.json?t=${Date.now()}`, { cache: "no-store" });
+    if (!logResponse.ok) throw new Error("Ingen prognosehistorik endnu");
+    const logPayload = await logResponse.json();
+    const snapshots = (Array.isArray(logPayload.snapshots) ? logPayload.snapshots : [])
+      .filter((item) => (item.area || "DK2") === settings.priceArea);
+
+    const targets = snapshots.flatMap((item) => item.points || []).map((item) => item.target).filter(Boolean).sort();
+    if (!targets.length) throw new Error("Ingen gemte prognosetimer endnu");
+
+    const startDate = targets[0].slice(0, 10);
+    const endDate = dateKey(addDays(startOfDay(new Date()), 2));
+    const officialPayload = await fetchJsonWithTimeout(historicalDayAheadUrl(settings.priceArea, startDate, endDate), 15000);
+    if (!Array.isArray(officialPayload.records)) throw new Error("Energinet returnerede ingen historikdata");
+
+    accuracyObservations = scoreSavedForecasts(snapshots, officialPayload.records, settings.priceArea);
+    ui.accuracyUpdatedAt.textContent = `Historik kontrolleret live: ${fmtHistoryUpdated.format(new Date())} · kun prognoser gemt mindst 2 døgn før prisdøgnet tæller med`;
   } catch {
-    accuracyObservations = [];
-    ui.accuracyUpdatedAt.textContent = "Historikken kunne ikke hentes.";
+    try {
+      const response = await fetch(`data/accuracy.json?t=${Date.now()}`, { cache: "no-store" });
+      if (!response.ok) throw new Error("Ingen reservehistorik");
+      const payload = await response.json();
+      accuracyObservations = cleanForecastObservations(Array.isArray(payload.observations) ? payload.observations : []);
+      const updated = payload.updatedAt ? new Date(payload.updatedAt) : null;
+      ui.accuracyUpdatedAt.textContent = updated && Number.isFinite(updated.getTime())
+        ? `Historik fra reservefil: ${fmtHistoryUpdated.format(updated)}`
+        : "Historikken kunne ikke opdateres live.";
+    } catch {
+      accuracyObservations = [];
+      ui.accuracyUpdatedAt.textContent = "Historikken kunne ikke hentes.";
+    }
   }
   renderAccuracy(selectedAccuracyDays);
   renderMonthlyAccuracy();
@@ -706,7 +777,7 @@ async function load() {
 }
 
 if (hasDocument) {
-  ui.refresh.addEventListener("click", load);
+  ui.refresh.addEventListener("click", () => { load(); loadAccuracy(); });
   ui.settingsButton.addEventListener("click", openSettings);
   $("closeSettingsButton").addEventListener("click", closeSettings);
   $("cancelSettingsButton").addEventListener("click", closeSettings);
@@ -745,13 +816,27 @@ if (hasDocument) {
   runPriceLoad();
   loadAccuracy();
   showReviewReminderIfDue();
+  const nextPriceRefreshDelay = (now = new Date()) => {
+    const minuteOfDay = now.getHours() * 60 + now.getMinutes();
+    const startMinute = 12 * 60 + 45;
+    const endMinute = 16 * 60;
+
+    if (minuteOfDay < startMinute) {
+      return Math.min(60, startMinute - minuteOfDay) * 60 * 1000;
+    }
+    if (minuteOfDay < endMinute) {
+      const elapsed = minuteOfDay - startMinute;
+      const waitMinutes = 15 - (elapsed % 15);
+      return waitMinutes * 60 * 1000;
+    }
+    return 60 * 60 * 1000;
+  };
+
   const schedulePriceRefresh = () => {
-    const hour = new Date().getHours();
-    const minutes = hour >= 12 && hour < 16 ? 15 : 60;
     setTimeout(async () => {
       await runPriceLoad();
       schedulePriceRefresh();
-    }, minutes * 60 * 1000);
+    }, nextPriceRefreshDelay());
   };
   schedulePriceRefresh();
   setInterval(loadAccuracy, 60 * 60 * 1000);
@@ -765,4 +850,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, shouldShowReviewReminder };
+if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, cleanForecastObservations, scoreSavedForecasts, shouldShowReviewReminder };
