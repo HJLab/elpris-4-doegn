@@ -150,6 +150,24 @@ function dayAheadUrl(area = settings.priceArea, now = new Date()) {
   return `https://api.energidataservice.dk/dataset/DayAheadPrices?start=${dateKey(start)}&end=${dateKey(end)}&columns=TimeDK,PriceArea,DayAheadPriceDKK&filter=${filter}&sort=TimeDK&limit=0`;
 }
 
+function daysBetweenDateKeys(earlier, later) {
+  const [ey, em, ed] = earlier.split("-").map(Number);
+  const [ly, lm, ld] = later.split("-").map(Number);
+  return Math.round((Date.UTC(ly, lm - 1, ld) - Date.UTC(ey, em - 1, ed)) / 86400000);
+}
+
+function cleanForecastObservations(observations) {
+  return observations.filter((item) => {
+    if (!item?.issuedAt || !item?.target) return false;
+    const issued = new Date(item.issuedAt);
+    if (!Number.isFinite(issued.getTime())) return false;
+    const issuedDate = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Copenhagen", year: "numeric", month: "2-digit", day: "2-digit"
+    }).format(issued);
+    return daysBetweenDateKeys(issuedDate, item.target.slice(0, 10)) >= 2;
+  });
+}
+
 async function fetchForecastSource() {
   const payload = await fetchJsonWithTimeout(`https://elpriser.org/api/forecast?area=${settings.priceArea}&mode=spot_ex`);
   if (!Array.isArray(payload.days) || !payload.days.length) throw new Error("Prognosekilden returnerede ingen priser");
@@ -531,10 +549,10 @@ async function loadAccuracy() {
     const response = await fetch(`data/accuracy.json?t=${Date.now()}`, { cache: "no-store" });
     if (!response.ok) throw new Error("Ingen statistik endnu");
     const payload = await response.json();
-    accuracyObservations = Array.isArray(payload.observations) ? payload.observations : [];
+    accuracyObservations = cleanForecastObservations(Array.isArray(payload.observations) ? payload.observations : []);
     const updated = payload.updatedAt ? new Date(payload.updatedAt) : null;
     ui.accuracyUpdatedAt.textContent = updated && Number.isFinite(updated.getTime())
-      ? `Historik senest opdateret: ${fmtHistoryUpdated.format(updated)}`
+      ? `Historik senest beregnet: ${fmtHistoryUpdated.format(updated)} · kun prognoser gemt mindst 2 døgn før prisdøgnet tæller med`
       : "Historikkens opdateringstidspunkt mangler.";
   } catch {
     accuracyObservations = [];
@@ -706,7 +724,7 @@ async function load() {
 }
 
 if (hasDocument) {
-  ui.refresh.addEventListener("click", load);
+  ui.refresh.addEventListener("click", () => { load(); loadAccuracy(); });
   ui.settingsButton.addEventListener("click", openSettings);
   $("closeSettingsButton").addEventListener("click", closeSettings);
   $("cancelSettingsButton").addEventListener("click", closeSettings);
@@ -765,4 +783,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, shouldShowReviewReminder };
+if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, cleanForecastObservations, shouldShowReviewReminder };
