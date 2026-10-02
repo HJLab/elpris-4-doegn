@@ -156,16 +156,50 @@ function daysBetweenDateKeys(earlier, later) {
   return Math.round((Date.UTC(ly, lm - 1, ld) - Date.UTC(ey, em - 1, ed)) / 86400000);
 }
 
+function copenhagenDateKey(date) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Copenhagen", year: "numeric", month: "2-digit", day: "2-digit"
+  }).format(date);
+}
+
 function cleanForecastObservations(observations) {
   return observations.filter((item) => {
     if (!item?.issuedAt || !item?.target) return false;
     const issued = new Date(item.issuedAt);
     if (!Number.isFinite(issued.getTime())) return false;
-    const issuedDate = new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Europe/Copenhagen", year: "numeric", month: "2-digit", day: "2-digit"
-    }).format(issued);
-    return daysBetweenDateKeys(issuedDate, item.target.slice(0, 10)) >= 2;
+    return daysBetweenDateKeys(copenhagenDateKey(issued), item.target.slice(0, 10)) >= 2;
   });
+}
+
+function historicalDayAheadUrl(area, startDate, endDate) {
+  const filter = encodeURIComponent(JSON.stringify({ PriceArea: [area] }));
+  return `https://api.energidataservice.dk/dataset/DayAheadPrices?start=${startDate}&end=${endDate}&columns=TimeDK,PriceArea,DayAheadPriceDKK&filter=${filter}&sort=TimeDK&limit=0`;
+}
+
+function scoreSavedForecasts(snapshots, officialRecords, priceArea = settings.priceArea) {
+  const actualHours = aggregateToHours(officialRecords, priceArea);
+  const observations = [];
+  for (const snapshot of snapshots) {
+    if ((snapshot.area || "DK2") !== priceArea || !snapshot.collectedAt) continue;
+    const issued = new Date(snapshot.collectedAt);
+    if (!Number.isFinite(issued.getTime())) continue;
+    const issuedDate = copenhagenDateKey(issued);
+    for (const point of snapshot.points || []) {
+      if (!point?.target || daysBetweenDateKeys(issuedDate, point.target.slice(0, 10)) < 2) continue;
+      const forecast = Number(point.forecastSpotExVat);
+      const actual = actualHours.get(point.target)?.spotExVat;
+      if (!Number.isFinite(forecast) || !Number.isFinite(actual)) continue;
+      observations.push({
+        area: priceArea,
+        issuedAt: snapshot.collectedAt,
+        target: point.target,
+        forecastSpotExVat: forecast,
+        actualSpotExVat: actual,
+        errorOre: Math.round(Math.abs(forecast - actual) * 10000) / 100
+      });
+    }
+  }
+  return observations.sort((a, b) => a.target.localeCompare(b.target) || a.issuedAt.localeCompare(b.issuedAt));
 }
 
 async function fetchForecastSource() {
@@ -546,17 +580,36 @@ function renderMonthlyAccuracy() {
 
 async function loadAccuracy() {
   try {
-    const response = await fetch(`data/accuracy.json?t=${Date.now()}`, { cache: "no-store" });
-    if (!response.ok) throw new Error("Ingen statistik endnu");
-    const payload = await response.json();
-    accuracyObservations = cleanForecastObservations(Array.isArray(payload.observations) ? payload.observations : []);
-    const updated = payload.updatedAt ? new Date(payload.updatedAt) : null;
-    ui.accuracyUpdatedAt.textContent = updated && Number.isFinite(updated.getTime())
-      ? `Historik senest beregnet: ${fmtHistoryUpdated.format(updated)} · kun prognoser gemt mindst 2 døgn før prisdøgnet tæller med`
-      : "Historikkens opdateringstidspunkt mangler.";
+    const logResponse = await fetch(`data/forecast-log.json?t=${Date.now()}`, { cache: "no-store" });
+    if (!logResponse.ok) throw new Error("Ingen prognosehistorik endnu");
+    const logPayload = await logResponse.json();
+    const snapshots = (Array.isArray(logPayload.snapshots) ? logPayload.snapshots : [])
+      .filter((item) => (item.area || "DK2") === settings.priceArea);
+
+    const targets = snapshots.flatMap((item) => item.points || []).map((item) => item.target).filter(Boolean).sort();
+    if (!targets.length) throw new Error("Ingen gemte prognosetimer endnu");
+
+    const startDate = targets[0].slice(0, 10);
+    const endDate = dateKey(addDays(startOfDay(new Date()), 2));
+    const officialPayload = await fetchJsonWithTimeout(historicalDayAheadUrl(settings.priceArea, startDate, endDate), 15000);
+    if (!Array.isArray(officialPayload.records)) throw new Error("Energinet returnerede ingen historikdata");
+
+    accuracyObservations = scoreSavedForecasts(snapshots, officialPayload.records, settings.priceArea);
+    ui.accuracyUpdatedAt.textContent = `Historik kontrolleret live: ${fmtHistoryUpdated.format(new Date())} · kun prognoser gemt mindst 2 døgn før prisdøgnet tæller med`;
   } catch {
-    accuracyObservations = [];
-    ui.accuracyUpdatedAt.textContent = "Historikken kunne ikke hentes.";
+    try {
+      const response = await fetch(`data/accuracy.json?t=${Date.now()}`, { cache: "no-store" });
+      if (!response.ok) throw new Error("Ingen reservehistorik");
+      const payload = await response.json();
+      accuracyObservations = cleanForecastObservations(Array.isArray(payload.observations) ? payload.observations : []);
+      const updated = payload.updatedAt ? new Date(payload.updatedAt) : null;
+      ui.accuracyUpdatedAt.textContent = updated && Number.isFinite(updated.getTime())
+        ? `Historik fra reservefil: ${fmtHistoryUpdated.format(updated)}`
+        : "Historikken kunne ikke opdateres live.";
+    } catch {
+      accuracyObservations = [];
+      ui.accuracyUpdatedAt.textContent = "Historikken kunne ikke hentes.";
+    }
   }
   renderAccuracy(selectedAccuracyDays);
   renderMonthlyAccuracy();
@@ -783,4 +836,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, cleanForecastObservations, shouldShowReviewReminder };
+if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, cleanForecastObservations, scoreSavedForecasts, shouldShowReviewReminder };
