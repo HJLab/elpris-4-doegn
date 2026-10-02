@@ -816,13 +816,27 @@ if (hasDocument) {
   runPriceLoad();
   loadAccuracy();
   showReviewReminderIfDue();
+  const nextPriceRefreshDelay = (now = new Date()) => {
+    const minuteOfDay = now.getHours() * 60 + now.getMinutes();
+    const startMinute = 12 * 60 + 45;
+    const endMinute = 16 * 60;
+
+    if (minuteOfDay < startMinute) {
+      return Math.min(60, startMinute - minuteOfDay) * 60 * 1000;
+    }
+    if (minuteOfDay < endMinute) {
+      const elapsed = minuteOfDay - startMinute;
+      const waitMinutes = 15 - (elapsed % 15);
+      return waitMinutes * 60 * 1000;
+    }
+    return 60 * 60 * 1000;
+  };
+
   const schedulePriceRefresh = () => {
-    const hour = new Date().getHours();
-    const minutes = hour >= 12 && hour < 16 ? 15 : 60;
     setTimeout(async () => {
       await runPriceLoad();
       schedulePriceRefresh();
-    }, minutes * 60 * 1000);
+    }, nextPriceRefreshDelay());
   };
   schedulePriceRefresh();
   setInterval(loadAccuracy, 60 * 60 * 1000);
