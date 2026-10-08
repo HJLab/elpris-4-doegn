@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, mergeKnownHours, forecastPayloadToHours, ceriusTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, shouldShowReviewReminder } = require("../app.js");
+const { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, mergeKnownHours, forecastPayloadToHours, ceriusTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, cleanForecastObservations, scoreSavedForecasts, shouldShowReviewReminder } = require("../app.js");
 
 const records = [
   { TimeDK: "2026-08-29T10:00:00", PriceArea: "DK2", DayAheadPriceDKK: 400 },
@@ -114,4 +114,22 @@ assert.equal(monthly.rows[0].averageOre, 10);
 assert.ok(Math.abs(monthly.rows[0].averagePercent - 10) < 0.000001);
 assert.ok(Math.abs(monthly.rows[3].averagePercent - 20) < 0.000001);
 assert.deepEqual(availableAccuracyMonths([{ area: "DK2", target: "2026-07-01T01:00", forecastSpotExVat: 1, actualSpotExVat: 1 }], new Date(2026, 7, 1), "DK2"), ["2026-07"]);
+const cleanHistory = cleanForecastObservations([
+  { issuedAt: "2026-09-30T15:53:23Z", target: "2026-10-01T10:00", errorOre: 99 },
+  { issuedAt: "2026-09-30T15:53:23Z", target: "2026-10-02T10:00", errorOre: 10 }
+]);
+assert.equal(cleanHistory.length, 1);
+assert.equal(cleanHistory[0].target, "2026-10-02T10:00");
+
+const liveHistory = scoreSavedForecasts([
+  { area: "DK2", collectedAt: "2026-09-30T15:53:23Z", points: [
+    { target: "2026-10-01T10:00", forecastSpotExVat: 9 },
+    { target: "2026-10-02T10:00", forecastSpotExVat: 0.8 }
+  ] }
+], [
+  { TimeDK: "2026-10-02T10:00:00", PriceArea: "DK2", DayAheadPriceDKK: 1000 }
+], "DK2");
+assert.equal(liveHistory.length, 1);
+assert.equal(liveHistory[0].errorOre, 20);
+
 console.log("Alle kernekontroller bestået.");
