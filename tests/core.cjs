@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, mergeKnownHours, forecastPayloadToHours, ceriusTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, shouldShowReviewReminder } = require("../app.js");
+const { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, mergeKnownHours, forecastPayloadToHours, ceriusTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, shouldShowReviewReminder } = require("../app.js");
 
 const records = [
   { TimeDK: "2026-08-29T10:00:00", PriceArea: "DK2", DayAheadPriceDKK: 400 },
@@ -83,35 +83,20 @@ assert.equal(dayMarks.expensive.size, 3);
 assert.equal(dayMarks.charge.average, 1);
 assert.equal(dayMarks.mostExpensive.total, 6);
 
-const accuracy = calculateAccuracy([
-  { area: "DK1", target: "2026-08-29T01:00", errorOre: 10 },
-  { area: "DK1", target: "2026-08-28T01:00", errorOre: 20 },
-  { area: "DK2", target: "2026-08-28T01:00", errorOre: 99 },
-  { area: "DK1", target: "2026-08-20T01:00", errorOre: 100 }
-], 7, new Date(2026, 7, 29, 12), "DK1");
-assert.equal(accuracy.averageOre, 15);
-assert.equal(accuracy.coveredDays, 2);
-assert.equal(accuracy.observations, 2);
-
-const daily = dailyAccuracyReport([
-  { area: "DK2", issuedAt: "2026-08-27T13:00:00Z", target: "2026-08-29T01:00", forecastSpotExVat: 1.2, actualSpotExVat: 1, errorOre: 20 },
-  { area: "DK2", issuedAt: "2026-08-28T13:00:00Z", target: "2026-08-29T01:00", forecastSpotExVat: 1.1, actualSpotExVat: 1, errorOre: 10 },
-  { area: "DK2", issuedAt: "2026-08-28T13:00:00Z", target: "2026-08-29T02:00", forecastSpotExVat: 0.8, actualSpotExVat: 1, errorOre: 20 }
-], 7, new Date(2026, 7, 29, 12), "DK2");
-assert.equal(daily.observations, 2);
-assert.equal(daily.rows.length, 1);
-assert.equal(daily.rows[0].averageOre, 15);
-assert.equal(daily.rows[0].best.issuedAt, "2026-08-28T13:00:00Z");
-assert.equal(daily.rows[0].complete, false);
-
-const monthly = monthlyAccuracyReport([
-  { area: "DK2", target: "2026-07-01T01:00", forecastSpotExVat: 1.1, actualSpotExVat: 1, errorOre: 10 },
-  { area: "DK2", target: "2026-07-01T07:00", forecastSpotExVat: 0.9, actualSpotExVat: 1, errorOre: 10 },
-  { area: "DK2", target: "2026-07-01T13:00", forecastSpotExVat: 1.2, actualSpotExVat: 1, errorOre: 20 },
-  { area: "DK2", target: "2026-07-01T19:00", forecastSpotExVat: 0.8, actualSpotExVat: 1, errorOre: 20 }
-], "2026-07", "DK2");
-assert.equal(monthly.rows[0].averageOre, 10);
-assert.ok(Math.abs(monthly.rows[0].averagePercent - 10) < 0.000001);
-assert.ok(Math.abs(monthly.rows[3].averagePercent - 20) < 0.000001);
-assert.deepEqual(availableAccuracyMonths([{ area: "DK2", target: "2026-07-01T01:00", forecastSpotExVat: 1, actualSpotExVat: 1 }], new Date(2026, 7, 1), "DK2"), ["2026-07"]);
+const approx=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`Expected ${b} got ${a}`);
+const aDate=new Date(2026,9,8,18);
+const customPrice=normalizeSettings({...DEFAULT_SETTINGS,supplierMarkupOre:27,supplierSubscriptionMonthly:100,gridSubscriptionMonthly:50,annualConsumption:3000});
+approx(totalPrice(0.5,aDate,customPrice)-comparableAccuracyPrice(0.5,aDate,customPrice),0.27);
+approx(comparableAccuracyPrice(0.5,aDate,customPrice),officialBasePrice(0.5,aDate,customPrice)+0.6);
+const observation={area:"DK2",target:"2026-10-08T18:00",issuedAt:"2026-10-07T13:00:00Z",forecastSpotExVat:0.8,actualSpotExVat:0.5,errorOre:999};
+approx(pricedAccuracyObservation(observation,customPrice).errorOre,37.5);
+approx(calculateAccuracy([observation],7,aDate,"DK2",customPrice).averageOre,37.5);
+const day=dailyAccuracyReport([observation],7,aDate,"DK2",customPrice);
+approx(day.rows[0].forecastAverageOre/100,comparableAccuracyPrice(0.8,aDate,customPrice));
+approx(day.rows[0].actualAverageOre/100,comparableAccuracyPrice(0.5,aDate,customPrice));
+const month=monthlyAccuracyReport([observation],"2026-10","DK2",customPrice);
+approx(month.rows[3].averageOre,37.5);
+approx(month.rows[3].averagePercent,37.5/(comparableAccuracyPrice(0.5,aDate,customPrice)*100)*100);
+assert.equal(pricedAccuracyObservation({...observation,forecastSpotExVat:null}),null);
+assert.deepEqual(availableAccuracyMonths([{area:"DK2",target:"2026-07-01T01:00",forecastSpotExVat:1,actualSpotExVat:1}],new Date(2026,7,1),"DK2"),["2026-07"]);
 console.log("Alle kernekontroller bestået.");

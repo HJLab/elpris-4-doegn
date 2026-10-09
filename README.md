@@ -86,3 +86,9 @@ Officielle priser stammer fra Energi Data Service. Browservenlige pris- og progn
 - Backup-jobbet kører på andre klokkeslæt end hovedjobbet og bruger samme idempotente arkiveringsscript.
 - Hvis GitHubs primære planlagte kørsel bliver forsinket eller springes over, får historikken flere uafhængige chancer for både at gemme en prognose før offentliggørelsen og opdatere træfsikkerheden bagefter.
 - Hovedjob og backup-job deler samme concurrency-gruppe, så de ikke skriver til historikfilerne samtidig.
+
+## Version 16
+
+- Sammenligner prognose og officiel pris med samlet timepris inkl. moms, afgifter, tariffer og fordelte abonnementer, men ekskl. elselskabets personlige kWh-tillæg.
+- For standardindstillinger er logprisen 11 øre/kWh lavere end timeprisen for samme time. Bevarer rå spotprishistorik og genberegner fejlvisning og månedsprocenter dynamisk.
+- Service-worker-cache opdateret, versionsnummer v16.

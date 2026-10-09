@@ -40,7 +40,7 @@ const ui = hasDocument ? {
   dailyAccuracyList: $("dailyAccuracyList"),
   monthlyAccuracyDetails: $("monthlyAccuracyDetails"), monthlyAccuracyMonth: $("accuracyMonth"),
   monthlyAccuracyIntro: $("monthlyAccuracyIntro"), monthlyAccuracyRows: $("monthlyAccuracyRows"), monthlyAccuracyCoverage: $("monthlyAccuracyCoverage"),
-  profileSummary: $("profileSummary"), settingsButton: $("settingsButton"),
+  profileSummary: $("profileSummary"), accuracyComparisonNote: $("accuracyComparisonNote"), settingsButton: $("settingsButton"),
   settingsDialog: $("settingsDialog"), settingsForm: $("settingsForm"),
   manualTariffs: $("manualTariffs"), calculationExplanation: $("calculationExplanation"),
   calculationButton: $("calculationButton"), calculationDialog: $("calculationDialog"), closeCalculationButton: $("closeCalculationButton"),
@@ -312,26 +312,37 @@ function bestChargeWindow(items, length = 3) {
   return best;
 }
 
-function calculateAccuracy(observations, days, now = new Date(), priceArea = settings.priceArea) {
+function comparableAccuracyPrice(spotExVat, date, activeSettings = settings) {
+  return totalPrice(spotExVat, date, activeSettings) - activeSettings.supplierMarkupOre / 100;
+}
+function pricedAccuracyObservation(item, activeSettings = settings) {
+  if (typeof item?.target !== "string" || item.forecastSpotExVat == null || item.actualSpotExVat == null) return null;
+  const forecastSpot = Number(item.forecastSpotExVat);
+  const actualSpot = Number(item.actualSpotExVat);
+  const date = parseDanishTime(item.target);
+  if (!Number.isFinite(forecastSpot) || !Number.isFinite(actualSpot) || !Number.isFinite(date.getTime())) return null;
+  const forecastPriceOre = comparableAccuracyPrice(forecastSpot, date, activeSettings) * 100;
+  const actualPriceOre = comparableAccuracyPrice(actualSpot, date, activeSettings) * 100;
+  return {...item, forecastPriceOre, actualPriceOre, errorOre: Math.abs(forecastPriceOre - actualPriceOre)};
+}
+function calculateAccuracy(observations, days, now = new Date(), priceArea = settings.priceArea, activeSettings = settings) {
   const cutoff = new Date(now);
-  cutoff.setHours(0, 0, 0, 0);
+  cutoff.setHours(0,0,0,0);
   cutoff.setDate(cutoff.getDate() - days + 1);
   const latestByTarget = new Map();
   for (const item of observations) {
-    const errorOre = Number(item.errorOre);
-    if (!Number.isFinite(errorOre) || !item.target) continue;
-    if ((item.area || "DK2") !== priceArea || parseDanishTime(item.target) < cutoff) continue;
-    const previous = latestByTarget.get(item.target);
-    if (!previous || String(item.issuedAt || "") > String(previous.issuedAt || "")) latestByTarget.set(item.target, item);
+    if (typeof item?.target !== "string" || (item.area || "DK2") !== priceArea || parseDanishTime(item.target) < cutoff) continue;
+    const priced = pricedAccuracyObservation(item,activeSettings);
+    if (!priced) continue;
+    const prev=latestByTarget.get(item.target);
+    if (!prev || String(item.issuedAt||"")>String(prev.issuedAt||"")) latestByTarget.set(item.target,priced);
   }
-  const usable = [...latestByTarget.values()].sort((a, b) => a.target.localeCompare(b.target));
-  const averageOre = usable.length ? mean(usable.map((item) => Number(item.errorOre))) : null;
-  const coveredDays = new Set(usable.map((item) => item.target.slice(0, 10))).size;
-  return { averageOre, coveredDays, observations: usable.length, items: usable };
+  const usable=[...latestByTarget.values()].sort((a,b)=>a.target.localeCompare(b.target));
+  return {averageOre:usable.length ? mean(usable.map(x=>x.errorOre)) : null,coveredDays:new Set(usable.map(x=>x.target.slice(0,10))).size,observations:usable.length,items:usable};
 }
 
-function dailyAccuracyReport(observations, days, now = new Date(), priceArea = settings.priceArea) {
-  const result = calculateAccuracy(observations, days, now, priceArea);
+function dailyAccuracyReport(observations, days, now = new Date(), priceArea = settings.priceArea, activeSettings = settings) {
+  const result = calculateAccuracy(observations, days, now, priceArea, activeSettings);
   const groups = new Map();
   for (const item of result.items) {
     const date = item.target.slice(0, 10);
@@ -345,8 +356,8 @@ function dailyAccuracyReport(observations, days, now = new Date(), priceArea = s
     return {
       date,
       averageOre: mean(sorted.map((item) => Number(item.errorOre))),
-      forecastAverageOre: mean(sorted.map((item) => Number(item.forecastSpotExVat) * 100)),
-      actualAverageOre: mean(sorted.map((item) => Number(item.actualSpotExVat) * 100)),
+      forecastAverageOre: mean(sorted.map((item) => item.forecastPriceOre)),
+      actualAverageOre: mean(sorted.map((item) => item.actualPriceOre)),
       observations: sorted.length,
       complete: sorted.length === 24,
       best,
@@ -371,23 +382,17 @@ function timeBand(target) {
   return "18:00–24:00";
 }
 
-function monthlyAccuracyReport(observations, month, priceArea = settings.priceArea) {
-  const bands = ["00:00–06:00", "06:00–12:00", "12:00–18:00", "18:00–24:00"];
-  const groups = new Map(bands.map((band) => [band, []]));
-  const usable = observations.filter((item) => {
-    if ((item.area || "DK2") !== priceArea || monthKey(item.target) !== month) return false;
-    return Number.isFinite(Number(item.errorOre)) && Number.isFinite(Number(item.forecastSpotExVat)) && Number.isFinite(Number(item.actualSpotExVat));
+function monthlyAccuracyReport(observations, month, priceArea = settings.priceArea, activeSettings = settings) {
+  const bands=["00:00–06:00","06:00–12:00","12:00–18:00","18:00–24:00"];
+  const groups=new Map(bands.map(x=>[x,[]]));
+  const usable=observations.filter(x=>(x.area||"DK2")===priceArea && monthKey(x.target)===month).map(x=>pricedAccuracyObservation(x,activeSettings)).filter(Boolean);
+  for(const item of usable) groups.get(timeBand(item.target)).push(item);
+  const rows=bands.map(band=>{
+    const items=groups.get(band);
+    const pct=items.filter(x=>Math.abs(x.actualPriceOre)>=1).map(x=>x.errorOre/Math.abs(x.actualPriceOre)*100);
+    return {band,averageOre:items.length?mean(items.map(x=>x.errorOre)):null,averagePercent:pct.length?mean(pct):null,observations:items.length};
   });
-  for (const item of usable) groups.get(timeBand(item.target)).push(item);
-  const rows = bands.map((band) => {
-    const items = groups.get(band);
-    const averageOre = items.length ? mean(items.map((item) => Number(item.errorOre))) : null;
-    const percentageValues = items
-      .filter((item) => Math.abs(Number(item.actualSpotExVat)) >= 0.01)
-      .map((item) => Math.abs(Number(item.forecastSpotExVat) - Number(item.actualSpotExVat)) / Math.abs(Number(item.actualSpotExVat)) * 100);
-    return { band, averageOre, averagePercent: percentageValues.length ? mean(percentageValues) : null, observations: items.length };
-  });
-  return { rows, observations: usable.length, coveredDays: new Set(usable.map((item) => item.target.slice(0, 10))).size };
+  return {rows,observations:usable.length,coveredDays:new Set(usable.map(x=>x.target.slice(0,10))).size};
 }
 
 function availableAccuracyMonths(observations, now = new Date(), priceArea = settings.priceArea) {
@@ -468,8 +473,8 @@ function renderDailyAccuracy(rows) {
     const body = document.createElement("div");
     body.className = "daily-accuracy-detail-grid";
     body.append(
-      makeAccuracyDetail("Prognosens gennemsnitspris", `${fmtPrice.format(row.forecastAverageOre)} øre/kWh`),
-      makeAccuracyDetail("Officiel gennemsnitspris", `${fmtPrice.format(row.actualAverageOre)} øre/kWh`),
+      makeAccuracyDetail("Prognosens gennemsnitspris", `${fmtPrice.format(row.forecastAverageOre / 100)} kr./kWh`),
+      makeAccuracyDetail("Officiel gennemsnitspris", `${fmtPrice.format(row.actualAverageOre / 100)} kr./kWh`),
       makeAccuracyDetail("Tætteste time", `${row.best.target.slice(11, 16)} · ${fmtPrice.format(row.best.errorOre)} øre/kWh forkert`),
       makeAccuracyDetail("Største fejl", `${row.worst.target.slice(11, 16)} · ${fmtPrice.format(row.worst.errorOre)} øre/kWh forkert`)
     );
@@ -512,7 +517,7 @@ function renderMonthlyAccuracy() {
   }));
   ui.monthlyAccuracyMonth.value = selectedAccuracyMonth;
   const result = monthlyAccuracyReport(accuracyObservations, selectedAccuracyMonth);
-  ui.monthlyAccuracyIntro.textContent = `DK${settings.priceArea === "DK1" ? "1" : "2"} · ${monthLabel(selectedAccuracyMonth)} · gennemsnitlig absolut forskel mellem prognose og officiel spotpris.`;
+  ui.monthlyAccuracyIntro.textContent = `DK${settings.priceArea === "DK1" ? "1" : "2"} · ${monthLabel(selectedAccuracyMonth)} · gennemsnitlig absolut forskel mellem prognose og officiel samlet pris uden personligt tillæg.`;
   ui.monthlyAccuracyRows.replaceChildren(...result.rows.map((row) => {
     const tr = document.createElement("tr");
     const values = [row.band, row.averageOre === null ? "–" : `${fmtPrice.format(row.averageOre)} øre/kWh`, row.averagePercent === null ? "–" : `${fmtPrice.format(row.averagePercent)} %`];
@@ -523,7 +528,7 @@ function renderMonthlyAccuracy() {
     }
     return tr;
   }));
-  ui.monthlyAccuracyCoverage.textContent = `${result.coveredDays} dage og ${result.observations} sammenlignede prognoser. Procenten beregnes i forhold til den officielle spotpris; timer med spotpris tæt på 0 kr./kWh tæller kun med i øre-målingen.`;
+  ui.monthlyAccuracyCoverage.textContent = `${result.coveredDays} dage og ${result.observations} sammenlignede prognoser. Procenten beregnes af den officielle samlede sammenligningspris; timer med pris tæt på 0 kr./kWh tæller kun med i øre-målingen.`;
 }
 
 async function loadAccuracy() {
@@ -609,6 +614,7 @@ function updateProfileText() {
   const productText = settings.product ? ` (${settings.product})` : "";
   const subscription = settings.supplierSubscriptionMonthly + settings.gridSubscriptionMonthly;
   ui.calculationExplanation.textContent = `Den store pris er din beregnede samlede kWh-pris: ${settings.priceArea}-spotpris, moms, ${settings.supplier}${productText}, nettarif, Energinets tarif, elafgift samt ${fmtPrice.format(subscription)} kr. i månedlige abonnementer fordelt på ${Math.round(settings.annualConsumption).toLocaleString("da-DK")} kWh om året. “Basis” er spot med moms, nettarif, Energinet og elafgift, men uden elselskabets kWh-tillæg og uden abonnementer. “Uden faste” er basis plus elselskabets kWh-tillæg.`;
+  ui.accuracyComparisonNote.textContent = `Logprisen er ${fmtPrice.format(settings.supplierMarkupOre)} øre/kWh lavere end timeprisen for samme time, da det personlige kWh-tillæg er trukket fra.`;
 }
 
 function fillSettingsForm() {
@@ -765,4 +771,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, shouldShowReviewReminder };
+if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, shouldShowReviewReminder };
