@@ -101,8 +101,21 @@ assert.equal(dayMarks.mostExpensive.total, 6);
 const approx=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`Expected ${b} got ${a}`);
 const aDate=new Date(2026,9,8,18);
 const customPrice=normalizeSettings({...DEFAULT_SETTINGS,supplierMarkupOre:27,supplierSubscriptionMonthly:100,gridSubscriptionMonthly:50,annualConsumption:3000});
-approx(totalPrice(0.5,aDate,customPrice)-comparableAccuracyPrice(0.5,aDate,customPrice),0.27);
-approx(comparableAccuracyPrice(0.5,aDate,customPrice),officialBasePrice(0.5,aDate,customPrice)+0.6);
+approx(totalPrice(0.5,aDate,customPrice)-comparableAccuracyPrice(0.5,aDate,customPrice),0);
+approx(comparableAccuracyPrice(0.5,aDate,customPrice),officialBasePrice(0.5,aDate,customPrice)+0.27+0.6);
+approx(comparableAccuracyPrice(0.7,priceDate,DEFAULT_SETTINGS)-officialBasePrice(0.7,priceDate,DEFAULT_SETTINGS),0.11);
+const equalPrices = pricedAccuracyObservation({
+  area:"DK2",target:"2026-10-08T18:00",forecastSpotExVat:0.7,actualSpotExVat:0.7
+},DEFAULT_SETTINGS);
+approx(equalPrices.errorOre,0);
+approx(equalPrices.forecastPriceOre,equalPrices.actualPriceOre);
+// The historic user markup must affect both sides equally, never the error.
+const markedUp = normalizeSettings({...customPrice,supplierMarkupOre:11});
+const fullAudit = pricedForecastAuditRow({target:"2026-10-08T18:00",rawForecastSpotExVat:0.7,forecastSpotExVat:0.8,actualSpotExVat:0.6},markedUp);
+const noMarkup = normalizeSettings({...markedUp,supplierMarkupOre:0});
+const unmarkedAudit = pricedForecastAuditRow({target:"2026-10-08T18:00",rawForecastSpotExVat:0.7,forecastSpotExVat:0.8,actualSpotExVat:0.6},noMarkup);
+for(const key of ["originalPriceOre","forecastPriceOre","actualPriceOre"]) approx(fullAudit[key]-unmarkedAudit[key],11);
+for(const key of ["adjustmentOre","signedErrorOre","errorOre","originalErrorOre","improvementOre"]) approx(fullAudit[key],unmarkedAudit[key]);
 const correctedHours=buildHorizon(forecastHours,exampleNow,DEFAULT_SETTINGS,0.06);
 approx(correctedHours[34].spotExVat,0.86);
 approx(buildHorizon(mergedHours,exampleNow,DEFAULT_SETTINGS,0.06)[34].spotExVat,1);

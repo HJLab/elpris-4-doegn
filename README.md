@@ -111,3 +111,10 @@ Officielle priser stammer fra Energi Data Service. Browservenlige pris- og progn
 - Ældre prognoser uden registreret justering vises med streg i justeringskolonnen. Der opfindes ikke historiske justeringer.
 - Dagskort viser også om justeringen sænkede eller hævede prognosefejlen. Officielle priser forbliver uændrede.
 - Cache-version opdateret til v24.
+
+## Version 19 – samme samlede pris overalt
+
+- Timepriser, prognoselog, historiske dagskort og månedsrapporter viser nu den samme beregnede samlede kWh-pris med spot, moms, nettariffer, afgifter, fordelte abonnementer og personligt kWh-tillæg (standard 11 øre/kWh inkl. moms).
+- Tillægget lægges på én gang i hver vist pris via `totalPrice`. Prognosefejl og gennemsnitlig fejl i øre er uændrede, da samme tillæg findes på både prognosen og den officielle sammenligningspris. Månedlig procentfejl kan ændre sig, fordi referenceprisen nu inkluderer tillægget.
+- De gemte rå spotpriser, den automatiske kalibrering og historiske justeringer ændres ikke. Den eksisterende log genberegnes til fælles prisvisning uden at omskrive historikken.
+- Status- og hjælpetekster er opdateret, og service-worker-cachen er opgraderet til v25.

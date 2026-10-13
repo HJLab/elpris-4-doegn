@@ -323,11 +323,13 @@ function bestChargeWindow(items, length = 3) {
   return best;
 }
 
+// The log uses exactly the same all-inclusive kWh price as the hourly view.
+// History remains raw spot prices; we reprice with current settings only when shown.
 function comparableAccuracyPrice(spotExVat, date, activeSettings = settings) {
-  return totalPrice(spotExVat, date, activeSettings) - activeSettings.supplierMarkupOre / 100;
+  return totalPrice(spotExVat, date, activeSettings);
 }
 // Audit rows keep the original spot forecast separate from the subsequently
-// calibrated forecast; user-specific kWh markup is excluded from every column.
+// calibrated forecast; personal kWh markup is included exactly once in every price.
 function pricedForecastAuditRow(item, activeSettings = settings) {
   if (typeof item?.target !== "string" || item.forecastSpotExVat == null) return null;
   const forecastSpot = Number(item.forecastSpotExVat);
@@ -667,7 +669,7 @@ function renderDailyAccuracy(rows) {
     }
     const note = document.createElement("p");
     note.className = "forecast-audit-note";
-    note.textContent = "Time for time i øre/kWh, inkl. moms og øvrige udgifter, uden dit personlige kWh-tillæg. Fejl: + betyder prognosen var for høj; − betyder for lav. — betyder ingen registreret automatisk justering (ældre log).";
+    note.textContent = "Time for time i øre/kWh, inkl. moms, tariffer, afgifter, abonnementer og dit personlige kWh-tillæg. Fejl: + betyder prognosen var for høj; − betyder for lav. — betyder ingen registreret automatisk justering (ældre log).";
     details.append(summary, body, note, makeForecastAuditTable(row.items, "Sammenligning time for time · øre/kWh"));
     fragment.append(details);
   }
@@ -707,7 +709,7 @@ function renderMonthlyAccuracy() {
   }));
   ui.monthlyAccuracyMonth.value = selectedAccuracyMonth;
   const result = monthlyAccuracyReport(accuracyObservations, selectedAccuracyMonth);
-  ui.monthlyAccuracyIntro.textContent = `DK${settings.priceArea === "DK1" ? "1" : "2"} · ${monthLabel(selectedAccuracyMonth)} · gennemsnitlig absolut forskel mellem prognose og officiel samlet pris uden personligt tillæg.`;
+  ui.monthlyAccuracyIntro.textContent = `DK${settings.priceArea === "DK1" ? "1" : "2"} · ${monthLabel(selectedAccuracyMonth)} · gennemsnitlig absolut forskel mellem prognose og officiel samlet pris inklusive personligt tillæg.`;
   ui.monthlyAccuracyRows.replaceChildren(...result.rows.map((row) => {
     const tr = document.createElement("tr");
     const values = [row.band, row.averageOre === null ? "–" : `${fmtPrice.format(row.averageOre)} øre/kWh`, row.averagePercent === null ? "–" : `${fmtPrice.format(row.averagePercent)} %`];
@@ -805,7 +807,7 @@ function updateProfileText() {
   const productText = settings.product ? ` (${settings.product})` : "";
   const subscription = settings.supplierSubscriptionMonthly + settings.gridSubscriptionMonthly;
   ui.calculationExplanation.textContent = `Den store pris er din beregnede samlede kWh-pris: ${settings.priceArea}-spotpris, moms, ${settings.supplier}${productText}, nettarif, Energinets tarif, elafgift samt ${fmtPrice.format(subscription)} kr. i månedlige abonnementer fordelt på ${Math.round(settings.annualConsumption).toLocaleString("da-DK")} kWh om året. “Basis” er spot med moms, nettarif, Energinet og elafgift, men uden elselskabets kWh-tillæg og uden abonnementer. “Uden faste” er basis plus elselskabets kWh-tillæg.`;
-  ui.accuracyComparisonNote.textContent = `Logprisen er ${fmtPrice.format(settings.supplierMarkupOre)} øre/kWh lavere end timeprisen for samme time, da det personlige kWh-tillæg er trukket fra.`;
+  ui.accuracyComparisonNote.textContent = `Prognoselog og timepriser beregnes ens, inklusive dit personlige kWh-tillæg på ${fmtPrice.format(settings.supplierMarkupOre)} øre/kWh. Tillægget medregnes kun én gang i hver pris.`;
 }
 
 function fillSettingsForm() {
