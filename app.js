@@ -17,6 +17,7 @@ const DEFAULT_SETTINGS = Object.freeze({
   gridLow: 0.1442, gridHigh: 0.2163, gridPeak: 0.5623
 });
 const SETTINGS_KEY = "elpris-user-settings-v1";
+const MARKUP_REPAIR_KEY = "elpris-markup-repair-v20";
 const REVIEW_REMINDER_DATE = "2026-10-22";
 const REVIEW_REMINDER_KEY = "elpris-review-reminder-2026-10-22";
 const fmtPrice = new Intl.NumberFormat("da-DK", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -35,6 +36,7 @@ const CALIBRATION = typeof module !== "undefined" && module.exports
 const $ = (id) => hasDocument ? document.getElementById(id) : null;
 const ui = hasDocument ? {
   statusPanel: $("statusPanel"), statusText: $("statusText"), refresh: $("refreshButton"),
+  markupNotice: $("markupNotice"), markupNoticeText: $("markupNoticeText"), markupFixButton: $("markupFixButton"), markupUndoButton: $("markupUndoButton"),
   summary: $("summary"), legend: $("legend"), daysHelp: $("daysHelp"), days: $("days"), updatedAt: $("updatedAt"),
   currentPrice: $("currentPrice"), currentKind: $("currentKind"),
   bestPrice: $("bestPrice"), bestTime: $("bestTime"),
@@ -58,6 +60,7 @@ let selectedForecastDate = "";
 let officialSpotForAudit = new Map();
 let selectedAccuracyDays = 7;
 let selectedAccuracyMonth = "";
+let markupRepairApplied = false;
 let settings = readSettings();
 
 function finiteNumber(value, fallback, min = 0, max = Number.MAX_SAFE_INTEGER) {
@@ -72,7 +75,8 @@ function normalizeSettings(value = {}) {
   return {
     priceArea: area, gridCompany, supplier,
     product: String(value.product || "").slice(0, 60),
-    supplierMarkupOre: finiteNumber(value.supplierMarkupOre, DEFAULT_SETTINGS.supplierMarkupOre, 0, 500),
+    supplierMarkupOre: finiteNumber(value.supplierMarkupOre == null || value.supplierMarkupOre === ""
+      ? DEFAULT_SETTINGS.supplierMarkupOre : value.supplierMarkupOre, DEFAULT_SETTINGS.supplierMarkupOre, 0, 500),
     supplierSubscriptionMonthly: finiteNumber(value.supplierSubscriptionMonthly, 0, 0, 2000),
     annualConsumption: finiteNumber(value.annualConsumption, DEFAULT_SETTINGS.annualConsumption, 100, 100000),
     gridSubscriptionMonthly: finiteNumber(value.gridSubscriptionMonthly, 0, 0, 2000),
@@ -82,15 +86,40 @@ function normalizeSettings(value = {}) {
   };
 }
 
+// Gendan kun gammel standardprofil, ikke profiler med egen elaftale eller egne tal.
+function shouldRepairLegacyZeroMarkup(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return false;
+  if (raw.supplierMarkupOre == null || raw.supplierMarkupOre === "" || Number(raw.supplierMarkupOre) !== 0) return false;
+  const candidate = normalizeSettings(raw);
+  return Object.keys(DEFAULT_SETTINGS).every((key) =>
+    key === "supplierMarkupOre" || candidate[key] === DEFAULT_SETTINGS[key]);
+}
+
 function readSettings() {
   if (typeof localStorage === "undefined") return normalizeSettings(DEFAULT_SETTINGS);
-  try { return normalizeSettings(JSON.parse(localStorage.getItem(SETTINGS_KEY)) || DEFAULT_SETTINGS); }
-  catch { return normalizeSettings(DEFAULT_SETTINGS); }
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+    const loaded = normalizeSettings(saved || DEFAULT_SETTINGS);
+    if (localStorage.getItem(MARKUP_REPAIR_KEY) !== "reviewed" && shouldRepairLegacyZeroMarkup(saved)) {
+      const repaired = { ...loaded, supplierMarkupOre: DEFAULT_SETTINGS.supplierMarkupOre };
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(repaired));
+      localStorage.setItem(MARKUP_REPAIR_KEY, "repaired");
+      markupRepairApplied = true;
+      return repaired;
+    }
+    return loaded;
+  } catch {
+    return normalizeSettings(DEFAULT_SETTINGS);
+  }
 }
 
 function saveSettings(next) {
   settings = normalizeSettings(next);
-  if (typeof localStorage !== "undefined") localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  markupRepairApplied = false;
+  if (typeof localStorage !== "undefined") {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    localStorage.setItem(MARKUP_REPAIR_KEY, "reviewed");
+  }
   return settings;
 }
 
@@ -378,9 +407,13 @@ function calculateAccuracy(observations, days, now = new Date(), priceArea = set
   const cutoff = new Date(now);
   cutoff.setHours(0,0,0,0);
   cutoff.setDate(cutoff.getDate() - days + 1);
+  const nextDay = startOfDay(now);
+  nextDay.setDate(nextDay.getDate() + 1);
   const latestByTarget = new Map();
   for (const item of observations) {
-    if (typeof item?.target !== "string" || (item.area || "DK2") !== priceArea || parseDanishTime(item.target) < cutoff) continue;
+    if (typeof item?.target !== "string" || (item.area || "DK2") !== priceArea) continue;
+    const targetDate = parseDanishTime(item.target);
+    if (!Number.isFinite(targetDate.getTime()) || targetDate < cutoff || targetDate >= nextDay) continue;
     const priced = pricedAccuracyObservation(item,activeSettings);
     if (!priced) continue;
     const prev=latestByTarget.get(item.target);
@@ -800,8 +833,25 @@ function setStatus(message, kind = "loading") {
   ui.statusPanel.className = `status-panel ${kind === "loading" ? "" : kind}`.trim();
 }
 
+function updateMarkupNotice() {
+  if (!hasDocument || !ui.markupNotice) return;
+  const needsCheck = settings.supplier.toLocaleLowerCase("da-DK") === DEFAULT_SETTINGS.supplier.toLocaleLowerCase("da-DK")
+    && settings.supplierMarkupOre === 0;
+  ui.markupNotice.hidden = !needsCheck && !markupRepairApplied;
+  ui.markupFixButton.hidden = !needsCheck;
+  ui.markupUndoButton.hidden = !markupRepairApplied;
+  if (needsCheck) {
+    ui.markupNoticeText.textContent =
+      "Dit gemte personlige tillæg er 0,00 øre/kWh. Hvis din aftale har 11,00 øre/kWh, kan du gendanne det her uden at ændre andre indstillinger.";
+  } else if (markupRepairApplied) {
+    ui.markupNoticeText.textContent =
+      "Et gammelt standardprofil-tillæg på 0,00 øre/kWh er genoprettet til 11,00 øre/kWh på denne enhed. Du kan altid ændre det under Indstillinger.";
+  }
+}
+
 function updateProfileText() {
   if (!hasDocument) return;
+  updateMarkupNotice();
   const gridName = settings.gridCompany === "cerius" ? "Cerius" : "eget netselskab";
   ui.profileSummary.textContent = `${settings.priceArea} · ${areaName(settings.priceArea)} · ${gridName} · ${settings.supplier}`;
   const productText = settings.product ? ` (${settings.product})` : "";
@@ -913,6 +963,22 @@ async function load() {
 if (hasDocument) {
   ui.refresh.addEventListener("click", load);
   ui.settingsButton.addEventListener("click", openSettings);
+  ui.markupFixButton.addEventListener("click", () => {
+    if (settings.supplierMarkupOre !== 0) return;
+    saveSettings({ ...settings, supplierMarkupOre: DEFAULT_SETTINGS.supplierMarkupOre });
+    renderAccuracy(selectedAccuracyDays);
+    renderMonthlyAccuracy();
+    renderForecastAudit();
+    load();
+  });
+  ui.markupUndoButton.addEventListener("click", () => {
+    if (!markupRepairApplied) return;
+    saveSettings({ ...settings, supplierMarkupOre: 0 });
+    renderAccuracy(selectedAccuracyDays);
+    renderMonthlyAccuracy();
+    renderForecastAudit();
+    load();
+  });
   $("closeSettingsButton").addEventListener("click", closeSettings);
   $("cancelSettingsButton").addEventListener("click", closeSettings);
   ui.calculationButton.addEventListener("click", openCalculation);
@@ -977,4 +1043,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, pricedForecastAuditRow, latestForecastSnapshot, shouldShowReviewReminder };
+if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, shouldRepairLegacyZeroMarkup, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, pricedForecastAuditRow, latestForecastSnapshot, shouldShowReviewReminder };

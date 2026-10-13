@@ -118,3 +118,13 @@ Officielle priser stammer fra Energi Data Service. Browservenlige pris- og progn
 - Tillægget lægges på én gang i hver vist pris via `totalPrice`. Prognosefejl og gennemsnitlig fejl i øre er uændrede, da samme tillæg findes på både prognosen og den officielle sammenligningspris. Månedlig procentfejl kan ændre sig, fordi referenceprisen nu inkluderer tillægget.
 - De gemte rå spotpriser, den automatiske kalibrering og historiske justeringer ændres ikke. Den eksisterende log genberegnes til fælles prisvisning uden at omskrive historikken.
 - Status- og hjælpetekster er opdateret, og service-worker-cachen er opgraderet til v25.
+
+
+## Version 20 – genoprettelse af personligt pristillæg
+
+- Standardprofilen DK2/Cerius/Modstrøm har stadig tillæg 11 øre/kWh inkl. moms, men gamle browserindstillinger kan overstyre det med 0 øre.
+- En gammel, ellers uændret standardprofil med gemt 0 gendannes automatisk én gang til 11 øre på den pågældende enhed. Individuelt tilpassede profiler ændres ikke automatisk.
+- Hvis en Modstrøm-profil stadig har 0 øre, vises en forståelig besked med en knap til at gendanne 11 øre uden at ændre de andre indstillinger. En senere manuel indstilling til 0 respekteres.
+- Tomt eller null tillæg bliver ikke længere fortolket som et udtrykkeligt valg om 0 øre. Et egentligt numerisk 0 forbliver gyldigt.
+- For 7, 14, 30 og 90 dages træfsikkerhed vises højst det valgte antal kalenderdage. Kendte priser for i morgen tælles ikke med i dag (rettelse af eksempelvis “8 af 7 dage”).
+- Gemte spotdata og prognosekalibrering bevares uændret. Personligt tillæg inkluderes præcis én gang i både timevisning og log. Versionsnummeret er v20 og service-worker cache v26.

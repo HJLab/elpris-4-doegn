@@ -1,8 +1,18 @@
 const assert = require("node:assert/strict");
-const { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, mergeKnownHours, forecastPayloadToHours, ceriusTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, shouldShowReviewReminder } = require("../app.js");
+const { DEFAULT_SETTINGS, normalizeSettings, shouldRepairLegacyZeroMarkup, aggregateToHours, mergeKnownHours, forecastPayloadToHours, ceriusTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, shouldShowReviewReminder } = require("../app.js");
 
 const { pricedForecastAuditRow, latestForecastSnapshot } = require("../app.js");
 const auditSettings = normalizeSettings(DEFAULT_SETTINGS);
+assert.equal(normalizeSettings({supplierMarkupOre:null}).supplierMarkupOre,11);
+assert.equal(normalizeSettings({supplierMarkupOre:""}).supplierMarkupOre,11);
+assert.equal(normalizeSettings({supplierMarkupOre:0}).supplierMarkupOre,0);
+assert.equal(shouldRepairLegacyZeroMarkup({...DEFAULT_SETTINGS,supplierMarkupOre:0}),true);
+assert.equal(shouldRepairLegacyZeroMarkup({...DEFAULT_SETTINGS,supplierMarkupOre:"0"}),true);
+assert.equal(shouldRepairLegacyZeroMarkup({...DEFAULT_SETTINGS,supplierMarkupOre:11}),false);
+assert.equal(shouldRepairLegacyZeroMarkup({...DEFAULT_SETTINGS,supplierMarkupOre:0,annualConsumption:5000}),false);
+assert.equal(shouldRepairLegacyZeroMarkup({...DEFAULT_SETTINGS,supplierMarkupOre:0,supplier:"Andet elselskab"}),false);
+assert.equal(shouldRepairLegacyZeroMarkup({...DEFAULT_SETTINGS,supplierMarkupOre:0,product:"Særaftale"}),false);
+assert.equal(shouldRepairLegacyZeroMarkup({...DEFAULT_SETTINGS,supplierMarkupOre:null}),false);
 const auditDate = new Date(2026,9,15,12);
 const old = pricedForecastAuditRow({target:"2026-10-15T12:00",forecastSpotExVat:0.7,actualSpotExVat:0.6},auditSettings);
 assert.equal(old.hasCalibration,false);
@@ -122,6 +132,12 @@ approx(buildHorizon(mergedHours,exampleNow,DEFAULT_SETTINGS,0.06)[34].spotExVat,
 const observation={area:"DK2",target:"2026-10-08T18:00",issuedAt:"2026-10-07T13:00:00Z",forecastSpotExVat:0.8,actualSpotExVat:0.5,errorOre:999};
 approx(pricedAccuracyObservation(observation,customPrice).errorOre,37.5);
 approx(calculateAccuracy([observation],7,aDate,"DK2",customPrice).averageOre,37.5);
+const boundedObservations = ["2026-10-07T12:00","2026-10-13T12:00","2026-10-14T12:00"].map((target) => ({
+  area:"DK2", target, issuedAt:"2026-10-06T10:00:00Z", forecastSpotExVat:0.8, actualSpotExVat:0.7
+}));
+const bounded = calculateAccuracy(boundedObservations,7,new Date(2026,9,13,16),"DK2",customPrice);
+assert.equal(bounded.observations,2);
+assert.equal(bounded.coveredDays,2);
 const day=dailyAccuracyReport([observation],7,aDate,"DK2",customPrice);
 approx(day.rows[0].forecastAverageOre/100,comparableAccuracyPrice(0.8,aDate,customPrice));
 approx(day.rows[0].actualAverageOre/100,comparableAccuracyPrice(0.5,aDate,customPrice));

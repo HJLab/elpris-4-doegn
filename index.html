@@ -20,7 +20,7 @@
     <div>
       <p id="profileSummary" class="eyebrow">DK2 · Østdanmark · Cerius · Modstrøm</p>
       <h1>Elpris – næste 4 dage</h1>
-      <span class="app-version">Version v19</span>
+      <span class="app-version">Version v20</span>
     </div>
     <div class="top-actions">
       <button id="settingsButton" class="secondary-button" type="button">Indstillinger</button>
@@ -32,6 +32,12 @@
     <section id="statusPanel" class="status-panel" aria-live="polite">
       <span class="spinner" aria-hidden="true"></span>
       <span id="statusText">Henter de nyeste priser…</span>
+    </section>
+
+    <section id="markupNotice" class="markup-notice" hidden>
+      <p id="markupNoticeText"></p>
+      <button id="markupFixButton" type="button" hidden>Gendan 11 øre/kWh</button>
+      <button id="markupUndoButton" type="button" hidden>Fortryd (behold 0 øre)</button>
     </section>
 
     <section id="summary" class="summary" hidden>
