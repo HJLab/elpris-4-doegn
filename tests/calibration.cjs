@@ -1,0 +1,30 @@
+"use strict";
+const assert = require("node:assert/strict");
+const { calculateCalibration, adjustForecastSpot } = require("../calibration.js");
+
+const asOf = "2026-10-13";
+const history = Array.from({length: 10}, (_, i) => {
+  const target = new Date(Date.UTC(2026, 9, 3 + i)).toISOString().slice(0, 10) + "T12:00";
+  return {area:"DK2", target, rawForecastSpotExVat:0.8, forecastSpotExVat:0.9, actualSpotExVat:1.0};
+});
+const approx = (x,y) => assert.ok(Math.abs(x-y)<1e-10, String(x) + " != " + String(y));
+const result = calculateCalibration(history, "DK2", asOf);
+assert.equal(result.sampleDays,10);
+assert.equal(result.active,true);
+approx(result.meanRawBias,0.2);
+approx(result.adjustment,0.1);
+approx(adjustForecastSpot(0.8,result.adjustment),0.9);
+assert.equal(calculateCalibration(history.slice(1), "DK2", asOf).active,false);
+approx(calculateCalibration(history.slice(1), "DK2", asOf).adjustment,0);
+approx(calculateCalibration(history, "DK1", asOf).adjustment,0);
+const repeated = history.concat(Array.from({length:10}, ()=>({...history[0]})));
+approx(calculateCalibration(repeated, "DK2", asOf).adjustment,0.1);
+const future = history.concat([{...history[0], target:"2026-10-13T12:00", actualSpotExVat:100}]);
+approx(calculateCalibration(future, "DK2", asOf).adjustment,0.1);
+const noRaw = history.map(({rawForecastSpotExVat,...rest})=>rest);
+approx(calculateCalibration(noRaw, "DK2", asOf).adjustment,0.05);
+const extremes = history.map(x=>({...x, actualSpotExVat:5}));
+approx(calculateCalibration(extremes, "DK2", asOf).adjustment,0.12);
+assert.equal(adjustForecastSpot(5,1),5);
+assert.equal(adjustForecastSpot(-0.5,-1),-0.5);
+console.log("Kalibreringskontroller bestaaet.");

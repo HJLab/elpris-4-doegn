@@ -1,6 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import calibration from "../calibration.js";
+const { calculateCalibration, adjustForecastSpot } = calibration;
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const LOG_PATH = path.join(ROOT, "data", "forecast-log.json");
@@ -128,15 +130,21 @@ function scoreSnapshots(snapshots, actualPrices, area = "DK2") {
     for (const point of snapshot.points || []) {
       const actual = actualPrices.get(point.target);
       if (!Number.isFinite(actual)) continue;
-      const errorOre = Math.abs(Number(point.forecastSpotExVat) - actual) * 100;
-      observations.push({
+      const forecastSpotExVat = Number(point.forecastSpotExVat);
+      if (!Number.isFinite(forecastSpotExVat)) continue;
+      const errorOre = Math.abs(forecastSpotExVat - actual) * 100;
+      const observation = {
         area,
         issuedAt: snapshot.collectedAt,
         target: point.target,
-        forecastSpotExVat: Number(point.forecastSpotExVat),
+        forecastSpotExVat,
         actualSpotExVat: actual,
         errorOre: Math.round(errorOre * 100) / 100
-      });
+      };
+      if (point.rawForecastSpotExVat != null && Number.isFinite(Number(point.rawForecastSpotExVat))) {
+        observation.rawForecastSpotExVat = Number(point.rawForecastSpotExVat);
+      }
+      observations.push(observation);
     }
   }
   return observations.sort((a, b) => a.target.localeCompare(b.target) || a.issuedAt.localeCompare(b.issuedAt));
@@ -155,10 +163,10 @@ async function main() {
   for (const area of AREAS) forecasts.set(area, await fetchJson(forecastUrl(area)));
 
   const allPoints = log.snapshots.flatMap((item) => item.points || []);
+  let observations = [];
   if (allPoints.length) {
     const firstDate = allPoints.map((item) => item.target.slice(0, 10)).sort()[0];
     const endDate = addDateDays(local.date, 2);
-    const observations = [];
     for (const area of AREAS) {
       const actualPayload = await fetchJson(dayAheadUrl(area, firstDate, endDate));
       observations.push(...scoreSnapshots(log.snapshots, actualPriceMap(actualPayload), area));
@@ -184,10 +192,20 @@ async function main() {
     if (!log.snapshots.some((item) => item.collectedDate === local.date && (item.area || "DK2") === area)) {
       const forecast = forecasts.get(area);
       const startKey = `${local.date}T${String(local.hour).padStart(2, "0")}:00`;
-      const points = forecastPoints(forecast, startKey, addNaiveHours(startKey, 96));
+      const calibrationResult = calculateCalibration(observations, area, local.date);
+      const points = forecastPoints(forecast, startKey, addNaiveHours(startKey, 96)).map((point) => ({
+        ...point,
+        rawForecastSpotExVat: point.forecastSpotExVat,
+        forecastSpotExVat: Math.round(adjustForecastSpot(point.forecastSpotExVat, calibrationResult.adjustment) * 1e6) / 1e6
+      }));
       if (!points.length) throw new Error(`${area}-prognosen indeholdt ingen fremtidige prognosetimer inden for 96 timer.`);
-      log.snapshots.push({ area, collectedDate: local.date, collectedAt: now.toISOString(), sourceGeneratedAt: forecast.generated || null, points });
-      console.log(`Gemte ${points.length} ${area}-prognosetimer for ${local.date}.`);
+      log.snapshots.push({
+        area, collectedDate: local.date, collectedAt: now.toISOString(),
+        sourceGeneratedAt: forecast.generated || null,
+        calibration: { version: 1, asOfDate: local.date, ...calibrationResult },
+        points
+      });
+      console.log(`Gemte ${points.length} ${area}-prognosetimer for ${local.date}. Korrektion: ${(calibrationResult.adjustment * 100).toFixed(2)} ore ra spot.`);
     }
   }
   log.snapshots.sort((a, b) => a.collectedAt.localeCompare(b.collectedAt));

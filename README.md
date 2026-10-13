@@ -92,3 +92,12 @@ Officielle priser stammer fra Energi Data Service. Browservenlige pris- og progn
 - Sammenligner prognose og officiel pris med samlet timepris inkl. moms, afgifter, tariffer og fordelte abonnementer, men ekskl. elselskabets personlige kWh-tillæg.
 - For standardindstillinger er logprisen 11 øre/kWh lavere end timeprisen for samme time. Bevarer rå spotprishistorik og genberegner fejlvisning og månedsprocenter dynamisk.
 - Service-worker-cache opdateret, versionsnummer v16.
+
+
+## Version 17
+
+- Dynamisk korrektion af fremtidige prognoser, separat for DK1 og DK2, baseret paa de seneste 21 afsluttede dage med data. Mindst 10 dage kraeves.
+- Alle dage vaegtes ens. Den systematiske fejl daempes med 10 dages regularisering og begraenses til hoejst plus/minus 12 oere/kWh spot ekskl. moms.
+- Officielle priser, tariffer, abonnementer og det personlige tillaeg aendres aldrig.
+- Raaprognosen gemmes sammen med den korrigerede prognose, saa efterfoelgende kontrol af forbedringen er mulig uden selvforstaerkning.
+- Appen viser den aktuelle korrektion og faar versionsnummer 17.

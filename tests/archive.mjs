@@ -43,4 +43,7 @@ const futureScored = scoreSnapshots([{ area: "DK1", collectedAt: "2026-08-29T13:
 assert.equal(futureScored.length, 1);
 assert.equal(futureScored[0].errorOre, 20);
 
+const calibrated = scoreSnapshots([{area:"DK1",collectedAt:"2026-08-29T13:00:00Z",points:[{target:"2026-08-30T00:00",rawForecastSpotExVat:0.7,forecastSpotExVat:0.8}]}],actual,"DK1");
+assert.equal(calibrated[0].rawForecastSpotExVat,0.7);
+assert.equal(calibrated[0].errorOre,0);
 console.log("Arkiveringskontroller bestået.");

@@ -5,12 +5,14 @@ on:
     branches: [main]
     paths:
       - "app.js"
+      - "calibration.js"
       - "scripts/**/*.mjs"
       - "tests/**"
       - ".github/workflows/check-app.yml"
   pull_request:
     paths:
       - "app.js"
+      - "calibration.js"
       - "scripts/**/*.mjs"
       - "tests/**"
       - ".github/workflows/check-app.yml"
@@ -28,3 +30,4 @@ jobs:
           node-version: "22"
       - run: node tests/core.cjs
       - run: node tests/archive.mjs
+      - run: node tests/calibration.cjs

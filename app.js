@@ -29,6 +29,9 @@ const fmtHistoryUpdated = new Intl.DateTimeFormat("da-DK", {
 });
 
 const hasDocument = typeof document !== "undefined";
+const CALIBRATION = typeof module !== "undefined" && module.exports
+  ? require("./calibration.js")
+  : globalThis.ElprisCalibration;
 const $ = (id) => hasDocument ? document.getElementById(id) : null;
 const ui = hasDocument ? {
   statusPanel: $("statusPanel"), statusText: $("statusText"), refresh: $("refreshButton"),
@@ -276,12 +279,15 @@ function totalPrice(spotExVat, date, activeSettings = settings) {
   return variablePrice(spotExVat, date, activeSettings) + fixedCostPerKwh(activeSettings);
 }
 
-function buildHorizon(knownHours, now = new Date(), activeSettings = settings) {
+function buildHorizon(knownHours, now = new Date(), activeSettings = settings, correction = 0) {
   const start = startOfDay(now);
   return Array.from({ length: CONFIG.horizonHours }, (_, index) => {
     const date = calendarHour(start, index);
     const known = knownHours.get(hourKey(date));
-    const spotExVat = known ? known.spotExVat : forecastSpot(date, knownHours);
+    const originalSpot = known ? known.spotExVat : forecastSpot(date, knownHours);
+    // Only forecast prices are calibrated. Published official prices are untouched.
+    const spotExVat = known?.kind === "actual" ? originalSpot
+      : CALIBRATION.adjustForecastSpot(originalSpot, correction);
     return {
       date,
       spotExVat,
@@ -699,14 +705,18 @@ async function load() {
     ui.refresh.disabled = false;
     return;
   }
-  const items = buildHorizon(known, now);
+  const calibration = CALIBRATION.calculateCalibration(accuracyObservations, settings.priceArea, localIso(now).slice(0, 10));
+  const items = buildHorizon(known, now, settings, calibration.adjustment);
   renderSummary(items, now);
   renderDays(items, now);
   const officialCount = items.filter((x) => x.kind === "actual").length;
   const forecastCount = items.length - officialCount;
   const cacheText = data.fromCache ? " Viser senest gemte data, fordi en ny hentning mislykkedes." : "";
   const sourceText = data.officialSourceOk === false ? " Direkte Energinet-data kunne ikke hentes, så reservekilden bruges." : "";
-  setStatus(`${officialCount} officielle timer og ${forecastCount} prognosetimer.${sourceText}${cacheText}`, data.fromCache || data.officialSourceOk === false ? "error" : "ok");
+  const calibrationText = forecastCount && calibration.active
+    ? ` Historisk prognosejustering: ${calibration.adjustment >= 0 ? "+" : ""}${fmtPrice.format(calibration.adjustment * 125)} øre/kWh inkl. moms (${calibration.sampleDays} døgn).`
+    : "";
+  setStatus(`${officialCount} officielle timer og ${forecastCount} prognosetimer.${calibrationText}${sourceText}${cacheText}`, data.fromCache || data.officialSourceOk === false ? "error" : "ok");
   ui.updatedAt.textContent = `Priser hentet ${fmtDate.format(data.savedAt)} kl. ${fmtTime.format(data.savedAt)}`;
   ui.refresh.disabled = false;
 }
@@ -748,8 +758,8 @@ if (hasDocument) {
     await load();
     lastPriceRefresh = Date.now();
   };
-  runPriceLoad();
-  loadAccuracy();
+  // Load historical bias before first rendering so the first forecast is calibrated.
+  loadAccuracy().then(runPriceLoad);
   showReviewReminderIfDue();
   const schedulePriceRefresh = () => {
     const hour = new Date().getHours();
