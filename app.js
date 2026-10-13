@@ -41,6 +41,8 @@ const ui = hasDocument ? {
   expensivePrice: $("expensivePrice"), expensiveTime: $("expensiveTime"),
   accuracyValue: $("accuracyValue"), accuracyCoverage: $("accuracyCoverage"), accuracyUpdatedAt: $("accuracyUpdatedAt"),
   dailyAccuracyList: $("dailyAccuracyList"),
+  forecastAuditInfo: $("forecastAuditInfo"), forecastAuditDate: $("forecastAuditDate"),
+  forecastAuditTable: $("forecastAuditTable"), forecastAuditStatus: $("forecastAuditStatus"),
   monthlyAccuracyDetails: $("monthlyAccuracyDetails"), monthlyAccuracyMonth: $("accuracyMonth"),
   monthlyAccuracyIntro: $("monthlyAccuracyIntro"), monthlyAccuracyRows: $("monthlyAccuracyRows"), monthlyAccuracyCoverage: $("monthlyAccuracyCoverage"),
   profileSummary: $("profileSummary"), accuracyComparisonNote: $("accuracyComparisonNote"), settingsButton: $("settingsButton"),
@@ -51,6 +53,9 @@ const ui = hasDocument ? {
 } : {};
 
 let accuracyObservations = [];
+let forecastSnapshots = [];
+let selectedForecastDate = "";
+let officialSpotForAudit = new Map();
 let selectedAccuracyDays = 7;
 let selectedAccuracyMonth = "";
 let settings = readSettings();
@@ -321,15 +326,51 @@ function bestChargeWindow(items, length = 3) {
 function comparableAccuracyPrice(spotExVat, date, activeSettings = settings) {
   return totalPrice(spotExVat, date, activeSettings) - activeSettings.supplierMarkupOre / 100;
 }
-function pricedAccuracyObservation(item, activeSettings = settings) {
-  if (typeof item?.target !== "string" || item.forecastSpotExVat == null || item.actualSpotExVat == null) return null;
+// Audit rows keep the original spot forecast separate from the subsequently
+// calibrated forecast; user-specific kWh markup is excluded from every column.
+function pricedForecastAuditRow(item, activeSettings = settings) {
+  if (typeof item?.target !== "string" || item.forecastSpotExVat == null) return null;
   const forecastSpot = Number(item.forecastSpotExVat);
-  const actualSpot = Number(item.actualSpotExVat);
+  const hasRaw = item.rawForecastSpotExVat != null && Number.isFinite(Number(item.rawForecastSpotExVat));
+  const rawSpot = hasRaw ? Number(item.rawForecastSpotExVat) : forecastSpot;
+  const hasActual = item.actualSpotExVat != null && Number.isFinite(Number(item.actualSpotExVat));
   const date = parseDanishTime(item.target);
-  if (!Number.isFinite(forecastSpot) || !Number.isFinite(actualSpot) || !Number.isFinite(date.getTime())) return null;
+  if (!Number.isFinite(forecastSpot) || !Number.isFinite(date.getTime())) return null;
+
+  const originalPriceOre = comparableAccuracyPrice(rawSpot, date, activeSettings) * 100;
   const forecastPriceOre = comparableAccuracyPrice(forecastSpot, date, activeSettings) * 100;
-  const actualPriceOre = comparableAccuracyPrice(actualSpot, date, activeSettings) * 100;
-  return {...item, forecastPriceOre, actualPriceOre, errorOre: Math.abs(forecastPriceOre - actualPriceOre)};
+  const actualPriceOre = hasActual
+    ? comparableAccuracyPrice(Number(item.actualSpotExVat), date, activeSettings) * 100
+    : null;
+  const errorOre = hasActual ? Math.abs(forecastPriceOre - actualPriceOre) : null;
+  const originalErrorOre = hasActual && hasRaw ? Math.abs(originalPriceOre - actualPriceOre) : null;
+  return {
+    ...item,
+    hasCalibration: hasRaw,
+    originalPriceOre,
+    forecastPriceOre,
+    adjustmentOre: hasRaw ? forecastPriceOre - originalPriceOre : null,
+    actualPriceOre,
+    signedErrorOre: hasActual ? forecastPriceOre - actualPriceOre : null,
+    errorOre,
+    originalErrorOre,
+    improvementOre: originalErrorOre == null ? null : originalErrorOre - errorOre
+  };
+}
+
+function pricedAccuracyObservation(item, activeSettings = settings) {
+  const priced = pricedForecastAuditRow(item, activeSettings);
+  return priced?.actualPriceOre == null ? null : priced;
+}
+
+function latestForecastSnapshot(snapshots, area) {
+  if (!Array.isArray(snapshots)) return null;
+  let latest = null;
+  for (const snapshot of snapshots) {
+    if (snapshot?.area !== area || !Array.isArray(snapshot.points)) continue;
+    if (!latest || String(snapshot.collectedAt || "") > String(latest.collectedAt || "")) latest = snapshot;
+  }
+  return latest;
 }
 function calculateAccuracy(observations, days, now = new Date(), priceArea = settings.priceArea, activeSettings = settings) {
   const cutoff = new Date(now);
@@ -364,6 +405,12 @@ function dailyAccuracyReport(observations, days, now = new Date(), priceArea = s
       averageOre: mean(sorted.map((item) => Number(item.errorOre))),
       forecastAverageOre: mean(sorted.map((item) => item.forecastPriceOre)),
       actualAverageOre: mean(sorted.map((item) => item.actualPriceOre)),
+      items: sorted,
+      adjustedHours: sorted.filter((item) => item.hasCalibration).length,
+      averageAdjustmentOre: sorted.some((item) => item.hasCalibration)
+        ? mean(sorted.filter((item) => item.hasCalibration).map((item) => item.adjustmentOre)) : null,
+      averageImprovementOre: sorted.some((item) => item.hasCalibration)
+        ? mean(sorted.filter((item) => item.hasCalibration).map((item) => item.improvementOre)) : null,
       observations: sorted.length,
       complete: sorted.length === 24,
       best,
@@ -430,6 +477,130 @@ function renderAccuracy(days = selectedAccuracyDays) {
   renderDailyAccuracy(result.rows);
 }
 
+
+function formatAuditOre(value) {
+  return Number.isFinite(value) ? fmtPrice.format(value) : "—";
+}
+
+function formatAuditSignedOre(value) {
+  if (!Number.isFinite(value)) return "—";
+  if (Math.abs(value) < 0.005) return "0,00";
+  return (value > 0 ? "+" : "−") + fmtPrice.format(Math.abs(value));
+}
+
+// One common, mobile-scrollable table for saved and finished forecasts.
+function makeForecastAuditTable(rows, captionText) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "forecast-audit-table-wrap";
+  wrapper.tabIndex = 0;
+  wrapper.setAttribute("aria-label", "Timepriser i en tabel, der kan rulles vandret");
+  const table = document.createElement("table");
+  table.className = "forecast-audit-table";
+  const caption = document.createElement("caption");
+  caption.textContent = captionText;
+  table.append(caption);
+  const thead = document.createElement("thead");
+  const header = document.createElement("tr");
+  for (const label of ["Kl.", "Oprindelig", "Justering", "Efter", "Officiel", "Fejl"]) {
+    const th = document.createElement("th");
+    th.scope = "col";
+    th.textContent = label;
+    header.append(th);
+  }
+  thead.append(header);
+  const tbody = document.createElement("tbody");
+  for (const point of rows) {
+    const tr = document.createElement("tr");
+    const hour = document.createElement("th");
+    hour.scope = "row";
+    hour.textContent = point.target.slice(11, 16);
+    tr.append(hour);
+    const values = [
+      formatAuditOre(point.originalPriceOre),
+      point.adjustmentOre == null ? "—" : formatAuditSignedOre(point.adjustmentOre),
+      formatAuditOre(point.forecastPriceOre),
+      point.actualPriceOre == null ? "Afventer" : formatAuditOre(point.actualPriceOre),
+      point.signedErrorOre == null ? "—" : formatAuditSignedOre(point.signedErrorOre)
+    ];
+    values.forEach((value, index) => {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      if (index === 1 && point.adjustmentOre != null) cell.className = "audit-adjustment";
+      if (index === 2) cell.className = "audit-after";
+      if (index === 4 && point.signedErrorOre != null) cell.className = "audit-error";
+      tr.append(cell);
+    });
+    tbody.append(tr);
+  }
+  table.append(thead, tbody);
+  wrapper.append(table);
+  return wrapper;
+}
+
+function renderForecastAudit() {
+  const snapshot = latestForecastSnapshot(forecastSnapshots, settings.priceArea);
+  if (!snapshot || !snapshot.points.length) {
+    ui.forecastAuditInfo.textContent = "Ingen gemte prognoser endnu for " + settings.priceArea + ".";
+    ui.forecastAuditDate.replaceChildren();
+    ui.forecastAuditDate.disabled = true;
+    ui.forecastAuditTable.replaceChildren();
+    ui.forecastAuditStatus.textContent = "Logvisningen opdateres, når dagens prognose er arkiveret.";
+    return;
+  }
+
+  const dates = [...new Set(snapshot.points.map((point) => String(point.target || "").slice(0, 10)))].filter(Boolean).sort();
+  if (!dates.includes(selectedForecastDate)) selectedForecastDate = dates[0];
+  ui.forecastAuditDate.disabled = false;
+  ui.forecastAuditDate.replaceChildren(...dates.map((day) => {
+    const option = document.createElement("option");
+    option.value = day;
+    option.textContent = fmtDateLong.format(parseDanishTime(day + "T12:00"));
+    return option;
+  }));
+  ui.forecastAuditDate.value = selectedForecastDate;
+
+  const savedAt = new Date(snapshot.collectedAt);
+  const savedText = Number.isFinite(savedAt.getTime()) ? fmtHistoryUpdated.format(savedAt) : "ukendt dato";
+  ui.forecastAuditInfo.textContent = "Arkiveret " + savedText + " · " + settings.priceArea + ". Den gemte prognose ændres ikke bagudrettet.";
+  const knownActuals = new Map();
+  for (const item of accuracyObservations) {
+    if ((item.area || "DK2") !== settings.priceArea || item.actualSpotExVat == null) continue;
+    const actual = Number(item.actualSpotExVat);
+    if (Number.isFinite(actual)) knownActuals.set(item.target, actual);
+  }
+
+  const rows = snapshot.points
+    .filter((point) => point.target.slice(0, 10) === selectedForecastDate)
+    .map((point) => {
+      const confirmed = officialSpotForAudit.get(point.target);
+      const actual = confirmed?.kind === "actual" ? confirmed.spotExVat : knownActuals.get(point.target);
+      return pricedForecastAuditRow({ ...point, actualSpotExVat: actual ?? null });
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.target.localeCompare(b.target));
+  ui.forecastAuditTable.replaceChildren(makeForecastAuditTable(rows, "Gemte timepriser · øre/kWh"));
+  const complete = rows.filter((item) => item.actualPriceOre != null).length;
+  const adjusted = rows.filter((item) => item.hasCalibration);
+  const changeText = adjusted.length
+    ? " · Automatisk justering " + formatAuditSignedOre(mean(adjusted.map((item) => item.adjustmentOre))) + " øre/kWh i gennemsnit."
+    : " · Ældre log uden gemt justering.";
+  ui.forecastAuditStatus.textContent =
+    rows.length + " gemte timer · " + complete + " med officiel pris." + changeText;
+}
+
+async function loadForecastSnapshots() {
+  try {
+    const response = await fetch("data/forecast-log.json?t=" + Date.now(), { cache: "no-store" });
+    if (!response.ok) throw new Error("Kunne ikke hente prognoselog");
+    const payload = await response.json();
+    if (!Array.isArray(payload.snapshots)) throw new Error("Ugyldige prognosedata");
+    forecastSnapshots = payload.snapshots;
+  } catch {
+    if (!forecastSnapshots.length) ui.forecastAuditStatus.textContent = "Prognoseloggen kunne ikke hentes.";
+  }
+  renderForecastAudit();
+}
+
 function renderDailyAccuracy(rows) {
   if (!rows.length) {
     ui.dailyAccuracyList.replaceChildren();
@@ -484,7 +655,20 @@ function renderDailyAccuracy(rows) {
       makeAccuracyDetail("Tætteste time", `${row.best.target.slice(11, 16)} · ${fmtPrice.format(row.best.errorOre)} øre/kWh forkert`),
       makeAccuracyDetail("Største fejl", `${row.worst.target.slice(11, 16)} · ${fmtPrice.format(row.worst.errorOre)} øre/kWh forkert`)
     );
-    details.append(summary, body);
+    if (row.adjustedHours > 0) {
+      const improvement = row.averageImprovementOre;
+      const effect = Math.abs(improvement) < 0.005
+        ? "Uændret"
+        : fmtPrice.format(Math.abs(improvement)) + (improvement > 0 ? " øre mindre fejl" : " øre større fejl");
+      body.append(
+        makeAccuracyDetail("Gns. automatisk justering (" + row.adjustedHours + " timer)", formatAuditSignedOre(row.averageAdjustmentOre) + " øre/kWh"),
+        makeAccuracyDetail("Hjalp justeringen?", effect)
+      );
+    }
+    const note = document.createElement("p");
+    note.className = "forecast-audit-note";
+    note.textContent = "Time for time i øre/kWh, inkl. moms og øvrige udgifter, uden dit personlige kWh-tillæg. Fejl: + betyder prognosen var for høj; − betyder for lav. — betyder ingen registreret automatisk justering (ældre log).";
+    details.append(summary, body, note, makeForecastAuditTable(row.items, "Sammenligning time for time · øre/kWh"));
     fragment.append(details);
   }
   ui.dailyAccuracyList.replaceChildren(fragment);
@@ -553,6 +737,7 @@ async function loadAccuracy() {
   }
   renderAccuracy(selectedAccuracyDays);
   renderMonthlyAccuracy();
+  renderForecastAudit();
 }
 
 function renderSummary(items, now) {
@@ -699,6 +884,8 @@ async function load() {
   const now = new Date();
   const forecastHours = forecastPayloadToHours(data.days || []);
   const officialHours = aggregateToHours(data.officialRecords || []);
+  officialSpotForAudit = officialHours;
+  renderForecastAudit();
   const known = mergeKnownHours(forecastHours, officialHours);
   if (!known.size) {
     setStatus("Der blev ikke fundet brugbare prisdata. Prøv igen om lidt.", "error");
@@ -738,6 +925,7 @@ if (hasDocument) {
     closeSettings();
     renderAccuracy(selectedAccuracyDays);
     renderMonthlyAccuracy();
+    renderForecastAudit();
     load();
   });
   ui.settingsDialog.addEventListener("click", (event) => {
@@ -753,6 +941,10 @@ if (hasDocument) {
     selectedAccuracyMonth = ui.monthlyAccuracyMonth.value;
     renderMonthlyAccuracy();
   });
+  ui.forecastAuditDate.addEventListener("change", () => {
+    selectedForecastDate = ui.forecastAuditDate.value;
+    renderForecastAudit();
+  });
   let lastPriceRefresh = 0;
   const runPriceLoad = async () => {
     await load();
@@ -760,6 +952,7 @@ if (hasDocument) {
   };
   // Load historical bias before first rendering so the first forecast is calibrated.
   loadAccuracy().then(runPriceLoad);
+  loadForecastSnapshots();
   showReviewReminderIfDue();
   const schedulePriceRefresh = () => {
     const hour = new Date().getHours();
@@ -771,6 +964,7 @@ if (hasDocument) {
   };
   schedulePriceRefresh();
   setInterval(loadAccuracy, 60 * 60 * 1000);
+  setInterval(loadForecastSnapshots, 60 * 60 * 1000);
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden && Date.now() - lastPriceRefresh > 5 * 60 * 1000) runPriceLoad();
   });
@@ -781,4 +975,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, shouldShowReviewReminder };
+if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, pricedForecastAuditRow, latestForecastSnapshot, shouldShowReviewReminder };

@@ -101,3 +101,13 @@ Officielle priser stammer fra Energi Data Service. Browservenlige pris- og progn
 - Officielle priser, tariffer, abonnementer og det personlige tillaeg aendres aldrig.
 - Raaprognosen gemmes sammen med den korrigerede prognose, saa efterfoelgende kontrol af forbedringen er mulig uden selvforstaerkning.
 - Appen viser den aktuelle korrektion og faar versionsnummer 17.
+
+
+## Version 18 – gennemskuelig prognoselog
+
+- Under "Prognoselog · automatisk justering" vises de senest arkiverede timeprognoser opdelt efter måldato, også før den officielle spotpris bliver tilgængelig.
+- De udfoldelige daglige træfsikkerhedskort viser time for time: oprindelig prognose, automatisk justering, korrigeret prognose, officiel pris og fejl (med fortegn).
+- Alle priser i tabellen er øre/kWh inklusive moms, tariffer, afgifter og fordelte faste beløb, men uden personligt kWh-tillæg.
+- Ældre prognoser uden registreret justering vises med streg i justeringskolonnen. Der opfindes ikke historiske justeringer.
+- Dagskort viser også om justeringen sænkede eller hævede prognosefejlen. Officielle priser forbliver uændrede.
+- Cache-version opdateret til v24.

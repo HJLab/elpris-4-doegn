@@ -20,7 +20,7 @@
     <div>
       <p id="profileSummary" class="eyebrow">DK2 · Østdanmark · Cerius · Modstrøm</p>
       <h1>Elpris – næste 4 dage</h1>
-      <span class="app-version">Version v17</span>
+      <span class="app-version">Version v18</span>
     </div>
     <div class="top-actions">
       <button id="settingsButton" class="secondary-button" type="button">Indstillinger</button>
@@ -62,6 +62,18 @@
     <section id="days" class="days" aria-label="Priser for de næste fire kalenderdage"></section>
 
     <section class="accuracy-section">
+      <details id="forecastAuditDetails" class="accuracy-details forecast-audit-section">
+        <summary>Prognoselog · automatisk justering</summary>
+        <div class="accuracy-body">
+          <p class="accuracy-explanation">Se præcis, hvordan den oprindelige prognose blev justeret, før de officielle priser kom. Alle tal er øre/kWh inkl. moms, tariffer, afgifter og fordelte abonnementer, men uden dit personlige tillæg.</p>
+          <p id="forecastAuditInfo" class="accuracy-coverage">Indlæser den seneste gemte prognose…</p>
+          <label class="forecast-audit-label" for="forecastAuditDate">Vælg prognosedag</label>
+          <select id="forecastAuditDate" class="forecast-audit-select" disabled></select>
+          <p class="forecast-audit-note">+ justering betyder en forhøjelse. + fejl betyder prognosen var for høj, − fejl betyder for lav. — betyder, at der ikke blev registreret nogen automatisk justering.</p>
+          <p id="forecastAuditStatus" class="accuracy-coverage" aria-live="polite"></p>
+          <div id="forecastAuditTable" aria-live="polite"></div>
+        </div>
+      </details>
       <details id="accuracyDetails" class="accuracy-details">
         <summary>Prognosens træfsikkerhed</summary>
         <div class="accuracy-body">
@@ -78,7 +90,7 @@
           <span id="accuracyCoverage" class="accuracy-coverage" aria-live="polite">Målingen begynder, når den første prognose er gemt.</span>
           <span id="accuracyUpdatedAt" class="accuracy-updated" aria-live="polite">Historikken er ikke opdateret endnu.</span>
           <div class="daily-accuracy-heading">
-            <strong>Fejl pr. døgn</strong>
+            <strong>Fejl pr. døgn · tryk for timepriser og justeringer</strong>
             <span>Tryk på et døgn for at se detaljerne</span>
           </div>
           <div id="dailyAccuracyList" class="daily-accuracy-list" aria-live="polite"></div>

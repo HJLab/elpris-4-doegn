@@ -325,6 +325,21 @@ input:focus, select:focus { outline: 2px solid var(--amber); outline-offset: 1px
 .daily-accuracy-detail-grid small { color: var(--muted); font-size: .66rem; }
 .daily-accuracy-detail-grid strong { font-size: .78rem; line-height: 1.35; }
 
+.forecast-audit-section { margin-bottom: 12px; }
+.forecast-audit-label { display: block; margin: 13px 0 6px; color: var(--muted); font-size: .83rem; font-weight: 750; }
+.forecast-audit-select { display: block; width: min(360px,100%); padding: 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); color: var(--text); font: inherit; margin-bottom: 12px; }
+.forecast-audit-note { margin: 10px 0; color: var(--muted); font-size: .74rem; line-height: 1.5; padding: 0 12px; }
+.forecast-audit-table-wrap { overflow-x: auto; margin: 12px 12px 14px; border: 1px solid var(--line); border-radius: 10px; }
+.forecast-audit-table { border-collapse: collapse; width: 100%; min-width: 630px; font-size: .76rem; font-variant-numeric: tabular-nums; }
+.forecast-audit-table caption { text-align: left; padding: 10px; font-weight: 750; color: var(--muted); background: var(--surface-2); }
+.forecast-audit-table th, .forecast-audit-table td { padding: 9px 7px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.forecast-audit-table th:first-child { position: sticky; left: 0; text-align: left; background: var(--surface); }
+.forecast-audit-table thead th { color: var(--muted); font-size: .7rem; background: var(--surface-2); }
+.forecast-audit-table tr:last-child th, .forecast-audit-table tr:last-child td { border-bottom: 0; }
+.forecast-audit-table .audit-adjustment { color: var(--blue); }
+.forecast-audit-table .audit-after { font-weight: 800; color: var(--text); }
+.forecast-audit-table .audit-error { font-weight: 750; }
+.daily-accuracy-card > .forecast-audit-table-wrap { margin: 10px 12px 14px; }
 .monthly-accuracy-details { margin-top: 12px; border-color: rgba(88, 166, 255, .45); }
 .monthly-accuracy-details > summary { color: var(--blue); }
 .monthly-accuracy-body { padding: 0 17px 17px; }

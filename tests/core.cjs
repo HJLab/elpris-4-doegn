@@ -1,6 +1,21 @@
 const assert = require("node:assert/strict");
 const { DEFAULT_SETTINGS, normalizeSettings, aggregateToHours, mergeKnownHours, forecastPayloadToHours, ceriusTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, shouldShowReviewReminder } = require("../app.js");
 
+const { pricedForecastAuditRow, latestForecastSnapshot } = require("../app.js");
+const auditSettings = normalizeSettings(DEFAULT_SETTINGS);
+const auditDate = new Date(2026,9,15,12);
+const old = pricedForecastAuditRow({target:"2026-10-15T12:00",forecastSpotExVat:0.7,actualSpotExVat:0.6},auditSettings);
+assert.equal(old.hasCalibration,false);
+assert.equal(old.adjustmentOre,null);
+const next = pricedForecastAuditRow({target:"2026-10-15T12:00",rawForecastSpotExVat:0.7,forecastSpotExVat:0.8,actualSpotExVat:0.75},auditSettings);
+assert.equal(next.hasCalibration,true);
+assert.ok(Math.abs(next.adjustmentOre - 12.5)<1e-8);
+assert.ok(Math.abs(next.signedErrorOre - 6.25)<1e-8);
+assert.ok(Math.abs(next.improvementOre - 0)<1e-8);
+const pending = pricedForecastAuditRow({target:"2026-10-16T12:00",rawForecastSpotExVat:0.7,forecastSpotExVat:0.8},auditSettings);
+assert.equal(pending.actualPriceOre,null);
+assert.equal(pending.errorOre,null);
+assert.equal(latestForecastSnapshot([{area:"DK2",collectedAt:"1",points:[{}]},{area:"DK2",collectedAt:"2",points:[{}]}],"DK2").collectedAt,"2");
 const records = [
   { TimeDK: "2026-08-29T10:00:00", PriceArea: "DK2", DayAheadPriceDKK: 400 },
   { TimeDK: "2026-08-29T10:15:00", PriceArea: "DK2", DayAheadPriceDKK: 600 },
