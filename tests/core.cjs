@@ -1,8 +1,17 @@
 const assert = require("node:assert/strict");
-const { DEFAULT_SETTINGS, normalizeSettings, shouldRepairLegacyZeroMarkup, aggregateToHours, mergeKnownHours, forecastPayloadToHours, ceriusTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, shouldShowReviewReminder } = require("../app.js");
+const { DEFAULT_SETTINGS, normalizeSettings, shouldRepairLegacyZeroMarkup, aggregateToHours, mergeKnownHours, forecastPayloadToHours, ceriusTariff, radiusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, shouldShowReviewReminder } = require("../app.js");
 
 const { pricedForecastAuditRow, latestForecastSnapshot } = require("../app.js");
 const auditSettings = normalizeSettings(DEFAULT_SETTINGS);
+// Den nye standard er Radius, men gamle gemte Cerius-profiler bevares.
+assert.equal(DEFAULT_SETTINGS.gridCompany,"radius");
+assert.equal(normalizeSettings({}).gridCompany,"radius");
+assert.equal(normalizeSettings({gridCompany:"radius"}).gridCompany,"radius");
+assert.equal(normalizeSettings({gridCompany:"cerius"}).gridCompany,"cerius");
+assert.equal(normalizeSettings({gridCompany:"manual"}).gridCompany,"manual");
+assert.equal(normalizeSettings({gridCompany:"ukendt"}).gridCompany,"radius");
+assert.equal(shouldRepairLegacyZeroMarkup({...DEFAULT_SETTINGS,gridCompany:"cerius",supplierMarkupOre:0}),true);
+assert.equal(shouldRepairLegacyZeroMarkup({...DEFAULT_SETTINGS,gridCompany:"cerius",supplierMarkupOre:0,gridSubscriptionMonthly:50}),false);
 assert.equal(normalizeSettings({supplierMarkupOre:null}).supplierMarkupOre,11);
 assert.equal(normalizeSettings({supplierMarkupOre:""}).supplierMarkupOre,11);
 assert.equal(normalizeSettings({supplierMarkupOre:0}).supplierMarkupOre,0);
@@ -60,11 +69,28 @@ assert.equal(ceriusTariff(new Date(2026, 7, 29, 18)), 0.5623);
 assert.equal(ceriusTariff(new Date(2026, 9, 1, 3)), 0.1442);
 assert.equal(ceriusTariff(new Date(2026, 9, 1, 12)), 0.4325);
 assert.equal(ceriusTariff(new Date(2026, 9, 1, 18)), 1.2975);
+// Radius Elnet officielle C-kundetariffer, inkl. moms, april/oktober 2026.
+assert.equal(radiusTariff(new Date(2026, 7, 29, 3)), 0.1327);
+assert.equal(radiusTariff(new Date(2026, 7, 29, 12)), 0.1991);
+assert.equal(radiusTariff(new Date(2026, 7, 29, 18)), 0.5176);
+assert.equal(radiusTariff(new Date(2026, 9, 15, 3)), 0.1327);
+assert.equal(radiusTariff(new Date(2026, 9, 15, 12)), 0.3982);
+assert.equal(radiusTariff(new Date(2026, 9, 15, 18)), 1.1945);
+assert.equal(radiusTariff(new Date(2026, 9, 15, 21)), 0.3982);
+assert.equal(gridTariff(new Date(2026, 9, 15, 19), DEFAULT_SETTINGS), 1.1945);
+assert.equal(gridTariff(new Date(2026, 9, 15, 19), {...DEFAULT_SETTINGS,gridCompany:"cerius"}), 1.2975);
+assert.ok(Math.abs(totalPrice(0.8,new Date(2026,9,15,19),{...DEFAULT_SETTINGS,gridCompany:"cerius"})
+  - totalPrice(0.8,new Date(2026,9,15,19),DEFAULT_SETTINGS) - 0.103)<1e-9);
+assert.ok(Math.abs(totalPrice(0.8,new Date(2026,9,15,15),{...DEFAULT_SETTINGS,gridCompany:"cerius"})
+  - totalPrice(0.8,new Date(2026,9,15,15),DEFAULT_SETTINGS) - 0.0343)<1e-9);
+assert.ok(Math.abs(totalPrice(0.8,new Date(2026,9,15,3),{...DEFAULT_SETTINGS,gridCompany:"cerius"})
+  - totalPrice(0.8,new Date(2026,9,15,3),DEFAULT_SETTINGS) - 0.0115)<1e-9);
 
 const priceDate = new Date(2026, 7, 29, 12);
-const baseCalculated = officialBasePrice(0.7, priceDate, DEFAULT_SETTINGS);
-const variableCalculated = variablePrice(0.7, priceDate, DEFAULT_SETTINGS);
-const calculated = totalPrice(0.7, priceDate, DEFAULT_SETTINGS);
+const legacyCeriusSettings = { ...DEFAULT_SETTINGS, gridCompany: "cerius" };
+const baseCalculated = officialBasePrice(0.7, priceDate, legacyCeriusSettings);
+const variableCalculated = variablePrice(0.7, priceDate, legacyCeriusSettings);
+const calculated = totalPrice(0.7, priceDate, legacyCeriusSettings);
 assert.ok(baseCalculated > 1.24 && baseCalculated < 1.26);
 assert.ok(variableCalculated > 1.35 && variableCalculated < 1.37);
 assert.equal(calculated, variableCalculated);

@@ -128,3 +128,18 @@ Officielle priser stammer fra Energi Data Service. Browservenlige pris- og progn
 - Tomt eller null tillæg bliver ikke længere fortolket som et udtrykkeligt valg om 0 øre. Et egentligt numerisk 0 forbliver gyldigt.
 - For 7, 14, 30 og 90 dages træfsikkerhed vises højst det valgte antal kalenderdage. Kendte priser for i morgen tælles ikke med i dag (rettelse af eksempelvis “8 af 7 dage”).
 - Gemte spotdata og prognosekalibrering bevares uændret. Personligt tillæg inkluderes præcis én gang i både timevisning og log. Versionsnummeret er v20 og service-worker cache v26.
+
+
+## Version 21 – korrekt netselskab Radius og adskilte brugerprofiler
+
+- Officielt netområdekort fra Green Power Denmark bekræfter Radius Elnet for ejerens boligadresse. Historisk var standardprofilen forkert sat til Cerius.
+- Der er nu valg mellem Radius Elnet, Cerius og brugerdefinerede tariffer. **Nye profiler bruger Radius som standard**; eksisterende profiler og abonnementer overskrives ikke.
+- Radius privat C-kundetariffer pr. 1. april og 1. oktober 2026 inkl. moms (kr./kWh):
+  - sommer (apr-sep): lav 0,1327 / høj 0,1991 / spids 0,5176
+  - vinter (okt-mar): lav 0,1327 / høj 0,3982 / spids 1,1945.
+- Kilder: https://radiuselnet.dk/priser/ og https://radiuselnet.dk/radius-haever-tarifferne/ samt tariffer fra DataHub beskrevet på https://www.priss.dk/nettariffer/791/ (gyldige fra 1. oktober 2026).
+- Gamle Modstrøm-profiler i DK2, som stadig bruger Cerius, får en tydelig besked og kan vælge **Skift til Radius** med ét tryk eller **Behold Cerius**. Andre brugerindstillinger bevares. Andre reelle Cerius-brugere ændres aldrig automatisk.
+- Ved DK1 skifter formularen fra både Radius og Cerius til brugerdefinerede satser, da de begge kun dækker DK2.
+- Den eksisterende v20-migrering af gamle 0-tillæg understøtter fortsat både den tidligere Cerius-standard og den nye Radius-standard.
+- Tarifændring betyder 3,43 øre/kWh lavere pris i dagtimerne, 10,30 øre/kWh lavere pris kl. 17-21 og 1,15 øre/kWh lavere natpris om vinteren ved ellers ens indstillinger.
+- Spotpriser, prognosekalibrering, alle historiske rå data og personligt kWh-tillæg ændres ikke; eventuelle faste omkostninger og det påståede Modstrøm-tillæg skal fortsat verificeres mod aftalen. Versionsnummer v21, cache v27.

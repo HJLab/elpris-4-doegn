@@ -263,10 +263,10 @@ input:focus, select:focus { outline: 2px solid var(--amber); outline-offset: 1px
 }
 .forecast-row .kind-badge { color: var(--muted); background: rgba(157, 178, 197, .1); }
 
-.markup-notice { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 13px 16px; margin: 10px 0 14px; border: 1px solid var(--amber); border-radius: 12px; background: var(--surface); }
-.markup-notice[hidden], .markup-notice button[hidden] { display: none; }
-.markup-notice p { margin: 0; flex: 1 1 260px; line-height: 1.45; }
-.markup-notice button { border: 1px solid var(--amber); border-radius: 9px; background: var(--amber-bg); color: var(--amber); font: inherit; padding: 9px 14px; font-weight: 750; cursor: pointer; }
+.markup-notice, .grid-notice { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 13px 16px; margin: 10px 0 14px; border: 1px solid var(--amber); border-radius: 12px; background: var(--surface); }
+.markup-notice[hidden], .markup-notice button[hidden], .grid-notice[hidden] { display: none; }
+.markup-notice p, .grid-notice p { margin: 0; flex: 1 1 260px; line-height: 1.45; }
+.markup-notice button, .grid-notice button { border: 1px solid var(--amber); border-radius: 9px; background: var(--amber-bg); color: var(--amber); font: inherit; padding: 9px 14px; font-weight: 750; cursor: pointer; }
 .accuracy-section { margin: 18px 0; }
 .accuracy-details {
   border: 1px solid var(--line);

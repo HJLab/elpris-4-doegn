@@ -7,16 +7,25 @@ const CONFIG = Object.freeze({
   ceriusInclVat: {
     summer: { low: 0.1442, high: 0.2163, peak: 0.5623 },
     winter: { low: 0.1442, high: 0.4325, peak: 1.2975 }
+  },
+  // Radius Elnet, privat C-kunde: gældende fra 1. april / 1. oktober 2026.
+  // Nettariffer i kr./kWh inkl. moms; abonnementer angives separat pr. bruger.
+  radiusInclVat: {
+    summer: { low: 0.1327, high: 0.1991, peak: 0.5176 },
+    winter: { low: 0.1327, high: 0.3982, peak: 1.1945 }
   }
 });
 
 const DEFAULT_SETTINGS = Object.freeze({
-  priceArea: "DK2", gridCompany: "cerius", supplier: "Modstrøm", product: "",
+  priceArea: "DK2", gridCompany: "radius", supplier: "Modstrøm", product: "",
   supplierMarkupOre: 11, supplierSubscriptionMonthly: 0,
   annualConsumption: 4000, gridSubscriptionMonthly: 0,
   gridLow: 0.1442, gridHigh: 0.2163, gridPeak: 0.5623
 });
+// Bevar den gamle Cerius-standard til den sikre v20-genoprettelse af 0-tillæg.
+const LEGACY_CERIUS_DEFAULT_SETTINGS = Object.freeze({ ...DEFAULT_SETTINGS, gridCompany: "cerius" });
 const SETTINGS_KEY = "elpris-user-settings-v1";
+const GRID_NOTICE_DISMISSED_KEY = "elpris-radius-notice-dismissed-v21";
 const MARKUP_REPAIR_KEY = "elpris-markup-repair-v20";
 const REVIEW_REMINDER_DATE = "2026-10-22";
 const REVIEW_REMINDER_KEY = "elpris-review-reminder-2026-10-22";
@@ -37,6 +46,7 @@ const $ = (id) => hasDocument ? document.getElementById(id) : null;
 const ui = hasDocument ? {
   statusPanel: $("statusPanel"), statusText: $("statusText"), refresh: $("refreshButton"),
   markupNotice: $("markupNotice"), markupNoticeText: $("markupNoticeText"), markupFixButton: $("markupFixButton"), markupUndoButton: $("markupUndoButton"),
+  gridNotice: $("gridNotice"), gridSwitchButton: $("gridSwitchButton"), gridKeepButton: $("gridKeepButton"),
   summary: $("summary"), legend: $("legend"), daysHelp: $("daysHelp"), days: $("days"), updatedAt: $("updatedAt"),
   currentPrice: $("currentPrice"), currentKind: $("currentKind"),
   bestPrice: $("bestPrice"), bestTime: $("bestTime"),
@@ -70,7 +80,8 @@ function finiteNumber(value, fallback, min = 0, max = Number.MAX_SAFE_INTEGER) {
 
 function normalizeSettings(value = {}) {
   const area = value.priceArea === "DK1" ? "DK1" : "DK2";
-  const gridCompany = value.gridCompany === "manual" ? "manual" : "cerius";
+  const gridCompany = ["radius", "cerius", "manual"].includes(value.gridCompany)
+    ? value.gridCompany : DEFAULT_SETTINGS.gridCompany;
   const supplier = String(value.supplier || DEFAULT_SETTINGS.supplier).slice(0, 60);
   return {
     priceArea: area, gridCompany, supplier,
@@ -91,8 +102,9 @@ function shouldRepairLegacyZeroMarkup(raw) {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return false;
   if (raw.supplierMarkupOre == null || raw.supplierMarkupOre === "" || Number(raw.supplierMarkupOre) !== 0) return false;
   const candidate = normalizeSettings(raw);
-  return Object.keys(DEFAULT_SETTINGS).every((key) =>
-    key === "supplierMarkupOre" || candidate[key] === DEFAULT_SETTINGS[key]);
+  return [DEFAULT_SETTINGS, LEGACY_CERIUS_DEFAULT_SETTINGS].some((defaults) =>
+    Object.keys(defaults).every((key) =>
+      key === "supplierMarkupOre" || candidate[key] === defaults[key]));
 }
 
 function readSettings() {
@@ -277,16 +289,20 @@ function forecastSpot(target, knownHours) {
   return Math.max(-0.5, Math.min(5, mean(candidates) ?? 0));
 }
 
-function ceriusTariff(date) {
+function seasonalGridTariff(date, tariffSet) {
   const summer = date.getMonth() >= 3 && date.getMonth() <= 8;
-  const rates = summer ? CONFIG.ceriusInclVat.summer : CONFIG.ceriusInclVat.winter;
+  const rates = summer ? tariffSet.summer : tariffSet.winter;
   const hour = date.getHours();
   if (hour < 6) return rates.low;
   if (hour >= 17 && hour < 21) return rates.peak;
   return rates.high;
 }
 
+function ceriusTariff(date) { return seasonalGridTariff(date, CONFIG.ceriusInclVat); }
+function radiusTariff(date) { return seasonalGridTariff(date, CONFIG.radiusInclVat); }
+
 function gridTariff(date, activeSettings = settings) {
+  if (activeSettings.gridCompany === "radius") return radiusTariff(date);
   if (activeSettings.gridCompany === "cerius") return ceriusTariff(date);
   const hour = date.getHours();
   if (hour < 6) return activeSettings.gridLow;
@@ -849,10 +865,20 @@ function updateMarkupNotice() {
   }
 }
 
+function updateGridNotice() {
+  if (!hasDocument || !ui.gridNotice) return;
+  const oldDefaultProfile = settings.priceArea === "DK2" && settings.gridCompany === "cerius"
+    && settings.supplier.toLocaleLowerCase("da-DK") === "modstrøm";
+  ui.gridNotice.hidden = !oldDefaultProfile ||
+    (typeof localStorage !== "undefined" && localStorage.getItem(GRID_NOTICE_DISMISSED_KEY) === "dismissed");
+}
+
 function updateProfileText() {
   if (!hasDocument) return;
   updateMarkupNotice();
-  const gridName = settings.gridCompany === "cerius" ? "Cerius" : "eget netselskab";
+  updateGridNotice();
+  const gridName = settings.gridCompany === "radius" ? "Radius"
+    : settings.gridCompany === "cerius" ? "Cerius" : "eget netselskab";
   ui.profileSummary.textContent = `${settings.priceArea} · ${areaName(settings.priceArea)} · ${gridName} · ${settings.supplier}`;
   const productText = settings.product ? ` (${settings.product})` : "";
   const subscription = settings.supplierSubscriptionMonthly + settings.gridSubscriptionMonthly;
@@ -877,7 +903,8 @@ function toggleManualTariffs() {
 }
 
 function handleAreaChange() {
-  if (ui.settingsForm.elements.priceArea.value === "DK1" && ui.settingsForm.elements.gridCompany.value === "cerius") {
+  if (ui.settingsForm.elements.priceArea.value === "DK1" &&
+      ["cerius", "radius"].includes(ui.settingsForm.elements.gridCompany.value)) {
     ui.settingsForm.elements.gridCompany.value = "manual";
   }
   toggleManualTariffs();
@@ -963,6 +990,19 @@ async function load() {
 if (hasDocument) {
   ui.refresh.addEventListener("click", load);
   ui.settingsButton.addEventListener("click", openSettings);
+  ui.gridSwitchButton.addEventListener("click", () => {
+    if (settings.gridCompany !== "cerius" || settings.priceArea !== "DK2") return;
+    // Skift kun netselskab. Bevar elselskab, tillæg, abonnementer og årsforbrug.
+    saveSettings({ ...settings, gridCompany: "radius" });
+    renderAccuracy(selectedAccuracyDays);
+    renderMonthlyAccuracy();
+    renderForecastAudit();
+    load();
+  });
+  ui.gridKeepButton.addEventListener("click", () => {
+    if (typeof localStorage !== "undefined") localStorage.setItem(GRID_NOTICE_DISMISSED_KEY, "dismissed");
+    updateGridNotice();
+  });
   ui.markupFixButton.addEventListener("click", () => {
     if (settings.supplierMarkupOre !== 0) return;
     saveSettings({ ...settings, supplierMarkupOre: DEFAULT_SETTINGS.supplierMarkupOre });
@@ -1043,4 +1083,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, shouldRepairLegacyZeroMarkup, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, pricedForecastAuditRow, latestForecastSnapshot, shouldShowReviewReminder };
+if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, shouldRepairLegacyZeroMarkup, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, radiusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, pricedForecastAuditRow, latestForecastSnapshot, shouldShowReviewReminder };
