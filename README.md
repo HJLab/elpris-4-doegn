@@ -29,7 +29,7 @@ Efter en afsluttet måned vises der også en rapport, opdelt i perioderne 00–0
 
 ## Vigtigt om den samlede pris
 
-Standardvalget er DK2, Cerius og Modstrøm med et tillæg på 11 øre/kWh inklusive moms. Brugeren kan ændre alle aftalespecifikke priser under **Indstillinger**. Cerius har en indbygget time- og sæsontarif; andre netselskaber vælges som **Andet**, hvorefter tarifferne indtastes fra elregningen. Faste abonnementer fordeles på det valgte årsforbrug. Kontrollér altid tallene på den seneste regning, da samme selskab kan have flere aftaler.
+Standardvalget er DK2, Radius Elnet og Modstrøm med et tillæg på 11 øre/kWh inklusive moms (arbejdsantagelse, endnu ikke verificeret mod aftalen). Brugeren kan ændre alle aftalespecifikke priser under **Indstillinger**. Radius og Cerius har indbyggede time- og sæsontariffer; andre netselskaber vælges som **Andet**, hvorefter tarifferne indtastes fra elregningen. Faste abonnementer fordeles på det valgte årsforbrug. Kontrollér altid tallene på den seneste regning, da samme selskab kan have flere aftaler.
 
 ## Lokal prøve på Windows
 
@@ -143,3 +143,10 @@ Officielle priser stammer fra Energi Data Service. Browservenlige pris- og progn
 - Den eksisterende v20-migrering af gamle 0-tillæg understøtter fortsat både den tidligere Cerius-standard og den nye Radius-standard.
 - Tarifændring betyder 3,43 øre/kWh lavere pris i dagtimerne, 10,30 øre/kWh lavere pris kl. 17-21 og 1,15 øre/kWh lavere natpris om vinteren ved ellers ens indstillinger.
 - Spotpriser, prognosekalibrering, alle historiske rå data og personligt kWh-tillæg ændres ikke; eventuelle faste omkostninger og det påståede Modstrøm-tillæg skal fortsat verificeres mod aftalen. Versionsnummer v21, cache v27.
+
+## Version 22 – vedligeholdelse overgår til Claude
+
+- Vedligeholdelse og videreudvikling varetages fremover af Claude (Anthropic) i stedet for ChatGPT.
+- Teksten i eftersynspåmindelsen henviser nu til Claude.
+- Afsnittet »Vigtigt om den samlede pris« nævner nu korrekt Radius Elnet som standard-netselskab (har været tilfældet i koden siden v21).
+- Ingen ændringer i beregninger, tariffer, tillæg, kalibrering eller historiske data. Versionsnummer v22, cache v28.
