@@ -150,3 +150,15 @@ Officielle priser stammer fra Energi Data Service. Browservenlige pris- og progn
 - Teksten i eftersynspåmindelsen henviser nu til Claude.
 - Afsnittet »Vigtigt om den samlede pris« nævner nu korrekt Radius Elnet som standard-netselskab (har været tilfældet i koden siden v21).
 - Ingen ændringer i beregninger, tariffer, tillæg, kalibrering eller historiske data. Versionsnummer v22, cache v28.
+
+## Version 23 – eftersyn af prognosekalibreringen efter 4 ugers historik
+
+Analyse af 3.552 observationer (26. sep.–23. okt. 2026, DK1 og DK2, horisont 2–4 døgn) viste:
+
+- Den rå prognose fra elpriser.org ligger systematisk for lavt: gennemsnitligt +17,2 øre/kWh (DK2) og +14,1 øre/kWh (DK1) spot ekskl. moms, med en gennemsnitlig absolut fejl (MAE) på 26,6 øre (DK2) og 22,2 øre (DK1).
+- Fejlen er næsten udelukkende et døgnniveau, der svinger fra dag til dag (fra −21 til +50 øre). Døgnets form rammes godt: det billigste 3-timers vindue findes præcist i 62 % af døgnene og inden for ±1 time i 82 % (DK2). Med perfekt kendt døgnniveau ville MAE være ca. 14 øre – resten er vejrusikkerhed, som ingen simpel korrektion kan fjerne.
+- Den gamle krympning af korrektionen (`dage/(dage+10)`) underkorrigerede, og i dag og i morgen (hvor de officielle priser allerede er kendt) indgik ikke i læringen. Begge dele er rettet: korrektionen bruger nu den fulde gennemsnitlige bias over de seneste 21 døgn plus i dag og i morgen. Loftet på ±0,12 kr/kWh spot ekskl. moms (15 øre inkl. moms) og kravet om mindst 10 døgn er uændret.
+- Ærlig rullende backtest (kun data kendt på snapshot-tidspunktet): MAE DK2 24,4 → 23,9 øre (perioden efter 10. okt.: 27,6 → 24,9), DK1 21,2 → 21,0 øre. Bias efter korrektion falder fra ca. +13 til ca. +9 øre (DK2).
+- Afprøvet og forkastet: time- og tidsgruppeafhængig korrektion (ingen forbedring), stærkere vægt på de seneste 1–3 døgn (ustabilt mellem DK1 og DK2) og sammenblanding med Smartere Elforbrug/EWII's prognose (samme eller dårligere MAE og markant dårligere ladevindue).
+- Snapshots i `data/forecast-log.json` mærkes nu `calibration.version: 2`, så gamle (version 1) og nye korrektioner kan skelnes i loggen. Historiske rå data ændres ikke.
+- Ingen ændringer i tariffer, tillæg, abonnementer eller totalprisberegning. Versionsnummer v23, cache v29.

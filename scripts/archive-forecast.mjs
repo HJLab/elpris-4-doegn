@@ -202,7 +202,7 @@ async function main() {
       log.snapshots.push({
         area, collectedDate: local.date, collectedAt: now.toISOString(),
         sourceGeneratedAt: forecast.generated || null,
-        calibration: { version: 1, asOfDate: local.date, ...calibrationResult },
+        calibration: { asOfDate: local.date, ...calibrationResult },
         points
       });
       console.log(`Gemte ${points.length} ${area}-prognosetimer for ${local.date}. Korrektion: ${(calibrationResult.adjustment * 100).toFixed(2)} ore ra spot.`);
