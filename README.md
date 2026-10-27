@@ -162,3 +162,10 @@ Analyse af 3.552 observationer (26. sep.–23. okt. 2026, DK1 og DK2, horisont 2
 - Afprøvet og forkastet: time- og tidsgruppeafhængig korrektion (ingen forbedring), stærkere vægt på de seneste 1–3 døgn (ustabilt mellem DK1 og DK2) og sammenblanding med Smartere Elforbrug/EWII's prognose (samme eller dårligere MAE og markant dårligere ladevindue).
 - Snapshots i `data/forecast-log.json` mærkes nu `calibration.version: 2`, så gamle (version 1) og nye korrektioner kan skelnes i loggen. Historiske rå data ændres ikke.
 - Ingen ændringer i tariffer, tillæg, abonnementer eller totalprisberegning. Versionsnummer v23, cache v29.
+
+## Version 24 – sikker og fuldstændig prognosehistorik
+
+- Arkiveringsjobbet sletter ikke længere automatisk prognosesnapshots efter 100 dage. Allerede gemte data for DK1/DK2 bevares, og nye snapshots lægges til uden en skjult tidsbaseret afkortning. Den større historik øger med tiden filstørrelsen i GitHub; en separat arkiveringsstrategi kan blive nødvendig senere.
+- En manglende logfil må stadig oprettes fra bunden. Derimod stopper jobbet nu med en fejl, hvis den eksisterende logfil ikke kan læses, har ugyldig JSON eller mangler en gyldig snapshots-liste. Derved overskrives historikken ikke tavst med tomme data.
+- Arkivtests dækker manglende, ødelagt, strukturelt ugyldig og gyldig historik.
+- Ingen ændringer i spotpriser, kalibrering, moms, tariffer, personligt kWh-tillæg eller eksisterende datarækker. Versionsnummer v24 og service-worker-cache v30.

@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
-import { addNaiveHours, forecastPoints, actualPriceMap, scoreSnapshots, shouldRun, hasSnapshotsForDate } from "../scripts/archive-forecast.mjs";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { addNaiveHours, forecastPoints, actualPriceMap, scoreSnapshots, shouldRun, hasSnapshotsForDate, readLog } from "../scripts/archive-forecast.mjs";
 
 assert.equal(addNaiveHours("2026-08-29T23:00", 2), "2026-08-30T01:00");
 assert.equal(shouldRun(10, false), false);
@@ -46,4 +49,20 @@ assert.equal(futureScored[0].errorOre, 20);
 const calibrated = scoreSnapshots([{area:"DK1",collectedAt:"2026-08-29T13:00:00Z",points:[{target:"2026-08-30T00:00",rawForecastSpotExVat:0.7,forecastSpotExVat:0.8}]}],actual,"DK1");
 assert.equal(calibrated[0].rawForecastSpotExVat,0.7);
 assert.equal(calibrated[0].errorOre,0);
+// A corrupt or unreadable archive must fail closed, never be silently replaced with [].
+const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "elpris-archive-"));
+try {
+  const missing = path.join(tmpDir, "missing.json");
+  assert.deepEqual(await readLog(missing), { version: 1, snapshots: [] });
+  const corrupt = path.join(tmpDir, "corrupt.json");
+  await fs.writeFile(corrupt, "{", "utf8");
+  await assert.rejects(readLog(corrupt), SyntaxError);
+  await fs.writeFile(corrupt, JSON.stringify({ version: 1, snapshots: {} }), "utf8");
+  await assert.rejects(readLog(corrupt), /Ugyldigt prognosearkiv/);
+  const valid = path.join(tmpDir, "valid.json");
+  await fs.writeFile(valid, JSON.stringify({ version: 1, snapshots: [{ area: "DK2", collectedDate: "2026-10-26", points: [] }] }), "utf8");
+  assert.equal((await readLog(valid)).snapshots.length, 1);
+} finally {
+  await fs.rm(tmpDir, { recursive: true, force: true });
+}
 console.log("Arkiveringskontroller bestået.");

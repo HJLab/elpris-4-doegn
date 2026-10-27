@@ -64,13 +64,20 @@ async function fetchJson(url, attempts = 3) {
   throw lastError;
 }
 
-async function readLog() {
+async function readLog(logPath = LOG_PATH) {
+  let content;
   try {
-    const payload = JSON.parse(await fs.readFile(LOG_PATH, "utf8"));
-    return { version: 1, snapshots: Array.isArray(payload.snapshots) ? payload.snapshots : [] };
-  } catch {
-    return { version: 1, snapshots: [] };
+    content = await fs.readFile(logPath, "utf8");
+  } catch (error) {
+    // Only a genuinely missing archive may start empty. Never erase history on a read error.
+    if (error?.code === "ENOENT") return { version: 1, snapshots: [] };
+    throw error;
   }
+  const payload = JSON.parse(content);
+  if (!payload || !Array.isArray(payload.snapshots)) {
+    throw new Error(`Ugyldigt prognosearkiv: ${logPath}`);
+  }
+  return { version: 1, snapshots: payload.snapshots };
 }
 
 async function writeJson(filePath, payload) {
@@ -156,9 +163,7 @@ async function main() {
   const forceRun = process.env.FORCE_RUN === "true";
 
   const log = await readLog();
-  const cutoff = now.getTime() - 100 * 86400000;
-  log.snapshots = log.snapshots.filter((item) => new Date(item.collectedAt).getTime() >= cutoff);
-
+  // Keep every historical snapshot. Never silently discard observations after 100 days.
   const forecasts = new Map();
   for (const area of AREAS) forecasts.set(area, await fetchJson(forecastUrl(area)));
 
@@ -219,4 +224,4 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   });
 }
 
-export { addNaiveHours, forecastPoints, actualPriceMap, scoreSnapshots, shouldRun, hasSnapshotsForDate };
+export { addNaiveHours, forecastPoints, actualPriceMap, scoreSnapshots, shouldRun, hasSnapshotsForDate, readLog };
