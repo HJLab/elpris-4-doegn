@@ -14,6 +14,8 @@ const dayAheadUrl = (area, start, end) => {
   return `https://api.energidataservice.dk/dataset/DayAheadPrices?start=${start}&end=${end}&columns=TimeDK,PriceArea,DayAheadPriceDKK&filter=${filter}&sort=TimeDK&limit=0`;
 };
 const COPENHAGEN = "Europe/Copenhagen";
+const MAX_RETRY_DELAY_MS = 120000;
+const PAUSE_BETWEEN_REQUESTS_MS = 2000;
 
 function copenhagenParts(date = new Date()) {
   const parts = Object.fromEntries(new Intl.DateTimeFormat("en-CA", {
@@ -45,20 +47,44 @@ function hasSnapshotsForDate(snapshots, date, areas = AREAS) {
   return areas.every((area) => snapshots.some((item) => item.collectedDate === date && (item.area || "DK2") === area));
 }
 
-async function fetchJson(url, attempts = 3) {
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Ventetid før næste forsøg. Ved 429 (for mange forespørgsler) og 5xx respekteres
+// serverens Retry-After, ellers ventes 5, 10, 20, 40 ... sekunder.
+function retryDelayMs(status, retryAfter, attempt, now = Date.now()) {
+  if (status === 429 || status >= 500) {
+    if (retryAfter) {
+      const seconds = Number(retryAfter);
+      if (Number.isFinite(seconds) && seconds >= 0) return Math.min(seconds * 1000, MAX_RETRY_DELAY_MS);
+      const until = Date.parse(retryAfter);
+      if (Number.isFinite(until)) return Math.min(Math.max(until - now, 0), MAX_RETRY_DELAY_MS);
+    }
+    return Math.min(5000 * 2 ** (attempt - 1), MAX_RETRY_DELAY_MS);
+  }
+  return attempt * 1500;
+}
+
+async function fetchJson(url, attempts = 5) {
   let lastError;
   for (let attempt = 1; attempt <= attempts; attempt++) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
+    let delay = attempt * 1500;
     try {
       const response = await fetch(url, { headers: { Accept: "application/json" }, signal: controller.signal });
-      if (!response.ok) throw new Error(`${url} svarede med fejl ${response.status}`);
+      if (!response.ok) {
+        delay = retryDelayMs(response.status, response.headers.get("retry-after"), attempt);
+        throw new Error(`${url} svarede med fejl ${response.status}`);
+      }
       return await response.json();
     } catch (error) {
       lastError = error;
-      if (attempt < attempts) await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
     } finally {
       clearTimeout(timeout);
+    }
+    if (attempt < attempts) {
+      console.warn(`Forsøg ${attempt} af ${attempts} mislykkedes (${lastError.message}). Prøver igen om ${Math.round(delay / 1000)} s.`);
+      await sleep(delay);
     }
   }
   throw lastError;
@@ -167,7 +193,8 @@ async function main() {
   if (allPoints.length) {
     const firstDate = allPoints.map((item) => item.target.slice(0, 10)).sort()[0];
     const endDate = addDateDays(local.date, 2);
-    for (const area of AREAS) {
+    for (const [index, area] of AREAS.entries()) {
+      if (index > 0) await sleep(PAUSE_BETWEEN_REQUESTS_MS);
       const actualPayload = await fetchJson(dayAheadUrl(area, firstDate, endDate));
       observations.push(...scoreSnapshots(log.snapshots, actualPriceMap(actualPayload), area));
     }
@@ -219,4 +246,4 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   });
 }
 
-export { addNaiveHours, forecastPoints, actualPriceMap, scoreSnapshots, shouldRun, hasSnapshotsForDate };
+export { addNaiveHours, forecastPoints, actualPriceMap, scoreSnapshots, shouldRun, hasSnapshotsForDate, retryDelayMs };
