@@ -34,4 +34,15 @@ const { DEFAULT_SETTINGS, normalizeSettings, totalPrice } = require("../app.js")
   assert.ok(Math.abs([...hrs.values()][0].spotExVat - 1.84508) < 1e-12);
   assert.deepEqual(elprisenRowsToRecords(null, "DK2"), []);
 }
+// v26: farveniveauer for månedens gennemsnit.
+{
+  const { monthAverageLevel } = require("../app.js");
+  assert.equal(monthAverageLevel(0), "green");
+  assert.equal(monthAverageLevel(1.99), "green");
+  assert.equal(monthAverageLevel(2), "yellow");
+  assert.equal(monthAverageLevel(4), "yellow");
+  assert.equal(monthAverageLevel(4.01), "red");
+  assert.equal(monthAverageLevel(5), "red");
+  assert.equal(monthAverageLevel(5.01), "alarm");
+}
 console.log("Månedsgennemsnit bestået.");
