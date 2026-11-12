@@ -14,13 +14,19 @@
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* v24: månedens gennemsnitspris */
+    .month-average { margin: 8px 0 14px; padding: 16px 18px; border: 1px solid rgba(88, 166, 255, .45); border-radius: 16px; background: rgba(88, 166, 255, .12); box-shadow: var(--shadow); }
+    .month-average[hidden], .status-panel[hidden] { display: none; }
+    .month-average strong { display: block; margin: 6px 0 2px; font-size: clamp(1.7rem, 5vw, 2.3rem); color: var(--blue); }
+  </style>
 </head>
 <body>
   <header class="topbar">
     <div>
       <p id="profileSummary" class="eyebrow">DK2 · Østdanmark · Radius · Modstrøm</p>
       <h1>Elpris – næste 4 dage</h1>
-      <span class="app-version">Version v23</span>
+      <span class="app-version">Version v24</span>
     </div>
     <div class="top-actions">
       <button id="settingsButton" class="secondary-button" type="button">Indstillinger</button>
@@ -29,6 +35,12 @@
   </header>
 
   <main>
+    <section id="monthAverage" class="month-average" hidden aria-live="polite">
+      <span id="monthAverageLabel" class="summary-label">Gennemsnit for måneden indtil nu</span>
+      <strong id="monthAveragePrice">–</strong>
+      <span id="monthAverageNote" class="summary-note">Henter månedens priser…</span>
+    </section>
+
     <section id="statusPanel" class="status-panel" aria-live="polite">
       <span class="spinner" aria-hidden="true"></span>
       <span id="statusText">Henter de nyeste priser…</span>
@@ -140,6 +152,7 @@
 
   <footer>
     <span id="updatedAt">Ikke opdateret endnu</span>
+    <span id="statusFooter"></span>
     <span>4 hele dage · automatisk opdatering</span>
   </footer>
 
