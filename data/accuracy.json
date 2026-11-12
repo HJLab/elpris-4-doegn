@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-11T21:58:41.273Z",
+  "updatedAt": "2026-11-12T18:24:07.729Z",
   "metric": "spot_ex_vat_mae",
   "observations": [
     {
@@ -44407,7 +44407,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T00:00",
       "forecastSpotExVat": 1.6437,
-      "actualSpotExVat": 1.598371319,
+      "actualSpotExVat": 1.59839270075,
       "errorOre": 4.53,
       "rawForecastSpotExVat": 1.5237
     },
@@ -44416,8 +44416,8 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T00:00",
       "forecastSpotExVat": 1.6656,
-      "actualSpotExVat": 1.5897372415,
-      "errorOre": 7.59,
+      "actualSpotExVat": 1.58975850775,
+      "errorOre": 7.58,
       "rawForecastSpotExVat": 1.5456
     },
     {
@@ -44425,7 +44425,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T01:00",
       "forecastSpotExVat": 1.58,
-      "actualSpotExVat": 1.5665635125000001,
+      "actualSpotExVat": 1.56658446875,
       "errorOre": 1.34,
       "rawForecastSpotExVat": 1.46
     },
@@ -44434,7 +44434,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T01:00",
       "forecastSpotExVat": 1.6347,
-      "actualSpotExVat": 1.5580976237500002,
+      "actualSpotExVat": 1.5581184667499999,
       "errorOre": 7.66,
       "rawForecastSpotExVat": 1.5147
     },
@@ -44443,8 +44443,8 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T02:00",
       "forecastSpotExVat": 1.5756,
-      "actualSpotExVat": 1.485137703,
-      "errorOre": 9.05,
+      "actualSpotExVat": 1.48515757,
+      "errorOre": 9.04,
       "rawForecastSpotExVat": 1.4556
     },
     {
@@ -44452,7 +44452,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T02:00",
       "forecastSpotExVat": 1.6228,
-      "actualSpotExVat": 1.48797836425,
+      "actualSpotExVat": 1.48799826925,
       "errorOre": 13.48,
       "rawForecastSpotExVat": 1.5028
     },
@@ -44461,7 +44461,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T03:00",
       "forecastSpotExVat": 1.5356,
-      "actualSpotExVat": 1.37855718975,
+      "actualSpotExVat": 1.378575631,
       "errorOre": 15.7,
       "rawForecastSpotExVat": 1.4156
     },
@@ -44470,8 +44470,8 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T03:00",
       "forecastSpotExVat": 1.6009,
-      "actualSpotExVat": 1.3832480217499998,
-      "errorOre": 21.77,
+      "actualSpotExVat": 1.38326652575,
+      "errorOre": 21.76,
       "rawForecastSpotExVat": 1.4809
     },
     {
@@ -44479,7 +44479,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T04:00",
       "forecastSpotExVat": 1.565,
-      "actualSpotExVat": 1.35407527475,
+      "actualSpotExVat": 1.3540933885,
       "errorOre": 21.09,
       "rawForecastSpotExVat": 1.445
     },
@@ -44488,8 +44488,8 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T04:00",
       "forecastSpotExVat": 1.6044,
-      "actualSpotExVat": 1.3715490335,
-      "errorOre": 23.29,
+      "actualSpotExVat": 1.371567381,
+      "errorOre": 23.28,
       "rawForecastSpotExVat": 1.4844
     },
     {
@@ -44497,7 +44497,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T05:00",
       "forecastSpotExVat": 1.6108,
-      "actualSpotExVat": 1.3581119670000001,
+      "actualSpotExVat": 1.35813013475,
       "errorOre": 25.27,
       "rawForecastSpotExVat": 1.4908
     },
@@ -44506,7 +44506,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T05:00",
       "forecastSpotExVat": 1.5886,
-      "actualSpotExVat": 1.40378669425,
+      "actualSpotExVat": 1.403805473,
       "errorOre": 18.48,
       "rawForecastSpotExVat": 1.4686
     },
@@ -44515,7 +44515,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T06:00",
       "forecastSpotExVat": 1.7419,
-      "actualSpotExVat": 1.5025927845,
+      "actualSpotExVat": 1.502612885,
       "errorOre": 23.93,
       "rawForecastSpotExVat": 1.6219
     },
@@ -44524,8 +44524,8 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T06:00",
       "forecastSpotExVat": 1.6757,
-      "actualSpotExVat": 1.5784493985,
-      "errorOre": 9.73,
+      "actualSpotExVat": 1.57847051375,
+      "errorOre": 9.72,
       "rawForecastSpotExVat": 1.5557
     },
     {
@@ -44533,7 +44533,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T07:00",
       "forecastSpotExVat": 2.0515,
-      "actualSpotExVat": 1.7596156972499999,
+      "actualSpotExVat": 1.7596392360000002,
       "errorOre": 29.19,
       "rawForecastSpotExVat": 1.9315
     },
@@ -44542,7 +44542,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T07:00",
       "forecastSpotExVat": 1.7147,
-      "actualSpotExVat": 1.8494700069999999,
+      "actualSpotExVat": 1.84949474775,
       "errorOre": 13.48,
       "rawForecastSpotExVat": 1.5947
     },
@@ -44551,8 +44551,8 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T08:00",
       "forecastSpotExVat": 2.1413,
-      "actualSpotExVat": 1.83044512875,
-      "errorOre": 31.09,
+      "actualSpotExVat": 1.830469615,
+      "errorOre": 31.08,
       "rawForecastSpotExVat": 2.0213
     },
     {
@@ -44560,7 +44560,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T08:00",
       "forecastSpotExVat": 1.7753,
-      "actualSpotExVat": 1.8839689892499998,
+      "actualSpotExVat": 1.8839941914999998,
       "errorOre": 10.87,
       "rawForecastSpotExVat": 1.6553
     },
@@ -44569,7 +44569,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T09:00",
       "forecastSpotExVat": 2.0348,
-      "actualSpotExVat": 1.671256471,
+      "actualSpotExVat": 1.6712788277500001,
       "errorOre": 36.35,
       "rawForecastSpotExVat": 1.9148
     },
@@ -44578,7 +44578,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T09:00",
       "forecastSpotExVat": 1.6616,
-      "actualSpotExVat": 1.751374089,
+      "actualSpotExVat": 1.7513975175,
       "errorOre": 8.98,
       "rawForecastSpotExVat": 1.5416
     },
@@ -44587,7 +44587,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T10:00",
       "forecastSpotExVat": 1.8356,
-      "actualSpotExVat": 1.50801241025,
+      "actualSpotExVat": 1.50803258325,
       "errorOre": 32.76,
       "rawForecastSpotExVat": 1.7156
     },
@@ -44596,7 +44596,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T10:00",
       "forecastSpotExVat": 1.6015,
-      "actualSpotExVat": 1.62920737175,
+      "actualSpotExVat": 1.629229166,
       "errorOre": 2.77,
       "rawForecastSpotExVat": 1.4815
     },
@@ -44605,7 +44605,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T11:00",
       "forecastSpotExVat": 1.6708,
-      "actualSpotExVat": 1.41236470825,
+      "actualSpotExVat": 1.41238360175,
       "errorOre": 25.84,
       "rawForecastSpotExVat": 1.5508
     },
@@ -44614,7 +44614,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T11:00",
       "forecastSpotExVat": 1.5729,
-      "actualSpotExVat": 1.49866819025,
+      "actualSpotExVat": 1.4986882382500002,
       "errorOre": 7.42,
       "rawForecastSpotExVat": 1.4529
     },
@@ -44623,8 +44623,8 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T12:00",
       "forecastSpotExVat": 1.6513,
-      "actualSpotExVat": 1.3286402229999998,
-      "errorOre": 32.27,
+      "actualSpotExVat": 1.3286579964999998,
+      "errorOre": 32.26,
       "rawForecastSpotExVat": 1.5313
     },
     {
@@ -44632,7 +44632,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T12:00",
       "forecastSpotExVat": 1.4664,
-      "actualSpotExVat": 1.428474188,
+      "actualSpotExVat": 1.4284932969999997,
       "errorOre": 3.79,
       "rawForecastSpotExVat": 1.3464
     },
@@ -44641,7 +44641,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T13:00",
       "forecastSpotExVat": 1.661,
-      "actualSpotExVat": 1.2321701390000002,
+      "actualSpotExVat": 1.2321866220000002,
       "errorOre": 42.88,
       "rawForecastSpotExVat": 1.541
     },
@@ -44650,7 +44650,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T13:00",
       "forecastSpotExVat": 1.4358,
-      "actualSpotExVat": 1.41679384525,
+      "actualSpotExVat": 1.416812798,
       "errorOre": 1.9,
       "rawForecastSpotExVat": 1.3158
     },
@@ -44659,7 +44659,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T14:00",
       "forecastSpotExVat": 1.7141,
-      "actualSpotExVat": 1.25966096375,
+      "actualSpotExVat": 1.2596778145,
       "errorOre": 45.44,
       "rawForecastSpotExVat": 1.5941
     },
@@ -44668,7 +44668,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T14:00",
       "forecastSpotExVat": 1.4212,
-      "actualSpotExVat": 1.44136924,
+      "actualSpotExVat": 1.4413885215,
       "errorOre": 2.02,
       "rawForecastSpotExVat": 1.3012
     },
@@ -44677,8 +44677,8 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T15:00",
       "forecastSpotExVat": 1.8791,
-      "actualSpotExVat": 1.2932442,
-      "errorOre": 58.59,
+      "actualSpotExVat": 1.2932614999999998,
+      "errorOre": 58.58,
       "rawForecastSpotExVat": 1.7591
     },
     {
@@ -44686,7 +44686,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T15:00",
       "forecastSpotExVat": 1.5054,
-      "actualSpotExVat": 1.4733265877500001,
+      "actualSpotExVat": 1.47334629675,
       "errorOre": 3.21,
       "rawForecastSpotExVat": 1.3854
     },
@@ -44695,8 +44695,8 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T16:00",
       "forecastSpotExVat": 1.9895,
-      "actualSpotExVat": 1.41843847075,
-      "errorOre": 57.11,
+      "actualSpotExVat": 1.4184574455,
+      "errorOre": 57.1,
       "rawForecastSpotExVat": 1.8695
     },
     {
@@ -44704,7 +44704,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T16:00",
       "forecastSpotExVat": 1.6505,
-      "actualSpotExVat": 1.522084877,
+      "actualSpotExVat": 1.52210523825,
       "errorOre": 12.84,
       "rawForecastSpotExVat": 1.5305
     },
@@ -44713,7 +44713,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T17:00",
       "forecastSpotExVat": 2.1563,
-      "actualSpotExVat": 1.46891610025,
+      "actualSpotExVat": 1.46893575025,
       "errorOre": 68.74,
       "rawForecastSpotExVat": 2.0363
     },
@@ -44722,7 +44722,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T17:00",
       "forecastSpotExVat": 1.7587,
-      "actualSpotExVat": 1.6566981405,
+      "actualSpotExVat": 1.6567203025000001,
       "errorOre": 10.2,
       "rawForecastSpotExVat": 1.6387
     },
@@ -44731,7 +44731,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T18:00",
       "forecastSpotExVat": 2.2021,
-      "actualSpotExVat": 1.4952108605,
+      "actualSpotExVat": 1.4952308622500001,
       "errorOre": 70.69,
       "rawForecastSpotExVat": 2.0821
     },
@@ -44740,7 +44740,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T18:00",
       "forecastSpotExVat": 1.8205,
-      "actualSpotExVat": 1.6191529495,
+      "actualSpotExVat": 1.61917460925,
       "errorOre": 20.13,
       "rawForecastSpotExVat": 1.7005
     },
@@ -44749,7 +44749,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T19:00",
       "forecastSpotExVat": 2.2138,
-      "actualSpotExVat": 1.39775031625,
+      "actualSpotExVat": 1.3977690142499999,
       "errorOre": 81.6,
       "rawForecastSpotExVat": 2.0938
     },
@@ -44758,7 +44758,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T19:00",
       "forecastSpotExVat": 1.9062,
-      "actualSpotExVat": 1.6061083840000001,
+      "actualSpotExVat": 1.60612986925,
       "errorOre": 30.01,
       "rawForecastSpotExVat": 1.7862
     },
@@ -44767,7 +44767,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T20:00",
       "forecastSpotExVat": 2.0993,
-      "actualSpotExVat": 1.33531200425,
+      "actualSpotExVat": 1.335329867,
       "errorOre": 76.4,
       "rawForecastSpotExVat": 1.9793
     },
@@ -44776,7 +44776,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T20:00",
       "forecastSpotExVat": 1.834,
-      "actualSpotExVat": 1.41819551275,
+      "actualSpotExVat": 1.41821448425,
       "errorOre": 41.58,
       "rawForecastSpotExVat": 1.714
     },
@@ -44785,7 +44785,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T21:00",
       "forecastSpotExVat": 1.9698,
-      "actualSpotExVat": 1.1789640055000001,
+      "actualSpotExVat": 1.1789797767499999,
       "errorOre": 79.08,
       "rawForecastSpotExVat": 1.8498
     },
@@ -44794,7 +44794,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T21:00",
       "forecastSpotExVat": 1.6832,
-      "actualSpotExVat": 1.2039505505,
+      "actualSpotExVat": 1.203966656,
       "errorOre": 47.92,
       "rawForecastSpotExVat": 1.5632
     },
@@ -44803,7 +44803,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T22:00",
       "forecastSpotExVat": 1.8126,
-      "actualSpotExVat": 1.09039923225,
+      "actualSpotExVat": 1.0904138187499999,
       "errorOre": 72.22,
       "rawForecastSpotExVat": 1.6926
     },
@@ -44812,7 +44812,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T22:00",
       "forecastSpotExVat": 1.5429,
-      "actualSpotExVat": 1.1126011812499998,
+      "actualSpotExVat": 1.11261606475,
       "errorOre": 43.03,
       "rawForecastSpotExVat": 1.4229
     },
@@ -44821,7 +44821,7 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T23:00",
       "forecastSpotExVat": 1.6661,
-      "actualSpotExVat": 1.033997354,
+      "actualSpotExVat": 1.034011186,
       "errorOre": 63.21,
       "rawForecastSpotExVat": 1.5461
     },
@@ -44830,9 +44830,873 @@
       "issuedAt": "2026-11-10T12:24:38.350Z",
       "target": "2026-11-12T23:00",
       "forecastSpotExVat": 1.4387,
-      "actualSpotExVat": 1.049975986,
+      "actualSpotExVat": 1.04999003175,
       "errorOre": 38.87,
       "rawForecastSpotExVat": 1.3187
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T00:00",
+      "forecastSpotExVat": 1.517,
+      "actualSpotExVat": 1.058175699,
+      "errorOre": 45.88,
+      "rawForecastSpotExVat": 1.397
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T00:00",
+      "forecastSpotExVat": 1.3037,
+      "actualSpotExVat": 1.058175699,
+      "errorOre": 24.55,
+      "rawForecastSpotExVat": 1.1837
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T00:00",
+      "forecastSpotExVat": 1.239,
+      "actualSpotExVat": 1.0776493725,
+      "errorOre": 16.14,
+      "rawForecastSpotExVat": 1.119
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T00:00",
+      "forecastSpotExVat": 0.9439,
+      "actualSpotExVat": 1.0776493725,
+      "errorOre": 13.37,
+      "rawForecastSpotExVat": 0.8239
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T01:00",
+      "forecastSpotExVat": 1.518,
+      "actualSpotExVat": 1.0667912127499999,
+      "errorOre": 45.12,
+      "rawForecastSpotExVat": 1.398
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T01:00",
+      "forecastSpotExVat": 1.251,
+      "actualSpotExVat": 1.0667912127499999,
+      "errorOre": 18.42,
+      "rawForecastSpotExVat": 1.131
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T01:00",
+      "forecastSpotExVat": 1.2453,
+      "actualSpotExVat": 1.0788081214999998,
+      "errorOre": 16.65,
+      "rawForecastSpotExVat": 1.1253
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T01:00",
+      "forecastSpotExVat": 0.8429,
+      "actualSpotExVat": 1.0788081214999998,
+      "errorOre": 23.59,
+      "rawForecastSpotExVat": 0.7229
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T02:00",
+      "forecastSpotExVat": 1.5145,
+      "actualSpotExVat": 1.0230408415,
+      "errorOre": 49.15,
+      "rawForecastSpotExVat": 1.3945
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T02:00",
+      "forecastSpotExVat": 1.2671,
+      "actualSpotExVat": 1.0230408415,
+      "errorOre": 24.41,
+      "rawForecastSpotExVat": 1.1471
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T02:00",
+      "forecastSpotExVat": 1.2132,
+      "actualSpotExVat": 1.0099774257499998,
+      "errorOre": 20.32,
+      "rawForecastSpotExVat": 1.0932
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T02:00",
+      "forecastSpotExVat": 0.8236,
+      "actualSpotExVat": 1.0099774257499998,
+      "errorOre": 18.64,
+      "rawForecastSpotExVat": 0.7036
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T03:00",
+      "forecastSpotExVat": 1.47,
+      "actualSpotExVat": 1.01492995925,
+      "errorOre": 45.51,
+      "rawForecastSpotExVat": 1.35
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T03:00",
+      "forecastSpotExVat": 1.2474,
+      "actualSpotExVat": 1.01492995925,
+      "errorOre": 23.25,
+      "rawForecastSpotExVat": 1.1274
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T03:00",
+      "forecastSpotExVat": 1.2095,
+      "actualSpotExVat": 1.0023897970000002,
+      "errorOre": 20.71,
+      "rawForecastSpotExVat": 1.0895
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T03:00",
+      "forecastSpotExVat": 0.9166,
+      "actualSpotExVat": 1.0023897970000002,
+      "errorOre": 8.58,
+      "rawForecastSpotExVat": 0.7966
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T04:00",
+      "forecastSpotExVat": 1.4385,
+      "actualSpotExVat": 1.0160699450000001,
+      "errorOre": 42.24,
+      "rawForecastSpotExVat": 1.3185
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T04:00",
+      "forecastSpotExVat": 1.2523,
+      "actualSpotExVat": 1.0160699450000001,
+      "errorOre": 23.62,
+      "rawForecastSpotExVat": 1.1323
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T04:00",
+      "forecastSpotExVat": 1.2231,
+      "actualSpotExVat": 1.0027823015,
+      "errorOre": 22.03,
+      "rawForecastSpotExVat": 1.1031
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T04:00",
+      "forecastSpotExVat": 0.9313,
+      "actualSpotExVat": 1.0027823015,
+      "errorOre": 7.15,
+      "rawForecastSpotExVat": 0.8113
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T05:00",
+      "forecastSpotExVat": 1.4859,
+      "actualSpotExVat": 1.0558956955,
+      "errorOre": 43,
+      "rawForecastSpotExVat": 1.3659
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T05:00",
+      "forecastSpotExVat": 1.3248,
+      "actualSpotExVat": 1.0558956955,
+      "errorOre": 26.89,
+      "rawForecastSpotExVat": 1.2048
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T05:00",
+      "forecastSpotExVat": 1.2411,
+      "actualSpotExVat": 1.0369639825,
+      "errorOre": 20.41,
+      "rawForecastSpotExVat": 1.1211
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T05:00",
+      "forecastSpotExVat": 0.9698,
+      "actualSpotExVat": 1.0369639825,
+      "errorOre": 6.72,
+      "rawForecastSpotExVat": 0.8498
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T06:00",
+      "forecastSpotExVat": 1.7244,
+      "actualSpotExVat": 1.2394752795000001,
+      "errorOre": 48.49,
+      "rawForecastSpotExVat": 1.6044
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T06:00",
+      "forecastSpotExVat": 1.6897,
+      "actualSpotExVat": 1.2394752795000001,
+      "errorOre": 45.02,
+      "rawForecastSpotExVat": 1.5697
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T06:00",
+      "forecastSpotExVat": 1.3957,
+      "actualSpotExVat": 1.25145474775,
+      "errorOre": 14.42,
+      "rawForecastSpotExVat": 1.2757
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T06:00",
+      "forecastSpotExVat": 1.1756,
+      "actualSpotExVat": 1.25145474775,
+      "errorOre": 7.59,
+      "rawForecastSpotExVat": 1.0556
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T07:00",
+      "forecastSpotExVat": 1.8469,
+      "actualSpotExVat": 1.403170033,
+      "errorOre": 44.37,
+      "rawForecastSpotExVat": 1.7269
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T07:00",
+      "forecastSpotExVat": 1.8159,
+      "actualSpotExVat": 1.403170033,
+      "errorOre": 41.27,
+      "rawForecastSpotExVat": 1.6959
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T07:00",
+      "forecastSpotExVat": 1.4454,
+      "actualSpotExVat": 1.437650799,
+      "errorOre": 0.77,
+      "rawForecastSpotExVat": 1.3254
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T07:00",
+      "forecastSpotExVat": 1.3402,
+      "actualSpotExVat": 1.437650799,
+      "errorOre": 9.75,
+      "rawForecastSpotExVat": 1.2202
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T08:00",
+      "forecastSpotExVat": 1.8765,
+      "actualSpotExVat": 1.3957132407499997,
+      "errorOre": 48.08,
+      "rawForecastSpotExVat": 1.7565
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T08:00",
+      "forecastSpotExVat": 1.9446,
+      "actualSpotExVat": 1.3957132407499997,
+      "errorOre": 54.89,
+      "rawForecastSpotExVat": 1.8246
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T08:00",
+      "forecastSpotExVat": 1.4585,
+      "actualSpotExVat": 1.4288110019999998,
+      "errorOre": 2.97,
+      "rawForecastSpotExVat": 1.3385
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T08:00",
+      "forecastSpotExVat": 1.466,
+      "actualSpotExVat": 1.4288110019999998,
+      "errorOre": 3.72,
+      "rawForecastSpotExVat": 1.346
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T09:00",
+      "forecastSpotExVat": 1.8953,
+      "actualSpotExVat": 1.03006783175,
+      "errorOre": 86.52,
+      "rawForecastSpotExVat": 1.7753
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T09:00",
+      "forecastSpotExVat": 1.8046,
+      "actualSpotExVat": 1.03006783175,
+      "errorOre": 77.45,
+      "rawForecastSpotExVat": 1.6846
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T09:00",
+      "forecastSpotExVat": 1.412,
+      "actualSpotExVat": 1.051858905,
+      "errorOre": 36.01,
+      "rawForecastSpotExVat": 1.292
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T09:00",
+      "forecastSpotExVat": 1.2951,
+      "actualSpotExVat": 1.051858905,
+      "errorOre": 24.32,
+      "rawForecastSpotExVat": 1.1751
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T10:00",
+      "forecastSpotExVat": 1.7478,
+      "actualSpotExVat": 0.78079728625,
+      "errorOre": 96.7,
+      "rawForecastSpotExVat": 1.6278
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T10:00",
+      "forecastSpotExVat": 1.5282,
+      "actualSpotExVat": 0.78079728625,
+      "errorOre": 74.74,
+      "rawForecastSpotExVat": 1.4082
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T10:00",
+      "forecastSpotExVat": 1.4014,
+      "actualSpotExVat": 0.7952063125000001,
+      "errorOre": 60.62,
+      "rawForecastSpotExVat": 1.2814
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T10:00",
+      "forecastSpotExVat": 1.1844,
+      "actualSpotExVat": 0.7952063125000001,
+      "errorOre": 38.92,
+      "rawForecastSpotExVat": 1.0644
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T11:00",
+      "forecastSpotExVat": 1.588,
+      "actualSpotExVat": 0.642145461,
+      "errorOre": 94.59,
+      "rawForecastSpotExVat": 1.468
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T11:00",
+      "forecastSpotExVat": 1.3806,
+      "actualSpotExVat": 0.642145461,
+      "errorOre": 73.85,
+      "rawForecastSpotExVat": 1.2606
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T11:00",
+      "forecastSpotExVat": 1.2851,
+      "actualSpotExVat": 0.6591895937500001,
+      "errorOre": 62.59,
+      "rawForecastSpotExVat": 1.1651
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T11:00",
+      "forecastSpotExVat": 1.0467,
+      "actualSpotExVat": 0.6591895937500001,
+      "errorOre": 38.75,
+      "rawForecastSpotExVat": 0.9267
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T12:00",
+      "forecastSpotExVat": 1.461,
+      "actualSpotExVat": 0.6117575350000001,
+      "errorOre": 84.92,
+      "rawForecastSpotExVat": 1.341
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T12:00",
+      "forecastSpotExVat": 1.311,
+      "actualSpotExVat": 0.6117575350000001,
+      "errorOre": 69.92,
+      "rawForecastSpotExVat": 1.191
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T12:00",
+      "forecastSpotExVat": 1.21,
+      "actualSpotExVat": 0.6344830625,
+      "errorOre": 57.55,
+      "rawForecastSpotExVat": 1.09
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T12:00",
+      "forecastSpotExVat": 1.1122,
+      "actualSpotExVat": 0.6344830625,
+      "errorOre": 47.77,
+      "rawForecastSpotExVat": 0.9922
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T13:00",
+      "forecastSpotExVat": 1.4136,
+      "actualSpotExVat": 0.66530080775,
+      "errorOre": 74.83,
+      "rawForecastSpotExVat": 1.2936
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T13:00",
+      "forecastSpotExVat": 1.2686,
+      "actualSpotExVat": 0.66530080775,
+      "errorOre": 60.33,
+      "rawForecastSpotExVat": 1.1486
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T13:00",
+      "forecastSpotExVat": 1.2347,
+      "actualSpotExVat": 0.6781960619999999,
+      "errorOre": 55.65,
+      "rawForecastSpotExVat": 1.1147
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T13:00",
+      "forecastSpotExVat": 0.9851,
+      "actualSpotExVat": 0.6781960619999999,
+      "errorOre": 30.69,
+      "rawForecastSpotExVat": 0.8651
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T14:00",
+      "forecastSpotExVat": 1.5194,
+      "actualSpotExVat": 0.8367327019999999,
+      "errorOre": 68.27,
+      "rawForecastSpotExVat": 1.3994
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T14:00",
+      "forecastSpotExVat": 1.3307,
+      "actualSpotExVat": 0.8367327019999999,
+      "errorOre": 49.4,
+      "rawForecastSpotExVat": 1.2107
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T14:00",
+      "forecastSpotExVat": 1.2721,
+      "actualSpotExVat": 0.850338125,
+      "errorOre": 42.18,
+      "rawForecastSpotExVat": 1.1521
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T14:00",
+      "forecastSpotExVat": 1.1139,
+      "actualSpotExVat": 0.850338125,
+      "errorOre": 26.36,
+      "rawForecastSpotExVat": 0.9939
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T15:00",
+      "forecastSpotExVat": 1.5801,
+      "actualSpotExVat": 1.145340053,
+      "errorOre": 43.48,
+      "rawForecastSpotExVat": 1.4601
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T15:00",
+      "forecastSpotExVat": 1.5189,
+      "actualSpotExVat": 1.145340053,
+      "errorOre": 37.36,
+      "rawForecastSpotExVat": 1.3989
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T15:00",
+      "forecastSpotExVat": 1.3218,
+      "actualSpotExVat": 1.16642096125,
+      "errorOre": 15.54,
+      "rawForecastSpotExVat": 1.2018
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T15:00",
+      "forecastSpotExVat": 1.24,
+      "actualSpotExVat": 1.16642096125,
+      "errorOre": 7.36,
+      "rawForecastSpotExVat": 1.12
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T16:00",
+      "forecastSpotExVat": 1.593,
+      "actualSpotExVat": 1.36554957175,
+      "errorOre": 22.75,
+      "rawForecastSpotExVat": 1.473
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T16:00",
+      "forecastSpotExVat": 1.6202,
+      "actualSpotExVat": 1.36554957175,
+      "errorOre": 25.47,
+      "rawForecastSpotExVat": 1.5002
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T16:00",
+      "forecastSpotExVat": 1.3804,
+      "actualSpotExVat": 1.39066725575,
+      "errorOre": 1.03,
+      "rawForecastSpotExVat": 1.2604
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T16:00",
+      "forecastSpotExVat": 1.3531,
+      "actualSpotExVat": 1.39066725575,
+      "errorOre": 3.76,
+      "rawForecastSpotExVat": 1.2331
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T17:00",
+      "forecastSpotExVat": 1.6659,
+      "actualSpotExVat": 1.4950812924999999,
+      "errorOre": 17.08,
+      "rawForecastSpotExVat": 1.5459
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T17:00",
+      "forecastSpotExVat": 1.6655,
+      "actualSpotExVat": 1.4950812924999999,
+      "errorOre": 17.04,
+      "rawForecastSpotExVat": 1.5455
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T17:00",
+      "forecastSpotExVat": 1.4303,
+      "actualSpotExVat": 1.505789995,
+      "errorOre": 7.55,
+      "rawForecastSpotExVat": 1.3103
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T17:00",
+      "forecastSpotExVat": 1.3728,
+      "actualSpotExVat": 1.505789995,
+      "errorOre": 13.3,
+      "rawForecastSpotExVat": 1.2528
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T18:00",
+      "forecastSpotExVat": 1.6822,
+      "actualSpotExVat": 1.2169366525,
+      "errorOre": 46.53,
+      "rawForecastSpotExVat": 1.5622
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T18:00",
+      "forecastSpotExVat": 1.7589,
+      "actualSpotExVat": 1.2169366525,
+      "errorOre": 54.2,
+      "rawForecastSpotExVat": 1.6389
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T18:00",
+      "forecastSpotExVat": 1.4934,
+      "actualSpotExVat": 1.2264118339999999,
+      "errorOre": 26.7,
+      "rawForecastSpotExVat": 1.3734
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T18:00",
+      "forecastSpotExVat": 1.5573,
+      "actualSpotExVat": 1.2264118339999999,
+      "errorOre": 33.09,
+      "rawForecastSpotExVat": 1.4373
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T19:00",
+      "forecastSpotExVat": 1.6481,
+      "actualSpotExVat": 1.246876011,
+      "errorOre": 40.12,
+      "rawForecastSpotExVat": 1.5281
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T19:00",
+      "forecastSpotExVat": 1.8121,
+      "actualSpotExVat": 1.246876011,
+      "errorOre": 56.52,
+      "rawForecastSpotExVat": 1.6921
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T19:00",
+      "forecastSpotExVat": 1.489,
+      "actualSpotExVat": 1.2358870149999999,
+      "errorOre": 25.31,
+      "rawForecastSpotExVat": 1.369
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T19:00",
+      "forecastSpotExVat": 1.5077,
+      "actualSpotExVat": 1.2358870149999999,
+      "errorOre": 27.18,
+      "rawForecastSpotExVat": 1.3877
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T20:00",
+      "forecastSpotExVat": 1.6367,
+      "actualSpotExVat": 1.164215676,
+      "errorOre": 47.25,
+      "rawForecastSpotExVat": 1.5167
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T20:00",
+      "forecastSpotExVat": 1.8074,
+      "actualSpotExVat": 1.164215676,
+      "errorOre": 64.32,
+      "rawForecastSpotExVat": 1.6874
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T20:00",
+      "forecastSpotExVat": 1.5334,
+      "actualSpotExVat": 1.148236789,
+      "errorOre": 38.52,
+      "rawForecastSpotExVat": 1.4134
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T20:00",
+      "forecastSpotExVat": 1.4478,
+      "actualSpotExVat": 1.148236789,
+      "errorOre": 29.96,
+      "rawForecastSpotExVat": 1.3278
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T21:00",
+      "forecastSpotExVat": 1.6192,
+      "actualSpotExVat": 1.049634955,
+      "errorOre": 56.96,
+      "rawForecastSpotExVat": 1.4992
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T21:00",
+      "forecastSpotExVat": 1.7553,
+      "actualSpotExVat": 1.049634955,
+      "errorOre": 70.57,
+      "rawForecastSpotExVat": 1.6353
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T21:00",
+      "forecastSpotExVat": 1.5124,
+      "actualSpotExVat": 1.0360108545,
+      "errorOre": 47.64,
+      "rawForecastSpotExVat": 1.3924
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T21:00",
+      "forecastSpotExVat": 1.3172,
+      "actualSpotExVat": 1.0360108545,
+      "errorOre": 28.12,
+      "rawForecastSpotExVat": 1.1972
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T22:00",
+      "forecastSpotExVat": 1.5801,
+      "actualSpotExVat": 1.358242321,
+      "errorOre": 22.19,
+      "rawForecastSpotExVat": 1.4601
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T22:00",
+      "forecastSpotExVat": 1.6907,
+      "actualSpotExVat": 1.358242321,
+      "errorOre": 33.25,
+      "rawForecastSpotExVat": 1.5707
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T22:00",
+      "forecastSpotExVat": 1.5362,
+      "actualSpotExVat": 1.3016527302499998,
+      "errorOre": 23.45,
+      "rawForecastSpotExVat": 1.4162
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T22:00",
+      "forecastSpotExVat": 1.295,
+      "actualSpotExVat": 1.3016527302499998,
+      "errorOre": 0.67,
+      "rawForecastSpotExVat": 1.175
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T23:00",
+      "forecastSpotExVat": 1.5446,
+      "actualSpotExVat": 1.2436615684999999,
+      "errorOre": 30.09,
+      "rawForecastSpotExVat": 1.4246
+    },
+    {
+      "area": "DK1",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T23:00",
+      "forecastSpotExVat": 1.5457,
+      "actualSpotExVat": 1.2436615684999999,
+      "errorOre": 30.2,
+      "rawForecastSpotExVat": 1.4257
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-10T12:24:38.350Z",
+      "target": "2026-11-13T23:00",
+      "forecastSpotExVat": 1.4737,
+      "actualSpotExVat": 1.2213658769999998,
+      "errorOre": 25.23,
+      "rawForecastSpotExVat": 1.3537
+    },
+    {
+      "area": "DK2",
+      "issuedAt": "2026-11-11T17:55:56.241Z",
+      "target": "2026-11-13T23:00",
+      "forecastSpotExVat": 1.2104,
+      "actualSpotExVat": 1.2213658769999998,
+      "errorOre": 1.1,
+      "rawForecastSpotExVat": 1.0904
     }
   ]
 }
