@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hjem</title>
+  <meta name="theme-color" content="#0b2036">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <meta name="apple-mobile-web-app-title" content="Hjem">
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #071421; color: #f3f7fb;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center; padding: 16px; box-sizing: border-box; }
+    img { width: 112px; height: 112px; border-radius: 26px; }
+    a { display: inline-block; margin-top: 18px; padding: 12px 22px; border-radius: 999px; background: #173650;
+      border: 1px solid #27435d; color: #f3f7fb; text-decoration: none; font-weight: 600; }
+    p { color: #9db2c5; font-size: 14px; max-width: 320px; margin: 14px auto 0; }
+  </style>
+</head>
+<body>
+  <main>
+    <img src="icon.svg" alt="">
+    <h1 style="margin:16px 0 0;font-size:24px">Hjem</h1>
+    <a id="go" href="http://homeassistant.tail677ef7.ts.net/hjem-panel/hjem">Åbn dashboard</a>
+    <p>Åbner automatisk. Kræver at Tailscale er tændt på denne enhed.</p>
+  </main>
+  <script>
+    setTimeout(function () { location.href = document.getElementById("go").href; }, 400);
+  </script>
+</body>
+</html>
