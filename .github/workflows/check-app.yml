@@ -31,3 +31,4 @@ jobs:
       - run: node tests/core.cjs
       - run: node tests/archive.mjs
       - run: node tests/calibration.cjs
+      - run: node tests/month.cjs
