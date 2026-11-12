@@ -205,10 +205,41 @@ async function fetchForecastSource() {
   return payload;
 }
 
+// Energi Data Service sender ikke længere CORS-headere til browsere (nov. 2026).
+// Derfor bruges elprisenligenu.dk (samme officielle day-ahead-priser, ekskl. moms) som reserve.
+function elprisenRowsToRecords(rows, area) {
+  if (!Array.isArray(rows)) return [];
+  return rows
+    .filter((row) => typeof row?.time_start === "string" && Number.isFinite(Number(row.DKK_per_kWh)))
+    .map((row) => ({ TimeDK: row.time_start.slice(0, 19), PriceArea: area, DayAheadPriceDKK: Number(row.DKK_per_kWh) * 1000 }));
+}
+
+async function fetchElprisenDay(area, date) {
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  try {
+    const rows = await fetchJsonWithTimeout(`https://www.elprisenligenu.dk/api/v1/prices/${date.getFullYear()}/${m}-${d}_${area}.json`);
+    return elprisenRowsToRecords(rows, area);
+  } catch { return []; } // Dage uden offentliggjorte priser giver 404.
+}
+
+async function fetchDayAheadRecords(url, area, start, endExclusive) {
+  try {
+    const payload = await fetchJsonWithTimeout(url);
+    if (Array.isArray(payload.records)) return payload.records;
+  } catch { /* prøv reservekilden */ }
+  const days = [];
+  for (let day = new Date(start); day < endExclusive; day.setDate(day.getDate() + 1)) days.push(new Date(day));
+  const records = (await Promise.all(days.map((day) => fetchElprisenDay(area, day)))).flat();
+  if (!records.length) throw new Error("Officielle priser kunne ikke hentes");
+  return records;
+}
+
 async function fetchOfficialSource() {
-  const payload = await fetchJsonWithTimeout(dayAheadUrl());
-  if (!Array.isArray(payload.records)) throw new Error("Energinet returnerede ikke DayAheadPrices-data");
-  return payload.records;
+  const start = startOfDay(new Date());
+  const end = new Date(start);
+  end.setDate(end.getDate() + 4);
+  return fetchDayAheadRecords(dayAheadUrl(), settings.priceArea, start, end);
 }
 
 
@@ -231,9 +262,10 @@ function monthCacheKey(area = settings.priceArea, now = new Date()) {
 async function fetchMonthHours(area = settings.priceArea, now = new Date()) {
   const key = monthCacheKey(area, now);
   try {
-    const payload = await fetchJsonWithTimeout(monthPricesUrl(area, now), 15000);
-    if (!Array.isArray(payload.records)) throw new Error("Ingen månedsdata");
-    const hours = aggregateToHours(payload.records, area);
+    const end = startOfDay(now);
+    end.setDate(end.getDate() + 1);
+    const records = await fetchDayAheadRecords(monthPricesUrl(area, now), area, startOfMonth(now), end);
+    const hours = aggregateToHours(records, area);
     const compact = [...hours.values()].map((h) => [localIso(h.date).slice(0, 13), h.spotExVat]);
     try { localStorage.setItem(key, JSON.stringify(compact)); } catch { /* lagring er valgfri */ }
     return { hours, fromCache: false };
@@ -1065,10 +1097,10 @@ async function load() {
   const calibrationText = forecastCount && calibration.active
     ? ` Historisk prognosejustering: ${calibration.adjustment >= 0 ? "+" : ""}${fmtPrice.format(calibration.adjustment * 125)} øre/kWh inkl. moms (${calibration.sampleDays} døgn).`
     : "";
-  const problem = data.fromCache || data.officialSourceOk === false;
-  setStatus(`${sourceText}${cacheText}`.trim(), problem ? "error" : "ok");
+  const problem = data.fromCache;
+  setStatus(cacheText.trim(), problem ? "error" : "ok");
   ui.statusPanel.hidden = !problem;
-  if (ui.statusFooter) ui.statusFooter.textContent = `${officialCount} officielle timer og ${forecastCount} prognosetimer.${calibrationText}`;
+  if (ui.statusFooter) ui.statusFooter.textContent = `${officialCount} officielle timer og ${forecastCount} prognosetimer.${calibrationText}${sourceText}`;
   renderMonthAverage(now);
   ui.updatedAt.textContent = `Priser hentet ${fmtDate.format(data.savedAt)} kl. ${fmtTime.format(data.savedAt)}`;
   ui.refresh.disabled = false;
@@ -1170,4 +1202,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, shouldRepairLegacyZeroMarkup, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, radiusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, pricedForecastAuditRow, latestForecastSnapshot, shouldShowReviewReminder, startOfMonth, monthAveragePrice };
+if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, shouldRepairLegacyZeroMarkup, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, radiusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, pricedForecastAuditRow, latestForecastSnapshot, shouldShowReviewReminder, startOfMonth, monthAveragePrice, elprisenRowsToRecords };
