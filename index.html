@@ -16,9 +16,13 @@
   <link rel="stylesheet" href="styles.css">
   <style>
     /* v24: månedens gennemsnitspris */
-    .month-average { margin: 8px 0 14px; padding: 16px 18px; border: 1px solid rgba(88, 166, 255, .45); border-radius: 16px; background: rgba(88, 166, 255, .12); box-shadow: var(--shadow); }
+    /* v27: lav, smal bjælke med farvet venstrekant, så den skiller sig ud fra kortene nedenunder */
+    .month-average { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 22px; padding: 9px 14px 9px 16px; border: 1px solid rgba(88, 166, 255, .45); border-left-width: 7px; border-radius: 10px; background: rgba(88, 166, 255, .08); }
     .month-average[hidden], .status-panel[hidden] { display: none; }
-    .month-average strong { display: block; margin: 6px 0 2px; font-size: clamp(1.7rem, 5vw, 2.3rem); color: var(--blue); }
+    .month-average-text { min-width: 0; }
+    .month-average .summary-label { font-size: .8rem; letter-spacing: .02em; text-transform: uppercase; }
+    .month-average .summary-note { font-size: .74rem; margin-top: 2px; }
+    .month-average strong { flex: 0 0 auto; margin: 0; font-size: clamp(1.3rem, 4.2vw, 1.6rem); white-space: nowrap; color: var(--blue); }
     /* v26: farve efter niveau – grøn < 2 kr., gul 2–4 kr., rød > 4 kr., blinkende rød > 5 kr. */
     .month-average.level-green { border-color: rgba(57, 217, 138, .6); background: var(--green-bg); }
     .month-average.level-green strong { color: var(--green); }
@@ -37,7 +41,7 @@
     <div>
       <p id="profileSummary" class="eyebrow">DK2 · Østdanmark · Radius · Modstrøm</p>
       <h1>Elpris – næste 4 dage</h1>
-      <span class="app-version">Version v26</span>
+      <span class="app-version">Version v27</span>
     </div>
     <div class="top-actions">
       <button id="settingsButton" class="secondary-button" type="button">Indstillinger</button>
@@ -47,9 +51,11 @@
 
   <main>
     <section id="monthAverage" class="month-average" hidden aria-live="polite">
-      <span id="monthAverageLabel" class="summary-label">Gennemsnit for måneden indtil nu</span>
+      <div class="month-average-text">
+        <span id="monthAverageLabel" class="summary-label">Gennemsnit for måneden indtil nu</span>
+        <span id="monthAverageNote" class="summary-note">Henter månedens priser…</span>
+      </div>
       <strong id="monthAveragePrice">–</strong>
-      <span id="monthAverageNote" class="summary-note">Henter månedens priser…</span>
     </section>
 
     <section id="statusPanel" class="status-panel" aria-live="polite">
