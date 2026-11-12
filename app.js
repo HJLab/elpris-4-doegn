@@ -313,7 +313,7 @@ async function renderMonthAverage(now = new Date()) {
   const result = await fetchMonthHours(settings.priceArea, now);
   const fmtMonth = new Intl.DateTimeFormat("da-DK", { month: "long" });
   const monthName = fmtMonth.format(now);
-  ui.monthAverageLabel.textContent = `Gennemsnit for ${monthName} indtil nu`;
+  ui.monthAverageLabel.textContent = `Gennemsnit ${monthName}`;
   ui.monthAverage.hidden = false;
   if (!result) {
     ui.monthAveragePrice.textContent = "–";
@@ -330,7 +330,7 @@ async function renderMonthAverage(now = new Date()) {
   ui.monthAverage.classList.remove("level-green", "level-yellow", "level-red", "level-alarm");
   ui.monthAverage.classList.add(`level-${monthAverageLevel(avg.average)}`);
   const missing = avg.expectedHours - avg.hours;
-  ui.monthAverageNote.textContent = `1. ${monthName} kl. 00 – ${fmtDate.format(avg.until)} kl. ${fmtTime.format(addHours(avg.until, 1))} · alt inklusive · ${avg.hours} timer`
+  ui.monthAverageNote.textContent = `1.–${avg.until.getDate()}. ${monthName} kl. ${fmtTime.format(addHours(avg.until, 1))} · alt inkl.`
     + (missing > 0 ? ` (${missing} mangler)` : "")
     + (result.fromCache ? " · gemte data" : "");
 }
