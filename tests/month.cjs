@@ -21,4 +21,17 @@ const { DEFAULT_SETTINGS, normalizeSettings, totalPrice } = require("../app.js")
   assert.ok(Math.abs(monthAveragePrice(hours, now, s).average - sum / 63) < 1e-12);
   assert.equal(monthAveragePrice(new Map(), now, s).average, null);
 }
+// v25: reservekilden elprisenligenu.dk omregnes til samme format som Energi Data Service.
+{
+  const { elprisenRowsToRecords, aggregateToHours } = require("../app.js");
+  const recs = elprisenRowsToRecords([{ DKK_per_kWh: 1.84508, time_start: "2026-11-01T00:00:00+01:00" }, { DKK_per_kWh: "x", time_start: "2026-11-01T01:00:00+01:00" }], "DK2");
+  assert.equal(recs.length, 1);
+  assert.equal(recs[0].TimeDK, "2026-11-01T00:00:00");
+  assert.equal(recs[0].PriceArea, "DK2");
+  assert.ok(Math.abs(recs[0].DayAheadPriceDKK - 1845.08) < 1e-9);
+  const hrs = aggregateToHours(recs, "DK2");
+  assert.equal(hrs.size, 1);
+  assert.ok(Math.abs([...hrs.values()][0].spotExVat - 1.84508) < 1e-12);
+  assert.deepEqual(elprisenRowsToRecords(null, "DK2"), []);
+}
 console.log("Månedsgennemsnit bestået.");
