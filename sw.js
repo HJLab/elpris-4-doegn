@@ -1,4 +1,4 @@
-const CACHE = "elpris-shell-v30";
+const CACHE = "elpris-shell-v32";
 const FILES = ["./", "index.html", "styles.css", "calibration.js", "app.js", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 
 self.addEventListener("install", (event) => {
@@ -12,7 +12,7 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.url.includes("api.energidataservice.dk")) return;
+  if (event.request.url.includes("api.energidataservice.dk") || event.request.url.includes("elprisenligenu.dk")) return;
   event.respondWith(fetch(event.request).then((response) => {
     const copy = response.clone();
     caches.open(CACHE).then((cache) => cache.put(event.request, copy));
