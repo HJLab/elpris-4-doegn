@@ -19,6 +19,17 @@
     .month-average { margin: 8px 0 14px; padding: 16px 18px; border: 1px solid rgba(88, 166, 255, .45); border-radius: 16px; background: rgba(88, 166, 255, .12); box-shadow: var(--shadow); }
     .month-average[hidden], .status-panel[hidden] { display: none; }
     .month-average strong { display: block; margin: 6px 0 2px; font-size: clamp(1.7rem, 5vw, 2.3rem); color: var(--blue); }
+    /* v26: farve efter niveau – grøn < 2 kr., gul 2–4 kr., rød > 4 kr., blinkende rød > 5 kr. */
+    .month-average.level-green { border-color: rgba(57, 217, 138, .6); background: var(--green-bg); }
+    .month-average.level-green strong { color: var(--green); }
+    .month-average.level-yellow { border-color: rgba(255, 200, 87, .6); background: var(--amber-bg); }
+    .month-average.level-yellow strong { color: var(--amber); }
+    .month-average.level-red, .month-average.level-alarm { border-color: rgba(255, 107, 122, .75); background: var(--red-bg); }
+    .month-average.level-red strong, .month-average.level-alarm strong { color: var(--red); }
+    .month-average.level-alarm { animation: month-alarm .7s steps(1, end) infinite; }
+    @keyframes month-alarm { 0% { background: #ff1f3d; border-color: #ff1f3d; } 50% { background: var(--red-bg); border-color: rgba(255, 107, 122, .75); } }
+    .month-average.level-alarm strong { animation: month-alarm-text .7s steps(1, end) infinite; }
+    @keyframes month-alarm-text { 0% { color: #fff; } 50% { color: var(--red); } }
   </style>
 </head>
 <body>
@@ -26,7 +37,7 @@
     <div>
       <p id="profileSummary" class="eyebrow">DK2 · Østdanmark · Radius · Modstrøm</p>
       <h1>Elpris – næste 4 dage</h1>
-      <span class="app-version">Version v25</span>
+      <span class="app-version">Version v26</span>
     </div>
     <div class="top-actions">
       <button id="settingsButton" class="secondary-button" type="button">Indstillinger</button>
@@ -50,12 +61,6 @@
       <p>Din gemte profil bruger stadig Cerius. Hvis du har Radius som netselskab, skal du skifte til Radius, så elprisen beregnes med de korrekte tariffer.</p>
       <button id="gridSwitchButton" type="button">Skift til Radius</button>
       <button id="gridKeepButton" type="button">Behold Cerius</button>
-    </section>
-
-    <section id="markupNotice" class="markup-notice" hidden>
-      <p id="markupNoticeText"></p>
-      <button id="markupFixButton" type="button" hidden>Gendan 11 øre/kWh</button>
-      <button id="markupUndoButton" type="button" hidden>Fortryd (behold 0 øre)</button>
     </section>
 
     <section id="summary" class="summary" hidden>
@@ -139,6 +144,12 @@
           <p id="monthlyAccuracyCoverage" class="accuracy-coverage"></p>
         </div>
       </details>
+    </section>
+
+    <section id="markupNotice" class="markup-notice" hidden>
+      <p id="markupNoticeText"></p>
+      <button id="markupFixButton" type="button" hidden>Gendan 11 øre/kWh</button>
+      <button id="markupUndoButton" type="button" hidden>Fortryd (behold 0 øre)</button>
     </section>
 
     <section class="details">
