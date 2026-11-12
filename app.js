@@ -57,7 +57,7 @@ const ui = hasDocument ? {
   forecastAuditTable: $("forecastAuditTable"), forecastAuditStatus: $("forecastAuditStatus"),
   monthlyAccuracyDetails: $("monthlyAccuracyDetails"), monthlyAccuracyMonth: $("accuracyMonth"),
   monthlyAccuracyIntro: $("monthlyAccuracyIntro"), monthlyAccuracyRows: $("monthlyAccuracyRows"), monthlyAccuracyCoverage: $("monthlyAccuracyCoverage"),
-  profileSummary: $("profileSummary"), accuracyComparisonNote: $("accuracyComparisonNote"), settingsButton: $("settingsButton"),
+  profileSummary: $("profileSummary"), monthAverage: $("monthAverage"), monthAveragePrice: $("monthAveragePrice"), monthAverageLabel: $("monthAverageLabel"), monthAverageNote: $("monthAverageNote"), statusFooter: $("statusFooter"), accuracyComparisonNote: $("accuracyComparisonNote"), settingsButton: $("settingsButton"),
   settingsDialog: $("settingsDialog"), settingsForm: $("settingsForm"),
   manualTariffs: $("manualTariffs"), calculationExplanation: $("calculationExplanation"),
   calculationButton: $("calculationButton"), calculationDialog: $("calculationDialog"), closeCalculationButton: $("closeCalculationButton"),
@@ -209,6 +209,88 @@ async function fetchOfficialSource() {
   const payload = await fetchJsonWithTimeout(dayAheadUrl());
   if (!Array.isArray(payload.records)) throw new Error("Energinet returnerede ikke DayAheadPrices-data");
   return payload.records;
+}
+
+
+function startOfMonth(date) { return new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0, 0); }
+
+function monthPricesUrl(area = settings.priceArea, now = new Date()) {
+  const start = startOfMonth(now);
+  const end = startOfDay(now);
+  end.setDate(end.getDate() + 1);
+  const filter = encodeURIComponent(JSON.stringify({ PriceArea: [area] }));
+  return `https://api.energidataservice.dk/dataset/DayAheadPrices?start=${dateKey(start)}&end=${dateKey(end)}&columns=TimeDK,PriceArea,DayAheadPriceDKK&filter=${filter}&sort=TimeDK&limit=0`;
+}
+
+function monthCacheKey(area = settings.priceArea, now = new Date()) {
+  return `elpris-${area.toLowerCase()}-month-${localIso(now).slice(0, 7)}-v1`;
+}
+
+// Officielle timepriser fra den 1. i måneden kl. 00 til og med i dag.
+// Hentes separat, så månedens historik ikke påvirker prognoseberegningen.
+async function fetchMonthHours(area = settings.priceArea, now = new Date()) {
+  const key = monthCacheKey(area, now);
+  try {
+    const payload = await fetchJsonWithTimeout(monthPricesUrl(area, now), 15000);
+    if (!Array.isArray(payload.records)) throw new Error("Ingen månedsdata");
+    const hours = aggregateToHours(payload.records, area);
+    const compact = [...hours.values()].map((h) => [localIso(h.date).slice(0, 13), h.spotExVat]);
+    try { localStorage.setItem(key, JSON.stringify(compact)); } catch { /* lagring er valgfri */ }
+    return { hours, fromCache: false };
+  } catch {
+    try {
+      const compact = JSON.parse(localStorage.getItem(key));
+      if (!Array.isArray(compact) || !compact.length) return null;
+      const hours = new Map();
+      for (const [stamp, spotExVat] of compact) {
+        const [d, h] = stamp.split("T");
+        const [y, m, day] = d.split("-").map(Number);
+        const date = new Date(y, m - 1, day, Number(h), 0, 0, 0);
+        hours.set(hourKey(date), { date, spotExVat, kind: "actual" });
+      }
+      return { hours, fromCache: true };
+    } catch { return null; }
+  }
+}
+
+// Gennemsnitlig samlet kWh-pris (alt inklusive) for alle timer fra den 1. kl. 00
+// til og med den igangværende time. Hver time vægtes ens (ikke forbrugsvægtet).
+function monthAveragePrice(hours, now = new Date(), activeSettings = settings) {
+  const start = startOfMonth(now);
+  const until = floorHour(now);
+  const totals = [];
+  for (const item of hours.values()) {
+    if (item.kind && item.kind !== "actual") continue;
+    if (item.date < start || item.date > until) continue;
+    totals.push(totalPrice(item.spotExVat, item.date, activeSettings));
+  }
+  const expected = Math.round((until - start) / 3600000) + 1;
+  return { average: mean(totals), hours: totals.length, expectedHours: expected, start, until };
+}
+
+async function renderMonthAverage(now = new Date()) {
+  if (!hasDocument || !ui.monthAverage) return;
+  const result = await fetchMonthHours(settings.priceArea, now);
+  const fmtMonth = new Intl.DateTimeFormat("da-DK", { month: "long" });
+  const monthName = fmtMonth.format(now);
+  ui.monthAverageLabel.textContent = `Gennemsnit for ${monthName} indtil nu`;
+  ui.monthAverage.hidden = false;
+  if (!result) {
+    ui.monthAveragePrice.textContent = "–";
+    ui.monthAverageNote.textContent = "Månedens priser kunne ikke hentes lige nu.";
+    return;
+  }
+  const avg = monthAveragePrice(result.hours, now, settings);
+  if (avg.average === null) {
+    ui.monthAveragePrice.textContent = "–";
+    ui.monthAverageNote.textContent = "Ingen officielle priser for måneden endnu.";
+    return;
+  }
+  ui.monthAveragePrice.textContent = `${fmtPrice.format(avg.average)} kr./kWh`;
+  const missing = avg.expectedHours - avg.hours;
+  ui.monthAverageNote.textContent = `1. ${monthName} kl. 00 – ${fmtDate.format(avg.until)} kl. ${fmtTime.format(addHours(avg.until, 1))} · alt inklusive · ${avg.hours} timer`
+    + (missing > 0 ? ` (${missing} mangler)` : "")
+    + (result.fromCache ? " · gemte data" : "");
 }
 
 async function fetchRecords() {
@@ -845,6 +927,7 @@ function renderDays(items, now) {
 }
 
 function setStatus(message, kind = "loading") {
+  ui.statusPanel.hidden = false;
   ui.statusText.textContent = message;
   ui.statusPanel.className = `status-panel ${kind === "loading" ? "" : kind}`.trim();
 }
@@ -982,7 +1065,11 @@ async function load() {
   const calibrationText = forecastCount && calibration.active
     ? ` Historisk prognosejustering: ${calibration.adjustment >= 0 ? "+" : ""}${fmtPrice.format(calibration.adjustment * 125)} øre/kWh inkl. moms (${calibration.sampleDays} døgn).`
     : "";
-  setStatus(`${officialCount} officielle timer og ${forecastCount} prognosetimer.${calibrationText}${sourceText}${cacheText}`, data.fromCache || data.officialSourceOk === false ? "error" : "ok");
+  const problem = data.fromCache || data.officialSourceOk === false;
+  setStatus(`${sourceText}${cacheText}`.trim(), problem ? "error" : "ok");
+  ui.statusPanel.hidden = !problem;
+  if (ui.statusFooter) ui.statusFooter.textContent = `${officialCount} officielle timer og ${forecastCount} prognosetimer.${calibrationText}`;
+  renderMonthAverage(now);
   ui.updatedAt.textContent = `Priser hentet ${fmtDate.format(data.savedAt)} kl. ${fmtTime.format(data.savedAt)}`;
   ui.refresh.disabled = false;
 }
@@ -1083,4 +1170,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, shouldRepairLegacyZeroMarkup, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, radiusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, pricedForecastAuditRow, latestForecastSnapshot, shouldShowReviewReminder };
+if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, shouldRepairLegacyZeroMarkup, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, radiusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, pricedForecastAuditRow, latestForecastSnapshot, shouldShowReviewReminder, startOfMonth, monthAveragePrice };
