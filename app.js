@@ -300,6 +300,14 @@ function monthAveragePrice(hours, now = new Date(), activeSettings = settings) {
   return { average: mean(totals), hours: totals.length, expectedHours: expected, start, until };
 }
 
+// Farve på månedens gennemsnit: grøn under 2 kr., gul 2–4 kr., rød over 4 kr., blinkende rød over 5 kr.
+function monthAverageLevel(price) {
+  if (price > 5) return "alarm";
+  if (price > 4) return "red";
+  if (price >= 2) return "yellow";
+  return "green";
+}
+
 async function renderMonthAverage(now = new Date()) {
   if (!hasDocument || !ui.monthAverage) return;
   const result = await fetchMonthHours(settings.priceArea, now);
@@ -319,6 +327,8 @@ async function renderMonthAverage(now = new Date()) {
     return;
   }
   ui.monthAveragePrice.textContent = `${fmtPrice.format(avg.average)} kr./kWh`;
+  ui.monthAverage.classList.remove("level-green", "level-yellow", "level-red", "level-alarm");
+  ui.monthAverage.classList.add(`level-${monthAverageLevel(avg.average)}`);
   const missing = avg.expectedHours - avg.hours;
   ui.monthAverageNote.textContent = `1. ${monthName} kl. 00 – ${fmtDate.format(avg.until)} kl. ${fmtTime.format(addHours(avg.until, 1))} · alt inklusive · ${avg.hours} timer`
     + (missing > 0 ? ` (${missing} mangler)` : "")
@@ -1202,4 +1212,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, shouldRepairLegacyZeroMarkup, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, radiusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, pricedForecastAuditRow, latestForecastSnapshot, shouldShowReviewReminder, startOfMonth, monthAveragePrice, elprisenRowsToRecords };
+if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, shouldRepairLegacyZeroMarkup, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, radiusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, pricedForecastAuditRow, latestForecastSnapshot, shouldShowReviewReminder, startOfMonth, monthAveragePrice, elprisenRowsToRecords, monthAverageLevel };
