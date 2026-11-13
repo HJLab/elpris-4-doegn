@@ -26564,6 +26564,698 @@
           "rawForecastSpotExVat": 1.2199
         }
       ]
+    },
+    {
+      "area": "DK1",
+      "collectedDate": "2026-11-13",
+      "collectedAt": "2026-11-13T17:51:13.186Z",
+      "sourceGeneratedAt": "2026-11-13",
+      "calibration": {
+        "asOfDate": "2026-11-13",
+        "adjustment": 0.12,
+        "sampleDays": 18,
+        "meanRawBias": 0.24503474560724225,
+        "active": true,
+        "version": 2
+      },
+      "points": [
+        {
+          "target": "2026-11-15T00:00",
+          "forecastSpotExVat": 0.9166,
+          "rawForecastSpotExVat": 0.7966
+        },
+        {
+          "target": "2026-11-15T01:00",
+          "forecastSpotExVat": 0.934,
+          "rawForecastSpotExVat": 0.814
+        },
+        {
+          "target": "2026-11-15T02:00",
+          "forecastSpotExVat": 0.9672,
+          "rawForecastSpotExVat": 0.8472
+        },
+        {
+          "target": "2026-11-15T03:00",
+          "forecastSpotExVat": 0.9463,
+          "rawForecastSpotExVat": 0.8263
+        },
+        {
+          "target": "2026-11-15T04:00",
+          "forecastSpotExVat": 0.9335,
+          "rawForecastSpotExVat": 0.8135
+        },
+        {
+          "target": "2026-11-15T05:00",
+          "forecastSpotExVat": 0.9958,
+          "rawForecastSpotExVat": 0.8758
+        },
+        {
+          "target": "2026-11-15T06:00",
+          "forecastSpotExVat": 1.0252,
+          "rawForecastSpotExVat": 0.9052
+        },
+        {
+          "target": "2026-11-15T07:00",
+          "forecastSpotExVat": 1.045,
+          "rawForecastSpotExVat": 0.925
+        },
+        {
+          "target": "2026-11-15T08:00",
+          "forecastSpotExVat": 1.0442,
+          "rawForecastSpotExVat": 0.9242
+        },
+        {
+          "target": "2026-11-15T09:00",
+          "forecastSpotExVat": 1.0109,
+          "rawForecastSpotExVat": 0.8909
+        },
+        {
+          "target": "2026-11-15T10:00",
+          "forecastSpotExVat": 0.9942,
+          "rawForecastSpotExVat": 0.8742
+        },
+        {
+          "target": "2026-11-15T11:00",
+          "forecastSpotExVat": 1.0367,
+          "rawForecastSpotExVat": 0.9167
+        },
+        {
+          "target": "2026-11-15T12:00",
+          "forecastSpotExVat": 0.9578,
+          "rawForecastSpotExVat": 0.8378
+        },
+        {
+          "target": "2026-11-15T13:00",
+          "forecastSpotExVat": 1.0026,
+          "rawForecastSpotExVat": 0.8826
+        },
+        {
+          "target": "2026-11-15T14:00",
+          "forecastSpotExVat": 0.9839,
+          "rawForecastSpotExVat": 0.8639
+        },
+        {
+          "target": "2026-11-15T15:00",
+          "forecastSpotExVat": 1.0332,
+          "rawForecastSpotExVat": 0.9132
+        },
+        {
+          "target": "2026-11-15T16:00",
+          "forecastSpotExVat": 0.9558,
+          "rawForecastSpotExVat": 0.8358
+        },
+        {
+          "target": "2026-11-15T17:00",
+          "forecastSpotExVat": 1.0988,
+          "rawForecastSpotExVat": 0.9788
+        },
+        {
+          "target": "2026-11-15T18:00",
+          "forecastSpotExVat": 1.1155,
+          "rawForecastSpotExVat": 0.9955
+        },
+        {
+          "target": "2026-11-15T19:00",
+          "forecastSpotExVat": 0.9272,
+          "rawForecastSpotExVat": 0.8072
+        },
+        {
+          "target": "2026-11-15T20:00",
+          "forecastSpotExVat": 0.8985,
+          "rawForecastSpotExVat": 0.7785
+        },
+        {
+          "target": "2026-11-15T21:00",
+          "forecastSpotExVat": 0.7246,
+          "rawForecastSpotExVat": 0.6046
+        },
+        {
+          "target": "2026-11-15T22:00",
+          "forecastSpotExVat": 0.674,
+          "rawForecastSpotExVat": 0.554
+        },
+        {
+          "target": "2026-11-15T23:00",
+          "forecastSpotExVat": 0.6627,
+          "rawForecastSpotExVat": 0.5427
+        },
+        {
+          "target": "2026-11-16T00:00",
+          "forecastSpotExVat": 0.7262,
+          "rawForecastSpotExVat": 0.6062
+        },
+        {
+          "target": "2026-11-16T01:00",
+          "forecastSpotExVat": 0.6756,
+          "rawForecastSpotExVat": 0.5556
+        },
+        {
+          "target": "2026-11-16T02:00",
+          "forecastSpotExVat": 0.6791,
+          "rawForecastSpotExVat": 0.5591
+        },
+        {
+          "target": "2026-11-16T03:00",
+          "forecastSpotExVat": 0.6841,
+          "rawForecastSpotExVat": 0.5641
+        },
+        {
+          "target": "2026-11-16T04:00",
+          "forecastSpotExVat": 0.6729,
+          "rawForecastSpotExVat": 0.5529
+        },
+        {
+          "target": "2026-11-16T05:00",
+          "forecastSpotExVat": 0.7222,
+          "rawForecastSpotExVat": 0.6022
+        },
+        {
+          "target": "2026-11-16T06:00",
+          "forecastSpotExVat": 0.8325,
+          "rawForecastSpotExVat": 0.7125
+        },
+        {
+          "target": "2026-11-16T07:00",
+          "forecastSpotExVat": 0.9212,
+          "rawForecastSpotExVat": 0.8012
+        },
+        {
+          "target": "2026-11-16T08:00",
+          "forecastSpotExVat": 0.9912,
+          "rawForecastSpotExVat": 0.8712
+        },
+        {
+          "target": "2026-11-16T09:00",
+          "forecastSpotExVat": 0.9434,
+          "rawForecastSpotExVat": 0.8234
+        },
+        {
+          "target": "2026-11-16T10:00",
+          "forecastSpotExVat": 0.9522,
+          "rawForecastSpotExVat": 0.8322
+        },
+        {
+          "target": "2026-11-16T11:00",
+          "forecastSpotExVat": 0.9144,
+          "rawForecastSpotExVat": 0.7944
+        },
+        {
+          "target": "2026-11-16T12:00",
+          "forecastSpotExVat": 0.8659,
+          "rawForecastSpotExVat": 0.7459
+        },
+        {
+          "target": "2026-11-16T13:00",
+          "forecastSpotExVat": 0.91,
+          "rawForecastSpotExVat": 0.79
+        },
+        {
+          "target": "2026-11-16T14:00",
+          "forecastSpotExVat": 0.9702,
+          "rawForecastSpotExVat": 0.8502
+        },
+        {
+          "target": "2026-11-16T15:00",
+          "forecastSpotExVat": 1.0739,
+          "rawForecastSpotExVat": 0.9539
+        },
+        {
+          "target": "2026-11-16T16:00",
+          "forecastSpotExVat": 1.1802,
+          "rawForecastSpotExVat": 1.0602
+        },
+        {
+          "target": "2026-11-16T17:00",
+          "forecastSpotExVat": 1.2777,
+          "rawForecastSpotExVat": 1.1577
+        },
+        {
+          "target": "2026-11-16T18:00",
+          "forecastSpotExVat": 1.2428,
+          "rawForecastSpotExVat": 1.1228
+        },
+        {
+          "target": "2026-11-16T19:00",
+          "forecastSpotExVat": 1.1929,
+          "rawForecastSpotExVat": 1.0729
+        },
+        {
+          "target": "2026-11-16T20:00",
+          "forecastSpotExVat": 1.1119,
+          "rawForecastSpotExVat": 0.9919
+        },
+        {
+          "target": "2026-11-16T21:00",
+          "forecastSpotExVat": 1.0508,
+          "rawForecastSpotExVat": 0.9308
+        },
+        {
+          "target": "2026-11-16T22:00",
+          "forecastSpotExVat": 1.0101,
+          "rawForecastSpotExVat": 0.8901
+        },
+        {
+          "target": "2026-11-16T23:00",
+          "forecastSpotExVat": 0.927,
+          "rawForecastSpotExVat": 0.807
+        },
+        {
+          "target": "2026-11-17T00:00",
+          "forecastSpotExVat": 0.9442,
+          "rawForecastSpotExVat": 0.8242
+        },
+        {
+          "target": "2026-11-17T01:00",
+          "forecastSpotExVat": 0.9762,
+          "rawForecastSpotExVat": 0.8562
+        },
+        {
+          "target": "2026-11-17T02:00",
+          "forecastSpotExVat": 0.9898,
+          "rawForecastSpotExVat": 0.8698
+        },
+        {
+          "target": "2026-11-17T03:00",
+          "forecastSpotExVat": 0.9959,
+          "rawForecastSpotExVat": 0.8759
+        },
+        {
+          "target": "2026-11-17T04:00",
+          "forecastSpotExVat": 1.0507,
+          "rawForecastSpotExVat": 0.9307
+        },
+        {
+          "target": "2026-11-17T05:00",
+          "forecastSpotExVat": 1.0601,
+          "rawForecastSpotExVat": 0.9401
+        },
+        {
+          "target": "2026-11-17T06:00",
+          "forecastSpotExVat": 1.1706,
+          "rawForecastSpotExVat": 1.0506
+        },
+        {
+          "target": "2026-11-17T07:00",
+          "forecastSpotExVat": 1.2366,
+          "rawForecastSpotExVat": 1.1166
+        },
+        {
+          "target": "2026-11-17T08:00",
+          "forecastSpotExVat": 1.3446,
+          "rawForecastSpotExVat": 1.2246
+        },
+        {
+          "target": "2026-11-17T09:00",
+          "forecastSpotExVat": 1.276,
+          "rawForecastSpotExVat": 1.156
+        },
+        {
+          "target": "2026-11-17T10:00",
+          "forecastSpotExVat": 1.3084,
+          "rawForecastSpotExVat": 1.1884
+        },
+        {
+          "target": "2026-11-17T11:00",
+          "forecastSpotExVat": 1.306,
+          "rawForecastSpotExVat": 1.186
+        },
+        {
+          "target": "2026-11-17T12:00",
+          "forecastSpotExVat": 1.243,
+          "rawForecastSpotExVat": 1.123
+        },
+        {
+          "target": "2026-11-17T13:00",
+          "forecastSpotExVat": 1.2266,
+          "rawForecastSpotExVat": 1.1066
+        },
+        {
+          "target": "2026-11-17T14:00",
+          "forecastSpotExVat": 1.2956,
+          "rawForecastSpotExVat": 1.1756
+        },
+        {
+          "target": "2026-11-17T15:00",
+          "forecastSpotExVat": 1.3523,
+          "rawForecastSpotExVat": 1.2323
+        },
+        {
+          "target": "2026-11-17T16:00",
+          "forecastSpotExVat": 1.4177,
+          "rawForecastSpotExVat": 1.2977
+        },
+        {
+          "target": "2026-11-17T17:00",
+          "forecastSpotExVat": 1.4787,
+          "rawForecastSpotExVat": 1.3587
+        }
+      ]
+    },
+    {
+      "area": "DK2",
+      "collectedDate": "2026-11-13",
+      "collectedAt": "2026-11-13T17:51:13.186Z",
+      "sourceGeneratedAt": "2026-11-13",
+      "calibration": {
+        "asOfDate": "2026-11-13",
+        "adjustment": 0.12,
+        "sampleDays": 18,
+        "meanRawBias": 0.4267123801900999,
+        "active": true,
+        "version": 2
+      },
+      "points": [
+        {
+          "target": "2026-11-15T00:00",
+          "forecastSpotExVat": 0.9912,
+          "rawForecastSpotExVat": 0.8712
+        },
+        {
+          "target": "2026-11-15T01:00",
+          "forecastSpotExVat": 1.0321,
+          "rawForecastSpotExVat": 0.9121
+        },
+        {
+          "target": "2026-11-15T02:00",
+          "forecastSpotExVat": 1.1137,
+          "rawForecastSpotExVat": 0.9937
+        },
+        {
+          "target": "2026-11-15T03:00",
+          "forecastSpotExVat": 0.9874,
+          "rawForecastSpotExVat": 0.8674
+        },
+        {
+          "target": "2026-11-15T04:00",
+          "forecastSpotExVat": 1.017,
+          "rawForecastSpotExVat": 0.897
+        },
+        {
+          "target": "2026-11-15T05:00",
+          "forecastSpotExVat": 1.0095,
+          "rawForecastSpotExVat": 0.8895
+        },
+        {
+          "target": "2026-11-15T06:00",
+          "forecastSpotExVat": 1.0396,
+          "rawForecastSpotExVat": 0.9196
+        },
+        {
+          "target": "2026-11-15T07:00",
+          "forecastSpotExVat": 0.9679,
+          "rawForecastSpotExVat": 0.8479
+        },
+        {
+          "target": "2026-11-15T08:00",
+          "forecastSpotExVat": 0.9534,
+          "rawForecastSpotExVat": 0.8334
+        },
+        {
+          "target": "2026-11-15T09:00",
+          "forecastSpotExVat": 0.9568,
+          "rawForecastSpotExVat": 0.8368
+        },
+        {
+          "target": "2026-11-15T10:00",
+          "forecastSpotExVat": 0.8061,
+          "rawForecastSpotExVat": 0.6861
+        },
+        {
+          "target": "2026-11-15T11:00",
+          "forecastSpotExVat": 0.7675,
+          "rawForecastSpotExVat": 0.6475
+        },
+        {
+          "target": "2026-11-15T12:00",
+          "forecastSpotExVat": 0.7838,
+          "rawForecastSpotExVat": 0.6638
+        },
+        {
+          "target": "2026-11-15T13:00",
+          "forecastSpotExVat": 0.8717,
+          "rawForecastSpotExVat": 0.7517
+        },
+        {
+          "target": "2026-11-15T14:00",
+          "forecastSpotExVat": 0.8588,
+          "rawForecastSpotExVat": 0.7388
+        },
+        {
+          "target": "2026-11-15T15:00",
+          "forecastSpotExVat": 0.8383,
+          "rawForecastSpotExVat": 0.7183
+        },
+        {
+          "target": "2026-11-15T16:00",
+          "forecastSpotExVat": 0.906,
+          "rawForecastSpotExVat": 0.786
+        },
+        {
+          "target": "2026-11-15T17:00",
+          "forecastSpotExVat": 1.0158,
+          "rawForecastSpotExVat": 0.8958
+        },
+        {
+          "target": "2026-11-15T18:00",
+          "forecastSpotExVat": 0.9995,
+          "rawForecastSpotExVat": 0.8795
+        },
+        {
+          "target": "2026-11-15T19:00",
+          "forecastSpotExVat": 0.9683,
+          "rawForecastSpotExVat": 0.8483
+        },
+        {
+          "target": "2026-11-15T20:00",
+          "forecastSpotExVat": 0.8767,
+          "rawForecastSpotExVat": 0.7567
+        },
+        {
+          "target": "2026-11-15T21:00",
+          "forecastSpotExVat": 0.7658,
+          "rawForecastSpotExVat": 0.6458
+        },
+        {
+          "target": "2026-11-15T22:00",
+          "forecastSpotExVat": 0.7892,
+          "rawForecastSpotExVat": 0.6692
+        },
+        {
+          "target": "2026-11-15T23:00",
+          "forecastSpotExVat": 0.7369,
+          "rawForecastSpotExVat": 0.6169
+        },
+        {
+          "target": "2026-11-16T00:00",
+          "forecastSpotExVat": 0.775,
+          "rawForecastSpotExVat": 0.655
+        },
+        {
+          "target": "2026-11-16T01:00",
+          "forecastSpotExVat": 0.7142,
+          "rawForecastSpotExVat": 0.5942
+        },
+        {
+          "target": "2026-11-16T02:00",
+          "forecastSpotExVat": 0.7388,
+          "rawForecastSpotExVat": 0.6188
+        },
+        {
+          "target": "2026-11-16T03:00",
+          "forecastSpotExVat": 0.6731,
+          "rawForecastSpotExVat": 0.5531
+        },
+        {
+          "target": "2026-11-16T04:00",
+          "forecastSpotExVat": 0.67,
+          "rawForecastSpotExVat": 0.55
+        },
+        {
+          "target": "2026-11-16T05:00",
+          "forecastSpotExVat": 0.7118,
+          "rawForecastSpotExVat": 0.5918
+        },
+        {
+          "target": "2026-11-16T06:00",
+          "forecastSpotExVat": 0.7767,
+          "rawForecastSpotExVat": 0.6567
+        },
+        {
+          "target": "2026-11-16T07:00",
+          "forecastSpotExVat": 0.8713,
+          "rawForecastSpotExVat": 0.7513
+        },
+        {
+          "target": "2026-11-16T08:00",
+          "forecastSpotExVat": 0.8841,
+          "rawForecastSpotExVat": 0.7641
+        },
+        {
+          "target": "2026-11-16T09:00",
+          "forecastSpotExVat": 0.8624,
+          "rawForecastSpotExVat": 0.7424
+        },
+        {
+          "target": "2026-11-16T10:00",
+          "forecastSpotExVat": 0.8495,
+          "rawForecastSpotExVat": 0.7295
+        },
+        {
+          "target": "2026-11-16T11:00",
+          "forecastSpotExVat": 0.8687,
+          "rawForecastSpotExVat": 0.7487
+        },
+        {
+          "target": "2026-11-16T12:00",
+          "forecastSpotExVat": 0.8413,
+          "rawForecastSpotExVat": 0.7213
+        },
+        {
+          "target": "2026-11-16T13:00",
+          "forecastSpotExVat": 0.8582,
+          "rawForecastSpotExVat": 0.7382
+        },
+        {
+          "target": "2026-11-16T14:00",
+          "forecastSpotExVat": 0.9915,
+          "rawForecastSpotExVat": 0.8715
+        },
+        {
+          "target": "2026-11-16T15:00",
+          "forecastSpotExVat": 1.1671,
+          "rawForecastSpotExVat": 1.0471
+        },
+        {
+          "target": "2026-11-16T16:00",
+          "forecastSpotExVat": 1.2617,
+          "rawForecastSpotExVat": 1.1417
+        },
+        {
+          "target": "2026-11-16T17:00",
+          "forecastSpotExVat": 1.3226,
+          "rawForecastSpotExVat": 1.2026
+        },
+        {
+          "target": "2026-11-16T18:00",
+          "forecastSpotExVat": 1.361,
+          "rawForecastSpotExVat": 1.241
+        },
+        {
+          "target": "2026-11-16T19:00",
+          "forecastSpotExVat": 1.216,
+          "rawForecastSpotExVat": 1.096
+        },
+        {
+          "target": "2026-11-16T20:00",
+          "forecastSpotExVat": 1.1345,
+          "rawForecastSpotExVat": 1.0145
+        },
+        {
+          "target": "2026-11-16T21:00",
+          "forecastSpotExVat": 1.0755,
+          "rawForecastSpotExVat": 0.9555
+        },
+        {
+          "target": "2026-11-16T22:00",
+          "forecastSpotExVat": 1.0993,
+          "rawForecastSpotExVat": 0.9793
+        },
+        {
+          "target": "2026-11-16T23:00",
+          "forecastSpotExVat": 1.0337,
+          "rawForecastSpotExVat": 0.9137
+        },
+        {
+          "target": "2026-11-17T00:00",
+          "forecastSpotExVat": 0.961,
+          "rawForecastSpotExVat": 0.841
+        },
+        {
+          "target": "2026-11-17T01:00",
+          "forecastSpotExVat": 0.943,
+          "rawForecastSpotExVat": 0.823
+        },
+        {
+          "target": "2026-11-17T02:00",
+          "forecastSpotExVat": 0.946,
+          "rawForecastSpotExVat": 0.826
+        },
+        {
+          "target": "2026-11-17T03:00",
+          "forecastSpotExVat": 0.8908,
+          "rawForecastSpotExVat": 0.7708
+        },
+        {
+          "target": "2026-11-17T04:00",
+          "forecastSpotExVat": 0.868,
+          "rawForecastSpotExVat": 0.748
+        },
+        {
+          "target": "2026-11-17T05:00",
+          "forecastSpotExVat": 0.8955,
+          "rawForecastSpotExVat": 0.7755
+        },
+        {
+          "target": "2026-11-17T06:00",
+          "forecastSpotExVat": 1.1089,
+          "rawForecastSpotExVat": 0.9889
+        },
+        {
+          "target": "2026-11-17T07:00",
+          "forecastSpotExVat": 1.1761,
+          "rawForecastSpotExVat": 1.0561
+        },
+        {
+          "target": "2026-11-17T08:00",
+          "forecastSpotExVat": 1.2178,
+          "rawForecastSpotExVat": 1.0978
+        },
+        {
+          "target": "2026-11-17T09:00",
+          "forecastSpotExVat": 1.2349,
+          "rawForecastSpotExVat": 1.1149
+        },
+        {
+          "target": "2026-11-17T10:00",
+          "forecastSpotExVat": 1.1715,
+          "rawForecastSpotExVat": 1.0515
+        },
+        {
+          "target": "2026-11-17T11:00",
+          "forecastSpotExVat": 1.2084,
+          "rawForecastSpotExVat": 1.0884
+        },
+        {
+          "target": "2026-11-17T12:00",
+          "forecastSpotExVat": 1.2364,
+          "rawForecastSpotExVat": 1.1164
+        },
+        {
+          "target": "2026-11-17T13:00",
+          "forecastSpotExVat": 1.2824,
+          "rawForecastSpotExVat": 1.1624
+        },
+        {
+          "target": "2026-11-17T14:00",
+          "forecastSpotExVat": 1.293,
+          "rawForecastSpotExVat": 1.173
+        },
+        {
+          "target": "2026-11-17T15:00",
+          "forecastSpotExVat": 1.3008,
+          "rawForecastSpotExVat": 1.1808
+        },
+        {
+          "target": "2026-11-17T16:00",
+          "forecastSpotExVat": 1.3384,
+          "rawForecastSpotExVat": 1.2184
+        },
+        {
+          "target": "2026-11-17T17:00",
+          "forecastSpotExVat": 1.4636,
+          "rawForecastSpotExVat": 1.3436
+        }
+      ]
     }
   ]
 }
