@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { DEFAULT_SETTINGS, normalizeSettings, shouldRepairLegacyZeroMarkup, aggregateToHours, mergeKnownHours, forecastPayloadToHours, ceriusTariff, radiusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, shouldShowReviewReminder } = require("../app.js");
+const { DEFAULT_SETTINGS, normalizeSettings, applyInvoiceMigration, aggregateToHours, mergeKnownHours, forecastPayloadToHours, ceriusTariff, radiusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, shouldShowReviewReminder } = require("../app.js");
 
 const { pricedForecastAuditRow, latestForecastSnapshot } = require("../app.js");
 const auditSettings = normalizeSettings(DEFAULT_SETTINGS);
@@ -10,18 +10,23 @@ assert.equal(normalizeSettings({gridCompany:"radius"}).gridCompany,"radius");
 assert.equal(normalizeSettings({gridCompany:"cerius"}).gridCompany,"cerius");
 assert.equal(normalizeSettings({gridCompany:"manual"}).gridCompany,"manual");
 assert.equal(normalizeSettings({gridCompany:"ukendt"}).gridCompany,"radius");
-assert.equal(shouldRepairLegacyZeroMarkup({...DEFAULT_SETTINGS,gridCompany:"cerius",supplierMarkupOre:0}),true);
-assert.equal(shouldRepairLegacyZeroMarkup({...DEFAULT_SETTINGS,gridCompany:"cerius",supplierMarkupOre:0,gridSubscriptionMonthly:50}),false);
-assert.equal(normalizeSettings({supplierMarkupOre:null}).supplierMarkupOre,11);
-assert.equal(normalizeSettings({supplierMarkupOre:""}).supplierMarkupOre,11);
+// v28: standard ud fra Modstrøm-fakturaer – intet kWh-tillæg, abonnementer 28,95 + 75,51 kr./md.
+assert.equal(DEFAULT_SETTINGS.supplierMarkupOre,0);
+assert.equal(DEFAULT_SETTINGS.supplierSubscriptionMonthly,28.95);
+assert.equal(DEFAULT_SETTINGS.gridSubscriptionMonthly,75.51);
+assert.equal(normalizeSettings({supplierMarkupOre:null}).supplierMarkupOre,0);
+assert.equal(normalizeSettings({supplierMarkupOre:""}).supplierMarkupOre,0);
 assert.equal(normalizeSettings({supplierMarkupOre:0}).supplierMarkupOre,0);
-assert.equal(shouldRepairLegacyZeroMarkup({...DEFAULT_SETTINGS,supplierMarkupOre:0}),true);
-assert.equal(shouldRepairLegacyZeroMarkup({...DEFAULT_SETTINGS,supplierMarkupOre:"0"}),true);
-assert.equal(shouldRepairLegacyZeroMarkup({...DEFAULT_SETTINGS,supplierMarkupOre:11}),false);
-assert.equal(shouldRepairLegacyZeroMarkup({...DEFAULT_SETTINGS,supplierMarkupOre:0,annualConsumption:5000}),false);
-assert.equal(shouldRepairLegacyZeroMarkup({...DEFAULT_SETTINGS,supplierMarkupOre:0,supplier:"Andet elselskab"}),false);
-assert.equal(shouldRepairLegacyZeroMarkup({...DEFAULT_SETTINGS,supplierMarkupOre:0,product:"Særaftale"}),false);
-assert.equal(shouldRepairLegacyZeroMarkup({...DEFAULT_SETTINGS,supplierMarkupOre:null}),false);
+assert.equal(normalizeSettings({supplierMarkupOre:5}).supplierMarkupOre,5);
+const migratedOld = applyInvoiceMigration({priceArea:"DK2",gridCompany:"radius",supplier:"Modstrøm",supplierMarkupOre:11,supplierSubscriptionMonthly:0,gridSubscriptionMonthly:0,annualConsumption:4000});
+assert.equal(migratedOld.supplierMarkupOre,0);
+assert.equal(migratedOld.supplierSubscriptionMonthly,28.95);
+assert.equal(migratedOld.gridSubscriptionMonthly,75.51);
+assert.equal(migratedOld.annualConsumption,9000);
+assert.equal(applyInvoiceMigration({supplier:"Modstrøm",annualConsumption:6500}).annualConsumption,6500);
+assert.equal(applyInvoiceMigration({supplier:"Modstrøm",gridCompany:"cerius"}).gridCompany,"cerius");
+assert.equal(applyInvoiceMigration({supplier:"Norlys",supplierMarkupOre:11}),null);
+assert.equal(applyInvoiceMigration(null),null);
 const auditDate = new Date(2026,9,15,12);
 const old = pricedForecastAuditRow({target:"2026-10-15T12:00",forecastSpotExVat:0.7,actualSpotExVat:0.6},auditSettings);
 assert.equal(old.hasCalibration,false);
@@ -87,7 +92,7 @@ assert.ok(Math.abs(totalPrice(0.8,new Date(2026,9,15,3),{...DEFAULT_SETTINGS,gri
   - totalPrice(0.8,new Date(2026,9,15,3),DEFAULT_SETTINGS) - 0.0115)<1e-9);
 
 const priceDate = new Date(2026, 7, 29, 12);
-const legacyCeriusSettings = { ...DEFAULT_SETTINGS, gridCompany: "cerius" };
+const legacyCeriusSettings = { ...DEFAULT_SETTINGS, gridCompany: "cerius", supplierMarkupOre: 11, supplierSubscriptionMonthly: 0, gridSubscriptionMonthly: 0 };
 const baseCalculated = officialBasePrice(0.7, priceDate, legacyCeriusSettings);
 const variableCalculated = variablePrice(0.7, priceDate, legacyCeriusSettings);
 const calculated = totalPrice(0.7, priceDate, legacyCeriusSettings);
@@ -139,7 +144,7 @@ const aDate=new Date(2026,9,8,18);
 const customPrice=normalizeSettings({...DEFAULT_SETTINGS,supplierMarkupOre:27,supplierSubscriptionMonthly:100,gridSubscriptionMonthly:50,annualConsumption:3000});
 approx(totalPrice(0.5,aDate,customPrice)-comparableAccuracyPrice(0.5,aDate,customPrice),0);
 approx(comparableAccuracyPrice(0.5,aDate,customPrice),officialBasePrice(0.5,aDate,customPrice)+0.27+0.6);
-approx(comparableAccuracyPrice(0.7,priceDate,DEFAULT_SETTINGS)-officialBasePrice(0.7,priceDate,DEFAULT_SETTINGS),0.11);
+approx(comparableAccuracyPrice(0.7,priceDate,DEFAULT_SETTINGS)-officialBasePrice(0.7,priceDate,DEFAULT_SETTINGS),104.46*12/9000);
 const equalPrices = pricedAccuracyObservation({
   area:"DK2",target:"2026-10-08T18:00",forecastSpotExVat:0.7,actualSpotExVat:0.7
 },DEFAULT_SETTINGS);

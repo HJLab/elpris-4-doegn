@@ -18,15 +18,15 @@ const CONFIG = Object.freeze({
 
 const DEFAULT_SETTINGS = Object.freeze({
   priceArea: "DK2", gridCompany: "radius", supplier: "Modstrøm", product: "",
-  supplierMarkupOre: 11, supplierSubscriptionMonthly: 0,
-  annualConsumption: 4000, gridSubscriptionMonthly: 0,
+  // v28: ud fra Modstrøms fakturaer jun.–sep. 2026: intet separat kWh-tillæg,
+  // faste beløb 104,46 kr./md. inkl. moms (elselskab 28,95 + netselskab 75,51).
+  supplierMarkupOre: 0, supplierSubscriptionMonthly: 28.95,
+  annualConsumption: 9000, gridSubscriptionMonthly: 75.51,
   gridLow: 0.1442, gridHigh: 0.2163, gridPeak: 0.5623
 });
-// Bevar den gamle Cerius-standard til den sikre v20-genoprettelse af 0-tillæg.
-const LEGACY_CERIUS_DEFAULT_SETTINGS = Object.freeze({ ...DEFAULT_SETTINGS, gridCompany: "cerius" });
 const SETTINGS_KEY = "elpris-user-settings-v1";
 const GRID_NOTICE_DISMISSED_KEY = "elpris-radius-notice-dismissed-v21";
-const MARKUP_REPAIR_KEY = "elpris-markup-repair-v20";
+const INVOICE_MIGRATION_KEY = "elpris-invoice-settings-v28";
 const REVIEW_REMINDER_DATE = "2026-10-22";
 const REVIEW_REMINDER_KEY = "elpris-review-reminder-2026-10-22";
 const fmtPrice = new Intl.NumberFormat("da-DK", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -45,7 +45,6 @@ const CALIBRATION = typeof module !== "undefined" && module.exports
 const $ = (id) => hasDocument ? document.getElementById(id) : null;
 const ui = hasDocument ? {
   statusPanel: $("statusPanel"), statusText: $("statusText"), refresh: $("refreshButton"),
-  markupNotice: $("markupNotice"), markupNoticeText: $("markupNoticeText"), markupFixButton: $("markupFixButton"), markupUndoButton: $("markupUndoButton"),
   gridNotice: $("gridNotice"), gridSwitchButton: $("gridSwitchButton"), gridKeepButton: $("gridKeepButton"),
   summary: $("summary"), legend: $("legend"), daysHelp: $("daysHelp"), days: $("days"), updatedAt: $("updatedAt"),
   currentPrice: $("currentPrice"), currentKind: $("currentKind"),
@@ -70,7 +69,6 @@ let selectedForecastDate = "";
 let officialSpotForAudit = new Map();
 let selectedAccuracyDays = 7;
 let selectedAccuracyMonth = "";
-let markupRepairApplied = false;
 let settings = readSettings();
 
 function finiteNumber(value, fallback, min = 0, max = Number.MAX_SAFE_INTEGER) {
@@ -88,38 +86,45 @@ function normalizeSettings(value = {}) {
     product: String(value.product || "").slice(0, 60),
     supplierMarkupOre: finiteNumber(value.supplierMarkupOre == null || value.supplierMarkupOre === ""
       ? DEFAULT_SETTINGS.supplierMarkupOre : value.supplierMarkupOre, DEFAULT_SETTINGS.supplierMarkupOre, 0, 500),
-    supplierSubscriptionMonthly: finiteNumber(value.supplierSubscriptionMonthly, 0, 0, 2000),
+    supplierSubscriptionMonthly: finiteNumber(value.supplierSubscriptionMonthly, DEFAULT_SETTINGS.supplierSubscriptionMonthly, 0, 2000),
     annualConsumption: finiteNumber(value.annualConsumption, DEFAULT_SETTINGS.annualConsumption, 100, 100000),
-    gridSubscriptionMonthly: finiteNumber(value.gridSubscriptionMonthly, 0, 0, 2000),
+    gridSubscriptionMonthly: finiteNumber(value.gridSubscriptionMonthly, DEFAULT_SETTINGS.gridSubscriptionMonthly, 0, 2000),
     gridLow: finiteNumber(value.gridLow, DEFAULT_SETTINGS.gridLow, 0, 10),
     gridHigh: finiteNumber(value.gridHigh, DEFAULT_SETTINGS.gridHigh, 0, 10),
     gridPeak: finiteNumber(value.gridPeak, DEFAULT_SETTINGS.gridPeak, 0, 10)
   };
 }
 
-// Gendan kun gammel standardprofil, ikke profiler med egen elaftale eller egne tal.
-function shouldRepairLegacyZeroMarkup(raw) {
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return false;
-  if (raw.supplierMarkupOre == null || raw.supplierMarkupOre === "" || Number(raw.supplierMarkupOre) !== 0) return false;
-  const candidate = normalizeSettings(raw);
-  return [DEFAULT_SETTINGS, LEGACY_CERIUS_DEFAULT_SETTINGS].some((defaults) =>
-    Object.keys(defaults).every((key) =>
-      key === "supplierMarkupOre" || candidate[key] === defaults[key]));
+// v28: Engangsopdatering af gemte Modstrøm-profiler til tallene fra fakturaerne.
+// Tillægget sættes til 0, abonnementerne til de fakturerede beløb, og et urørt
+// standard-årsforbrug på 4.000 kWh hæves til 9.000 kWh. Andre elselskaber røres ikke.
+function applyInvoiceMigration(saved) {
+  if (!saved || typeof saved !== "object" || Array.isArray(saved)) return null;
+  const current = normalizeSettings(saved);
+  if (current.supplier.toLocaleLowerCase("da-DK") !== "modstrøm") return null;
+  return normalizeSettings({
+    ...current,
+    supplierMarkupOre: 0,
+    supplierSubscriptionMonthly: DEFAULT_SETTINGS.supplierSubscriptionMonthly,
+    gridSubscriptionMonthly: DEFAULT_SETTINGS.gridSubscriptionMonthly,
+    annualConsumption: Number(saved.annualConsumption) === 4000 || saved.annualConsumption == null
+      ? DEFAULT_SETTINGS.annualConsumption : current.annualConsumption
+  });
 }
 
 function readSettings() {
   if (typeof localStorage === "undefined") return normalizeSettings(DEFAULT_SETTINGS);
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
-    const loaded = normalizeSettings(saved || DEFAULT_SETTINGS);
-    if (localStorage.getItem(MARKUP_REPAIR_KEY) !== "reviewed" && shouldRepairLegacyZeroMarkup(saved)) {
-      const repaired = { ...loaded, supplierMarkupOre: DEFAULT_SETTINGS.supplierMarkupOre };
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(repaired));
-      localStorage.setItem(MARKUP_REPAIR_KEY, "repaired");
-      markupRepairApplied = true;
-      return repaired;
+    if (localStorage.getItem(INVOICE_MIGRATION_KEY) !== "done") {
+      localStorage.setItem(INVOICE_MIGRATION_KEY, "done");
+      const migrated = applyInvoiceMigration(saved);
+      if (migrated) {
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(migrated));
+        return migrated;
+      }
     }
-    return loaded;
+    return normalizeSettings(saved || DEFAULT_SETTINGS);
   } catch {
     return normalizeSettings(DEFAULT_SETTINGS);
   }
@@ -127,10 +132,9 @@ function readSettings() {
 
 function saveSettings(next) {
   settings = normalizeSettings(next);
-  markupRepairApplied = false;
   if (typeof localStorage !== "undefined") {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-    localStorage.setItem(MARKUP_REPAIR_KEY, "reviewed");
+    localStorage.setItem(INVOICE_MIGRATION_KEY, "done");
   }
   return settings;
 }
@@ -974,22 +978,6 @@ function setStatus(message, kind = "loading") {
   ui.statusPanel.className = `status-panel ${kind === "loading" ? "" : kind}`.trim();
 }
 
-function updateMarkupNotice() {
-  if (!hasDocument || !ui.markupNotice) return;
-  const needsCheck = settings.supplier.toLocaleLowerCase("da-DK") === DEFAULT_SETTINGS.supplier.toLocaleLowerCase("da-DK")
-    && settings.supplierMarkupOre === 0;
-  ui.markupNotice.hidden = !needsCheck && !markupRepairApplied;
-  ui.markupFixButton.hidden = !needsCheck;
-  ui.markupUndoButton.hidden = !markupRepairApplied;
-  if (needsCheck) {
-    ui.markupNoticeText.textContent =
-      "Dit gemte personlige tillæg er 0,00 øre/kWh. Hvis din aftale har 11,00 øre/kWh, kan du gendanne det her uden at ændre andre indstillinger.";
-  } else if (markupRepairApplied) {
-    ui.markupNoticeText.textContent =
-      "Et gammelt standardprofil-tillæg på 0,00 øre/kWh er genoprettet til 11,00 øre/kWh på denne enhed. Du kan altid ændre det under Indstillinger.";
-  }
-}
-
 function updateGridNotice() {
   if (!hasDocument || !ui.gridNotice) return;
   const oldDefaultProfile = settings.priceArea === "DK2" && settings.gridCompany === "cerius"
@@ -1000,7 +988,6 @@ function updateGridNotice() {
 
 function updateProfileText() {
   if (!hasDocument) return;
-  updateMarkupNotice();
   updateGridNotice();
   const gridName = settings.gridCompany === "radius" ? "Radius"
     : settings.gridCompany === "cerius" ? "Cerius" : "eget netselskab";
@@ -1132,22 +1119,6 @@ if (hasDocument) {
     if (typeof localStorage !== "undefined") localStorage.setItem(GRID_NOTICE_DISMISSED_KEY, "dismissed");
     updateGridNotice();
   });
-  ui.markupFixButton.addEventListener("click", () => {
-    if (settings.supplierMarkupOre !== 0) return;
-    saveSettings({ ...settings, supplierMarkupOre: DEFAULT_SETTINGS.supplierMarkupOre });
-    renderAccuracy(selectedAccuracyDays);
-    renderMonthlyAccuracy();
-    renderForecastAudit();
-    load();
-  });
-  ui.markupUndoButton.addEventListener("click", () => {
-    if (!markupRepairApplied) return;
-    saveSettings({ ...settings, supplierMarkupOre: 0 });
-    renderAccuracy(selectedAccuracyDays);
-    renderMonthlyAccuracy();
-    renderForecastAudit();
-    load();
-  });
   $("closeSettingsButton").addEventListener("click", closeSettings);
   $("cancelSettingsButton").addEventListener("click", closeSettings);
   ui.calculationButton.addEventListener("click", openCalculation);
@@ -1212,4 +1183,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, shouldRepairLegacyZeroMarkup, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, radiusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, pricedForecastAuditRow, latestForecastSnapshot, shouldShowReviewReminder, startOfMonth, monthAveragePrice, elprisenRowsToRecords, monthAverageLevel };
+if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, applyInvoiceMigration, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, radiusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, pricedForecastAuditRow, latestForecastSnapshot, shouldShowReviewReminder, startOfMonth, monthAveragePrice, elprisenRowsToRecords, monthAverageLevel };
