@@ -2,7 +2,10 @@
 
 const CONFIG = Object.freeze({
   horizonHours: 96,
-  energinetTariffInclVat: 0.115 * 1.25,
+  // Energinets forbrugstariffer (nettarif + systemtarif), kr./kWh ekskl. moms, pr. gyldighedsår.
+  // 2026: 7,2 + 4,3 = 11,5 øre. 2027: 4,9 + 5,6 = 10,5 øre (Energinet, pressemeddelelse 4.9.2026).
+  // Senere år bruger seneste kendte sats, indtil en ny tilføjes.
+  energinetTariffExVatByYear: Object.freeze({ 2026: 0.115, 2027: 0.105 }),
   electricityTaxInclVat: 0.008 * 1.25,
   ceriusInclVat: {
     summer: { low: 0.1442, high: 0.2163, peak: 0.5623 },
@@ -443,9 +446,18 @@ function fixedCostPerKwh(activeSettings = settings) {
     activeSettings.annualConsumption;
 }
 
+function energinetTariffInclVat(date) {
+  const rates = CONFIG.energinetTariffExVatByYear;
+  const years = Object.keys(rates).map(Number).sort((x, y) => x - y);
+  const year = date.getFullYear();
+  let chosen = years[0];
+  for (const y of years) if (y <= year) chosen = y;
+  return rates[chosen] * 1.25;
+}
+
 function officialBasePrice(spotExVat, date, activeSettings = settings) {
   const spotInclVat = spotExVat * 1.25;
-  return spotInclVat + CONFIG.energinetTariffInclVat + CONFIG.electricityTaxInclVat +
+  return spotInclVat + energinetTariffInclVat(date) + CONFIG.electricityTaxInclVat +
     gridTariff(date, activeSettings);
 }
 
@@ -1183,4 +1195,4 @@ if (hasDocument) {
 }
 
 // Eksporteres kun for de automatiske, lokale kontroller.
-if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, applyInvoiceMigration, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, radiusTariff, gridTariff, fixedCostPerKwh, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, pricedForecastAuditRow, latestForecastSnapshot, shouldShowReviewReminder, startOfMonth, monthAveragePrice, elprisenRowsToRecords, monthAverageLevel };
+if (typeof module !== "undefined") module.exports = { DEFAULT_SETTINGS, normalizeSettings, applyInvoiceMigration, aggregateToHours, mergeKnownHours, forecastPayloadToHours, forecastSpot, ceriusTariff, radiusTariff, gridTariff, fixedCostPerKwh, energinetTariffInclVat, officialBasePrice, variablePrice, totalPrice, comparableAccuracyPrice, pricedAccuracyObservation, startOfDay, calendarHour, buildHorizon, bestChargeWindow, classifyDay, calculateAccuracy, dailyAccuracyReport, monthlyAccuracyReport, availableAccuracyMonths, timeBand, pricedForecastAuditRow, latestForecastSnapshot, shouldShowReviewReminder, startOfMonth, monthAveragePrice, elprisenRowsToRecords, monthAverageLevel };
