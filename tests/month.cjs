@@ -46,3 +46,5 @@ const { DEFAULT_SETTINGS, normalizeSettings, totalPrice } = require("../app.js")
   assert.equal(monthAverageLevel(5.01), "alarm");
 }
 console.log("Månedsgennemsnit bestået.");
+// v29: Energinets datostyrede tarif testes her, så GitHub Actions kører den uden ændring af workflow-filen.
+require("./energinet.cjs");
